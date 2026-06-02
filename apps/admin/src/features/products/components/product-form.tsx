@@ -3,6 +3,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { AdminSelectField } from "@/components/AdminSelectField";
 import {
   TextField,
   TextFieldInput,
@@ -282,61 +283,49 @@ export function ProductForm({
             />
           </TextField>
 
-          <label className="productSelectField">
-            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
-              카테고리 *
-            </Text>
-            <select
-              className="productSelect"
-              value={values.category}
-              required
-              onChange={(event) => setField("category", event.target.value)}
-            >
-              {CATEGORY_OPTIONS}
-            </select>
-          </label>
+          <AdminSelectField
+            className="productFormField"
+            label="카테고리"
+            name="category"
+            value={values.category}
+            required
+            onChange={(event) => setField("category", event.target.value)}
+          >
+            {CATEGORY_OPTIONS}
+          </AdminSelectField>
 
-          <label className="productSelectField">
-            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
-              색상 *
-            </Text>
-            <select
-              className="productSelect"
-              value={values.color}
-              required
-              onChange={(event) => setField("color", event.target.value)}
-            >
-              {COLOR_OPTIONS}
-            </select>
-          </label>
+          <AdminSelectField
+            className="productFormField"
+            label="색상"
+            name="color"
+            value={values.color}
+            required
+            onChange={(event) => setField("color", event.target.value)}
+          >
+            {COLOR_OPTIONS}
+          </AdminSelectField>
 
-          <label className="productSelectField">
-            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
-              패턴 *
-            </Text>
-            <select
-              className="productSelect"
-              value={values.pattern}
-              required
-              onChange={(event) => setField("pattern", event.target.value)}
-            >
-              {PATTERN_OPTIONS}
-            </select>
-          </label>
+          <AdminSelectField
+            className="productFormField"
+            label="패턴"
+            name="pattern"
+            value={values.pattern}
+            required
+            onChange={(event) => setField("pattern", event.target.value)}
+          >
+            {PATTERN_OPTIONS}
+          </AdminSelectField>
 
-          <label className="productSelectField">
-            <Text as="span" textStyle="t3Bold" className="productFieldLabel">
-              소재 *
-            </Text>
-            <select
-              className="productSelect"
-              value={values.material}
-              required
-              onChange={(event) => setField("material", event.target.value)}
-            >
-              {MATERIAL_OPTIONS}
-            </select>
-          </label>
+          <AdminSelectField
+            className="productFormField"
+            label="소재"
+            name="material"
+            value={values.material}
+            required
+            onChange={(event) => setField("material", event.target.value)}
+          >
+            {MATERIAL_OPTIONS}
+          </AdminSelectField>
 
           <TextField
             className="productFormField productFormFieldFull"

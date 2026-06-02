@@ -5,6 +5,7 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 import type { KeyboardEvent } from "react";
+import { Checkbox } from "seed-design/ui/checkbox";
 import { AdminTableSkeletonBody } from "@/components/AdminSkeleton";
 import "./AdminDataTable.css";
 
@@ -108,11 +109,10 @@ export function AdminDataTable<TData>({
             <tr key={headerGroup.id}>
               {selectionEnabled ? (
                 <th scope="col">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     aria-label="전체 선택"
                     checked={allSelected}
-                    onChange={toggleAll}
+                    onCheckedChange={toggleAll}
                   />
                 </th>
               ) : null}
@@ -151,14 +151,14 @@ export function AdminDataTable<TData>({
               >
                 {selectionEnabled ? (
                   <td>
-                    <input
-                      type="checkbox"
-                      aria-label="행 선택"
-                      disabled={!selectable}
-                      checked={selectedRowIds?.has(row.id) ?? false}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={() => toggleRow(row.id)}
-                    />
+                    <span onClick={(event) => event.stopPropagation()}>
+                      <Checkbox
+                        aria-label="행 선택"
+                        disabled={!selectable}
+                        checked={selectedRowIds?.has(row.id) ?? false}
+                        onCheckedChange={() => toggleRow(row.id)}
+                      />
+                    </span>
                   </td>
                 ) : null}
                 {row.getVisibleCells().map((cell) => (

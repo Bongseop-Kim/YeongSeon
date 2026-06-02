@@ -1,8 +1,16 @@
 import { Text } from "seed-design/ui/text";
-import { useCallback } from "react";
 import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ActionButton } from "seed-design/ui/action-button";
+import {
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogRoot,
+  AlertDialogTitle,
+} from "seed-design/ui/alert-dialog";
 import { Chip } from "seed-design/ui/chip";
 import { Switch } from "seed-design/ui/switch";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
@@ -60,96 +68,85 @@ export function CouponIssueDialog({
   onSelectedUserIdsChange,
   onIssue,
 }: CouponIssueDialogProps): ReactNode {
-  const openDialog = useCallback((dialog: HTMLDialogElement | null) => {
-    if (dialog && !dialog.open) {
-      dialog.showModal();
-    }
-  }, []);
-
   return (
-    <dialog
-      ref={openDialog}
-      className="couponModal"
-      aria-labelledby="coupon-issue-title"
-      onClose={onClose}
+    <AlertDialogRoot
+      open
+      role="dialog"
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
     >
-      <header className="couponModalHeader">
-        <div>
-          <Text
-            as="h2"
-            textStyle="t6Bold"
-            id="coupon-issue-title"
-            className="couponModalTitle"
-          >
-            쿠폰 발급
-          </Text>
-          <Text as="p" textStyle="t4Regular" className="couponPageDescription">
+      <AlertDialogContent className="couponModal" layerIndex={60}>
+        <AlertDialogHeader>
+          <AlertDialogTitle id="coupon-issue-title">쿠폰 발급</AlertDialogTitle>
+          <AlertDialogDescription>
             대상 고객을 선택해 쿠폰을 발급합니다.
-          </Text>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <Chip.RadioRoot
+          className="couponPresetGroup"
+          aria-label="고객 프리셋"
+          value={selectedPreset}
+          onValueChange={onPresetChange}
+        >
+          {COUPON_PRESET_KEYS.map((preset) => (
+            <Chip.RadioItem key={preset} value={preset}>
+              <Text as="span" textStyle="t4Regular">
+                {COUPON_PRESET_LABELS[preset]}
+              </Text>
+            </Chip.RadioItem>
+          ))}
+        </Chip.RadioRoot>
+
+        <div className="couponSearchRow">
+          <TextField
+            label="고객명 검색"
+            name="coupon-user-search"
+            value={keyword}
+            onValueChange={({ value }) => onKeywordChange(value)}
+          >
+            <TextFieldInput placeholder="고객명 검색…" />
+          </TextField>
+          <Switch
+            checked={excludeIssuedUsers}
+            onCheckedChange={onExcludeIssuedUsersChange}
+            label="중복 발급 방지"
+          />
         </div>
-        <ActionButton type="button" variant="neutralWeak" onClick={onClose}>
-          닫기
-        </ActionButton>
-      </header>
 
-      <Chip.RadioRoot
-        className="couponPresetGroup"
-        aria-label="고객 프리셋"
-        value={selectedPreset}
-        onValueChange={onPresetChange}
-      >
-        {COUPON_PRESET_KEYS.map((preset) => (
-          <Chip.RadioItem key={preset} value={preset}>
-            <Text as="span" textStyle="t4Regular">
-              {COUPON_PRESET_LABELS[preset]}
-            </Text>
-          </Chip.RadioItem>
-        ))}
-      </Chip.RadioRoot>
+        <Text as="p" textStyle="t4Regular" aria-live="polite">
+          {KR_NUMBER_FORMAT.format(selectedUserIds.size)}명 선택됨
+          {isFetching ? " · 고객 조회 중…" : ""}
+        </Text>
 
-      <div className="couponSearchRow">
-        <TextField
-          label="고객명 검색"
-          name="coupon-user-search"
-          value={keyword}
-          onValueChange={({ value }) => onKeywordChange(value)}
-        >
-          <TextFieldInput placeholder="고객명 검색…" />
-        </TextField>
-        <Switch
-          checked={excludeIssuedUsers}
-          onCheckedChange={onExcludeIssuedUsersChange}
-          label="중복 발급 방지"
+        <AdminDataTable
+          data={users}
+          columns={USER_COLUMNS}
+          getRowId={(row) => row.id}
+          emptyText="조건에 맞는 고객이 없습니다."
+          selectedRowIds={selectedUserIds}
+          onSelectedRowIdsChange={onSelectedUserIdsChange}
         />
-      </div>
 
-      <Text as="p" textStyle="t4Regular" aria-live="polite">
-        {KR_NUMBER_FORMAT.format(selectedUserIds.size)}명 선택됨
-        {isFetching ? " · 고객 조회 중…" : ""}
-      </Text>
-
-      <AdminDataTable
-        data={users}
-        columns={USER_COLUMNS}
-        getRowId={(row) => row.id}
-        emptyText="조건에 맞는 고객이 없습니다."
-        selectedRowIds={selectedUserIds}
-        onSelectedRowIdsChange={onSelectedUserIdsChange}
-      />
-
-      <div className="couponFormActions">
-        <ActionButton
-          type="button"
-          loading={isIssuing}
-          disabled={isIssuing}
-          onClick={onIssue}
-        >
-          선택 발급
-        </ActionButton>
-        <ActionButton type="button" variant="neutralWeak" onClick={onClose}>
-          취소
-        </ActionButton>
-      </div>
-    </dialog>
+        <AlertDialogFooter>
+          <ActionButton
+            type="button"
+            loading={isIssuing}
+            disabled={isIssuing}
+            onClick={onIssue}
+          >
+            선택 발급
+          </ActionButton>
+          <AlertDialogAction
+            type="button"
+            variant="neutralWeak"
+            onClick={onClose}
+          >
+            취소
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialogRoot>
   );
 }

@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
 import { loginAdmin } from "@/features/auth/api/auth-api";
 import "./auth.css";
 
@@ -62,38 +63,40 @@ export function LoginForm() {
         ) : null}
 
         <form className="authForm" autoComplete="off" onSubmit={handleSubmit}>
-          <label className="authField" htmlFor="admin-email">
-            <Text as="span" textStyle="t3Bold" className="authFieldLabel">
-              이메일
-            </Text>
-            <input
+          <TextField
+            className="authField"
+            label="이메일"
+            value={email}
+            disabled={isPending}
+            onValueChange={({ value }) => setEmail(value)}
+          >
+            <TextFieldInput
               id="admin-email"
-              className="authInput"
+              name="email"
               type="email"
               inputMode="email"
               autoComplete="username"
               placeholder="admin@example.com"
-              value={email}
               disabled={isPending}
-              onChange={(event) => setEmail(event.target.value)}
             />
-          </label>
+          </TextField>
 
-          <label className="authField" htmlFor="admin-password">
-            <Text as="span" textStyle="t3Bold" className="authFieldLabel">
-              비밀번호
-            </Text>
-            <input
+          <TextField
+            className="authField"
+            label="비밀번호"
+            value={password}
+            disabled={isPending}
+            onValueChange={({ value }) => setPassword(value)}
+          >
+            <TextFieldInput
               id="admin-password"
-              className="authInput"
+              name="password"
               type="password"
               autoComplete="current-password"
               placeholder="비밀번호"
-              value={password}
               disabled={isPending}
-              onChange={(event) => setPassword(event.target.value)}
             />
-          </label>
+          </TextField>
 
           <div className="authActions">
             <ActionButton

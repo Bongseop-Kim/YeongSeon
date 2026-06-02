@@ -72,29 +72,11 @@
   min-width: 160px;
 }
 
-.claimFilterLabel,
 .claimDetailLabel {
   color: var(--seed-color-fg-neutral-muted);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
-}
-
-.claimSelect,
-.claimInput,
-.claimTextarea {
-  width: 100%;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 10px;
-  background: var(--seed-color-bg-layer-default);
-  padding: 10px 12px;
-  color: var(--seed-color-fg-neutral);
-  font: inherit;
-}
-
-.claimTextarea {
-  min-height: 96px;
-  resize: vertical;
 }
 
 .claimDetailGrid {

@@ -1,8 +1,18 @@
 import { Text } from "seed-design/ui/text";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { eulo } from "@yeongseon/shared";
 import { ActionButton } from "seed-design/ui/action-button";
+import {
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogRoot,
+  AlertDialogTitle,
+} from "seed-design/ui/alert-dialog";
 import { Callout } from "seed-design/ui/callout";
+import { TextField, TextFieldTextarea } from "seed-design/ui/text-field";
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 
 type ActiveModal = "advance" | "rollback" | "cancel" | null;
@@ -37,24 +47,6 @@ function getConfirmLabel(activeModal: ActiveModal) {
   return "취소 처리";
 }
 
-function openDialog(dialog: HTMLDialogElement | null): void {
-  if (!dialog) return;
-  if (typeof dialog.showModal === "function") {
-    dialog.showModal();
-    return;
-  }
-  dialog.setAttribute("open", "");
-}
-
-function closeDialog(dialog: HTMLDialogElement | null): void {
-  if (!dialog) return;
-  if (typeof dialog.close === "function") {
-    dialog.close();
-    return;
-  }
-  dialog.removeAttribute("open");
-}
-
 export function OrderStatusActions({
   order,
   nextStatus,
@@ -64,7 +56,6 @@ export function OrderStatusActions({
   onBeforeAdvance,
   isUpdating,
 }: OrderStatusActionsProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [memo, setMemo] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -75,11 +66,9 @@ export function OrderStatusActions({
     setActiveModal(nextModal);
     setMemo("");
     setValidationError(null);
-    openDialog(dialogRef.current);
   };
 
   const closeModal = () => {
-    closeDialog(dialogRef.current);
     setActiveModal(null);
     setMemo("");
     setValidationError(null);
@@ -114,10 +103,12 @@ export function OrderStatusActions({
   };
 
   useEffect(() => {
-    if (isClaimLocked && dialogRef.current?.open) {
-      closeDialog(dialogRef.current);
+    if (isClaimLocked && activeModal) {
+      setActiveModal(null);
+      setMemo("");
+      setValidationError(null);
     }
-  }, [isClaimLocked]);
+  }, [activeModal, isClaimLocked]);
 
   return (
     <section className="orderPanel" aria-labelledby="order-status-action-title">
@@ -176,91 +167,73 @@ export function OrderStatusActions({
         ) : null}
       </div>
 
-      <dialog
-        ref={dialogRef}
-        className="orderModal"
-        aria-labelledby="order-status-dialog-title"
-        onClose={() => setActiveModal(null)}
+      <AlertDialogRoot
+        open={activeModal !== null}
+        role="dialog"
+        onOpenChange={(open) => {
+          if (!open) closeModal();
+        }}
       >
         {activeModal ? (
-          <>
-            <div className="orderModalHeader">
-              <Text
-                as="h3"
-                textStyle="t5Bold"
-                id="order-status-dialog-title"
-                className="orderSectionTitle"
-              >
+          <AlertDialogContent layerIndex={60}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
                 {getModalTitle(activeModal, nextStatus, rollbackStatus)}
-              </Text>
-            </div>
-            {activeModal === "advance" ? (
-              <Text as="p" textStyle="t4Regular">
-                현재 상태{" "}
-                <Text as="strong" textStyle="t5Bold">
-                  {order.status}
-                </Text>{" "}
-                →{" "}
-                <Text as="strong" textStyle="t5Bold">
-                  {nextStatus}
-                </Text>
-                으로 변경합니다.
-              </Text>
-            ) : null}
-            {activeModal === "cancel" ? (
-              <Text as="p" textStyle="t4Regular">
-                이 주문을 취소하시겠습니까?
-              </Text>
-            ) : null}
-            {activeModal === "rollback" ? (
-              <Text as="p" textStyle="t4Regular">
-                현재 상태{" "}
-                <Text as="strong" textStyle="t5Bold">
-                  {order.status}
-                </Text>{" "}
-                →{" "}
-                <Text as="strong" textStyle="t5Bold">
-                  {rollbackStatus}
-                </Text>
-                으로 롤백합니다.
-              </Text>
-            ) : null}
-            {validationError ? (
-              <Callout
-                tone="critical"
-                description={validationError}
-                role="alert"
-              />
-            ) : null}
-            <label className="orderField">
-              <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-                {activeModal === "rollback"
-                  ? "롤백 사유 (필수)"
-                  : "메모 (선택)"}
-              </Text>
-              <textarea
-                className="orderInput orderTextarea"
-                placeholder={
-                  activeModal === "rollback"
-                    ? "롤백 사유 (필수)"
-                    : "메모 (선택)"
-                }
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {activeModal === "advance" ? (
+                  <>
+                    현재 상태 {order.status}에서 {nextStatus}(으)로 변경합니다.
+                  </>
+                ) : null}
+                {activeModal === "cancel"
+                  ? "이 주문을 취소하시겠습니까?"
+                  : null}
+                {activeModal === "rollback" ? (
+                  <>
+                    현재 상태 {order.status}에서 {rollbackStatus}(으)로
+                    롤백합니다.
+                  </>
+                ) : null}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="orderModalBody">
+              {validationError ? (
+                <Callout
+                  tone="critical"
+                  description={validationError}
+                  role="alert"
+                />
+              ) : null}
+              <TextField
+                label={activeModal === "rollback" ? "롤백 사유" : "메모"}
                 value={memo}
-                onChange={(event) => {
-                  setMemo(event.target.value);
+                required={activeModal === "rollback"}
+                showRequiredIndicator={activeModal === "rollback"}
+                invalid={Boolean(validationError)}
+                onValueChange={({ value }) => {
+                  setMemo(value);
                   setValidationError(null);
                 }}
-              />
-            </label>
-            <div className="orderModalActions">
-              <ActionButton
-                type="button"
+              >
+                <TextFieldTextarea
+                  name="order-status-memo"
+                  placeholder={
+                    activeModal === "rollback"
+                      ? "롤백 사유 (필수)"
+                      : "메모 (선택)"
+                  }
+                />
+              </TextField>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogAction
                 variant="neutralWeak"
                 disabled={isUpdating}
                 onClick={closeModal}
               >
                 닫기
-              </ActionButton>
+              </AlertDialogAction>
               <ActionButton
                 type="button"
                 loading={isUpdating}
@@ -269,10 +242,10 @@ export function OrderStatusActions({
               >
                 {getConfirmLabel(activeModal)}
               </ActionButton>
-            </div>
-          </>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         ) : null}
-      </dialog>
+      </AlertDialogRoot>
     </section>
   );
 }

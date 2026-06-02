@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from "seed-design/ui/alert-dialog";
 import { Callout } from "seed-design/ui/callout";
+import { TextField, TextFieldTextarea } from "seed-design/ui/text-field";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
 import "./claims.css";
 
@@ -145,12 +146,16 @@ export function ClaimStatusActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="claimModalBody">
-            <textarea
-              className="claimTextarea"
-              placeholder="메모 (선택)"
+            <TextField
+              label="메모"
               value={memo}
-              onChange={(event) => setMemo(event.target.value)}
-            />
+              onValueChange={({ value }) => setMemo(value)}
+            >
+              <TextFieldTextarea
+                name="claim-advance-memo"
+                placeholder="메모 (선택)"
+              />
+            </TextField>
           </div>
           <AlertDialogFooter>
             <AlertDialogAction variant="neutralWeak" onClick={closeModal}>
@@ -181,12 +186,16 @@ export function ClaimStatusActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="claimModalBody">
-            <textarea
-              className="claimTextarea"
-              placeholder="거부 사유 (선택)"
+            <TextField
+              label="거부 사유"
               value={memo}
-              onChange={(event) => setMemo(event.target.value)}
-            />
+              onValueChange={({ value }) => setMemo(value)}
+            >
+              <TextFieldTextarea
+                name="claim-reject-memo"
+                placeholder="거부 사유 (선택)"
+              />
+            </TextField>
           </div>
           <AlertDialogFooter>
             <AlertDialogAction variant="neutralWeak" onClick={closeModal}>
@@ -224,15 +233,22 @@ export function ClaimStatusActions({
             {validationError ? (
               <Callout tone="critical" description={validationError} />
             ) : null}
-            <textarea
-              className="claimTextarea"
-              placeholder="롤백 사유 (필수)"
+            <TextField
+              label="롤백 사유"
               value={memo}
-              onChange={(event) => {
-                setMemo(event.target.value);
+              required
+              showRequiredIndicator
+              invalid={Boolean(validationError)}
+              onValueChange={({ value }) => {
+                setMemo(value);
                 setValidationError(null);
               }}
-            />
+            >
+              <TextFieldTextarea
+                name="claim-rollback-memo"
+                placeholder="롤백 사유 (필수)"
+              />
+            </TextField>
           </div>
           <AlertDialogFooter>
             <AlertDialogAction variant="neutralWeak" onClick={closeModal}>

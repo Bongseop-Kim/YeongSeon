@@ -1,5 +1,7 @@
 import { Text } from "seed-design/ui/text";
 import { ActionButton } from "seed-design/ui/action-button";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
+import { AdminSelectField } from "@/components/AdminSelectField";
 import {
   COURIER_COMPANY_NAMES,
   buildTrackingUrl,
@@ -40,36 +42,34 @@ export function TrackingSection({
   return (
     <div className="orderTrackingSection">
       <div className="orderTrackingControls">
-        <label className="orderSelectField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            택배사
-          </Text>
-          <select
-            className="orderSelect"
+        <AdminSelectField
+          className="orderField"
+          label="택배사"
+          name="courierCompany"
+          disabled={isReadOnly}
+          value={courierCompany}
+          onChange={(event) => onCourierChange?.(event.target.value)}
+        >
+          <option value="">택배사 선택</option>
+          {COURIER_COMPANY_NAMES.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </AdminSelectField>
+        <TextField
+          className="orderField"
+          label="송장번호"
+          disabled={isReadOnly}
+          value={trackingNumber}
+          onValueChange={({ value }) => onTrackingNumberChange?.(value)}
+        >
+          <TextFieldInput
+            name="trackingNumber"
             disabled={isReadOnly}
-            value={courierCompany}
-            onChange={(event) => onCourierChange?.(event.target.value)}
-          >
-            <option value="">택배사 선택</option>
-            {COURIER_COMPANY_NAMES.map((name) => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="orderField">
-          <Text as="span" textStyle="t3Bold" className="orderFieldLabel">
-            송장번호
-          </Text>
-          <input
-            className="orderInput"
-            disabled={isReadOnly}
-            value={trackingNumber}
             placeholder="송장번호"
-            onChange={(event) => onTrackingNumberChange?.(event.target.value)}
           />
-        </label>
+        </TextField>
         {!isReadOnly ? (
           <ActionButton
             type="button"
@@ -81,14 +81,11 @@ export function TrackingSection({
           </ActionButton>
         ) : null}
         {trackingUrl ? (
-          <a
-            className="orderLinkButton"
-            href={trackingUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            배송추적
-          </a>
+          <ActionButton asChild variant="neutralWeak">
+            <a href={trackingUrl} target="_blank" rel="noreferrer">
+              배송추적
+            </a>
+          </ActionButton>
         ) : null}
       </div>
       {shippedAt ? (

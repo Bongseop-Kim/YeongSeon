@@ -4,6 +4,8 @@ import {
   buildTrackingUrl,
 } from "@yeongseon/shared/constants/courier-companies";
 import { ActionButton } from "seed-design/ui/action-button";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
+import { AdminSelectField } from "@/components/AdminSelectField";
 import "./claims.css";
 
 const COURIER_OPTIONS = COURIER_COMPANY_NAMES.map((name) => ({
@@ -59,46 +61,40 @@ export function ClaimTrackingSection({
         {TRACKING_TITLE[trackingType]}
       </Text>
       <div className="claimTrackingForm">
-        <label className="claimTrackingField">
-          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
-            택배사
-          </Text>
-          <select
-            className="claimSelect"
-            value={courierCompany}
-            onChange={(event) => onCourierChange(event.target.value)}
-          >
-            <option value="">택배사 선택</option>
-            {COURIER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="claimTrackingField">
-          <Text as="span" textStyle="t3Bold" className="claimFilterLabel">
-            송장번호
-          </Text>
-          <input
-            className="claimInput"
-            value={trackingNumber}
+        <AdminSelectField
+          className="claimTrackingField"
+          label="택배사"
+          name={`${trackingType}-courier-company`}
+          value={courierCompany}
+          onChange={(event) => onCourierChange(event.target.value)}
+        >
+          <option value="">택배사 선택</option>
+          {COURIER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminSelectField>
+        <TextField
+          className="claimTrackingField"
+          label="송장번호"
+          value={trackingNumber}
+          onValueChange={({ value }) => onTrackingNumberChange(value)}
+        >
+          <TextFieldInput
+            name={`${trackingType}-tracking-number`}
             placeholder="송장번호"
-            onChange={(event) => onTrackingNumberChange(event.target.value)}
           />
-        </label>
+        </TextField>
         <ActionButton type="button" loading={isPending} onClick={onSave}>
           저장
         </ActionButton>
         {trackingUrl ? (
-          <a
-            className="claimTextButton"
-            href={trackingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {TRACKING_LABEL[trackingType]}
-          </a>
+          <ActionButton asChild variant="neutralWeak">
+            <a href={trackingUrl} target="_blank" rel="noopener noreferrer">
+              {TRACKING_LABEL[trackingType]}
+            </a>
+          </ActionButton>
         ) : null}
       </div>
     </section>

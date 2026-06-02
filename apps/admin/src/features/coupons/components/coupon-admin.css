@@ -201,21 +201,6 @@
   background: rgb(0 0 0 / 45%);
 }
 
-.couponModalHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.couponModalTitle {
-  margin: 0;
-  font-size: 20px;
-  line-height: 28px;
-  font-weight: 700;
-}
-
 .couponPresetGroup {
   display: flex;
   gap: 8px;

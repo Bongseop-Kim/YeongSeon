@@ -112,42 +112,12 @@
   gap: 16px;
 }
 
-.productFormField,
-.productSelectField {
+.productFormField {
   min-width: 0;
 }
 
 .productFormFieldFull {
   grid-column: 1 / -1;
-}
-
-.productSelectField {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.productFieldLabel {
-  color: var(--seed-color-fg-neutral-muted);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 18px;
-}
-
-.productSelect {
-  min-height: 40px;
-  width: 100%;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 10px;
-  background: var(--seed-color-bg-layer-default);
-  color: var(--seed-color-fg-neutral);
-  padding: 0 12px;
-  font: inherit;
-}
-
-.productSelect:focus-visible {
-  outline: 2px solid var(--seed-color-stroke-brand);
-  outline-offset: 2px;
 }
 
 .productFileInput {
@@ -207,10 +177,9 @@
 }
 
 .productOptionRow {
-  grid-template-columns: minmax(160px, 1fr) minmax(120px, 180px) minmax(
-      120px,
-      180px
-    ) auto;
+  grid-template-columns:
+    minmax(160px, 1fr) minmax(120px, 180px) minmax(120px, 180px)
+    auto;
 }
 
 .productFormActions {
