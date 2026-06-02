@@ -42,6 +42,8 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
                         className="orderPreviewImage"
                         src={tie.imageUrl}
                         alt="수선 대상 넥타이"
+                        width={120}
+                        height={120}
                       />
                     </a>
                   </OrderDetailItem>

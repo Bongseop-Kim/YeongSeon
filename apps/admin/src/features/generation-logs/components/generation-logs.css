@@ -268,36 +268,6 @@
   color: var(--seed-color-fg-brand);
 }
 
-.generationLogDetailGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  overflow: hidden;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 12px;
-}
-
-.generationLogDetailItem {
-  display: grid;
-  grid-template-columns: minmax(120px, 40%) 1fr;
-  min-height: 48px;
-  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
-}
-
-.generationLogDetailLabel,
-.generationLogDetailValue {
-  padding: 12px;
-  font-size: 13px;
-  line-height: 20px;
-  overflow-wrap: anywhere;
-}
-
-.generationLogDetailLabel {
-  background: var(--seed-color-bg-neutral-weak);
-  color: var(--seed-color-fg-neutral-muted);
-  font-weight: 600;
-}
-
 .generationLogMediaItem,
 .generationLogDataBlock,
 .generationLogTextColumn {
@@ -367,7 +337,6 @@
 
 @media (max-width: 980px) {
   .generationLogStatsGrid,
-  .generationLogDetailGrid,
   .generationLogPromptGrid {
     grid-template-columns: 1fr;
   }

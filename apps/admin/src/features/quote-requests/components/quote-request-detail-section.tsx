@@ -19,6 +19,7 @@ import {
 } from "seed-design/ui/alert-dialog";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
+import { AdminDetailItem, AdminDetailList } from "@/components/AdminDetailList";
 import {
   TextField,
   TextFieldInput,
@@ -51,16 +52,19 @@ function formatDateTime(value: string): string {
   return value ? new Date(value).toLocaleString("ko-KR") : "-";
 }
 
-function DetailItem({ label, value }: { label: string; value: ReactNode }) {
+function DetailItem({
+  label,
+  value,
+  full,
+}: {
+  label: string;
+  value: ReactNode;
+  full?: boolean;
+}) {
   return (
-    <div className="quoteRequestDetailItem">
-      <Text as="dt" textStyle="t4Medium" className="quoteRequestDetailLabel">
-        {label}
-      </Text>
-      <Text as="dd" textStyle="t4Regular" className="quoteRequestDetailValue">
-        {value}
-      </Text>
-    </div>
+    <AdminDetailItem label={label} full={full}>
+      {value}
+    </AdminDetailItem>
   );
 }
 
@@ -244,7 +248,7 @@ export function QuoteRequestDetailSection({
       ) : null}
 
       <DetailSection title="견적 기본 정보" id="quote-basic-title">
-        <dl className="quoteRequestDetailGrid">
+        <AdminDetailList>
           <DetailItem label="견적번호" value={detail.quoteNumber} />
           <DetailItem label="요청일" value={detail.date} />
           <DetailItem
@@ -279,11 +283,11 @@ export function QuoteRequestDetailSection({
           />
           <DetailItem label="고객 연락처" value={detail.customerPhone ?? "-"} />
           <DetailItem label="고객 이메일" value={detail.customerEmail ?? "-"} />
-        </dl>
+        </AdminDetailList>
       </DetailSection>
 
       <DetailSection title="담당자 연락처" id="quote-contact-title">
-        <dl className="quoteRequestDetailGrid">
+        <AdminDetailList>
           <DetailItem label="성함" value={detail.contactName} />
           <DetailItem label="상호명" value={detail.businessName || "-"} />
           <DetailItem
@@ -291,7 +295,7 @@ export function QuoteRequestDetailSection({
             value={CONTACT_METHOD_LABELS[detail.contactMethod]}
           />
           <DetailItem label="연락처" value={detail.contactValue} />
-        </dl>
+        </AdminDetailList>
       </DetailSection>
 
       <CustomOrderOptionsDetail
@@ -330,17 +334,21 @@ export function QuoteRequestDetailSection({
       ) : null}
 
       <DetailSection title="배송지 정보" id="quote-shipping-title">
-        <dl className="quoteRequestDetailGrid">
+        <AdminDetailList>
           <DetailItem label="수령인" value={detail.recipientName ?? "-"} />
           <DetailItem label="연락처" value={detail.recipientPhone ?? "-"} />
           <DetailItem
             label="우편번호"
             value={detail.shippingPostalCode ?? "-"}
           />
-          <DetailItem label="주소" value={shippingAddressText} />
-          <DetailItem label="배송메모" value={detail.deliveryMemo ?? "-"} />
-          <DetailItem label="배송요청사항" value={deliveryRequestText} />
-        </dl>
+          <DetailItem label="주소" value={shippingAddressText} full />
+          <DetailItem
+            label="배송메모"
+            value={detail.deliveryMemo ?? "-"}
+            full
+          />
+          <DetailItem label="배송요청사항" value={deliveryRequestText} full />
+        </AdminDetailList>
       </DetailSection>
 
       <DetailSection title="견적 입력" id="quote-input-title">

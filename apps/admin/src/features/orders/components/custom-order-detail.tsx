@@ -35,7 +35,13 @@ function ReferenceImages({ urls }: { urls: string[] }) {
             target="_blank"
             rel="noreferrer"
           >
-            <img className="orderPreviewImage" src={url} alt="참고 이미지" />
+            <img
+              className="orderPreviewImage"
+              src={url}
+              alt="참고 이미지"
+              width={120}
+              height={120}
+            />
           </a>
         ))}
       </div>

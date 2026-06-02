@@ -5,6 +5,7 @@ import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { TextField, TextFieldTextarea } from "seed-design/ui/text-field";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
+import { AdminDetailItem, AdminDetailList } from "@/components/AdminDetailList";
 import { StatusBadge } from "@/components/StatusBadge";
 import type { InquiryStatus } from "@/features/inquiries/types/admin-inquiry";
 import {
@@ -18,16 +19,19 @@ function statusTone(status: InquiryStatus) {
   return status === "답변완료" ? "positive" : "warning";
 }
 
-function DetailItem({ label, value }: { label: string; value: ReactNode }) {
+function DetailItem({
+  label,
+  value,
+  full,
+}: {
+  label: string;
+  value: ReactNode;
+  full?: boolean;
+}) {
   return (
-    <div className="inquiryDetailItem">
-      <Text as="dt" textStyle="t4Medium" className="inquiryDetailLabel">
-        {label}
-      </Text>
-      <Text as="dd" textStyle="t4Regular" className="inquiryDetailValue">
-        {value}
-      </Text>
-    </div>
+    <AdminDetailItem label={label} full={full}>
+      {value}
+    </AdminDetailItem>
   );
 }
 
@@ -82,7 +86,7 @@ export function InquiryDetailSection() {
         />
       ) : null}
 
-      <dl className="inquiryDetailGrid">
+      <AdminDetailList>
         <DetailItem label="제목" value={detail.title} />
         <DetailItem
           label="상태"
@@ -114,14 +118,14 @@ export function InquiryDetailSection() {
           />
         ) : null}
         <DetailItem label="작성일" value={detail.date} />
-        <DetailItem label="내용" value={detail.content} />
+        <DetailItem label="내용" value={detail.content} full />
         {detail.type === "answered" ? (
           <>
-            <DetailItem label="답변" value={detail.answer} />
+            <DetailItem label="답변" value={detail.answer} full />
             <DetailItem label="답변일" value={detail.answerDate} />
           </>
         ) : null}
-      </dl>
+      </AdminDetailList>
 
       {detail.type === "pending" ? (
         <div className="inquiryAnswerBox">

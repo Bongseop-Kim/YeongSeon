@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { ActionButton } from "seed-design/ui/action-button";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
+import { AdminDetailItem, AdminDetailList } from "@/components/AdminDetailList";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   useGenerationLogDetailQuery,
@@ -410,7 +411,7 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
 }
 
 function DetailGrid({ children }: { children: React.ReactNode }) {
-  return <dl className="generationLogDetailGrid">{children}</dl>;
+  return <AdminDetailList columns={3}>{children}</AdminDetailList>;
 }
 
 function DetailItem({
@@ -420,16 +421,7 @@ function DetailItem({
   label: string;
   children: React.ReactNode;
 }) {
-  return (
-    <div className="generationLogDetailItem">
-      <Text as="dt" textStyle="t4Medium" className="generationLogDetailLabel">
-        {label}
-      </Text>
-      <Text as="dd" textStyle="t4Regular" className="generationLogDetailValue">
-        {children}
-      </Text>
-    </div>
-  );
+  return <AdminDetailItem label={label}>{children}</AdminDetailItem>;
 }
 
 function RequestOptionsSection({ log }: { log: AdminGenerationLogItem }) {
