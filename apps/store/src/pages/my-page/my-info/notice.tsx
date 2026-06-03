@@ -290,7 +290,7 @@ export default function MyInfoNoticePage() {
             open={showVerifyModal}
             onOpenChange={(open) => !open && setShowVerifyModal(false)}
           >
-            <DialogContent>
+            <DialogContent mobilePresentation="sheet">
               <DialogHeader>
                 <DialogTitle>전화번호 인증</DialogTitle>
               </DialogHeader>

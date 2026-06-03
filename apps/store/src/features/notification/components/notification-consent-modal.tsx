@@ -35,14 +35,14 @@ export const NotificationConsentModal = ({
             번호를 수집합니다.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button onClick={() => handleConsent(true)} className="w-full">
+        <DialogFooter>
+          <Button onClick={() => handleConsent(true)} className="flex-1">
             동의하고 계속
           </Button>
           <Button
             variant="outline"
             onClick={() => handleConsent(false)}
-            className="w-full"
+            className="flex-1"
           >
             동의 없이 계속
           </Button>

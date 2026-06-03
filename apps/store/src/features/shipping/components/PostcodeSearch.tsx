@@ -28,6 +28,8 @@ export const PostcodeSearch = ({
   useEffect(() => {
     if (!isLoaded || !isOpen) return;
 
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     const embedPostcode = () => {
       if (containerRef.current && window.daum?.Postcode) {
         containerRef.current.innerHTML = "";
@@ -41,19 +43,26 @@ export const PostcodeSearch = ({
         });
 
         postcode.embed(containerRef.current);
-      } else {
-        setTimeout(embedPostcode, 100);
+        return;
       }
+
+      retryTimer = setTimeout(embedPostcode, 100);
     };
 
-    // DOM 렌더링 완료를 기다리기 위해 setTimeout 사용
-    setTimeout(embedPostcode, 0);
+    const startTimer = setTimeout(embedPostcode, 0);
+
+    return () => {
+      clearTimeout(startTimer);
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
   }, [isLoaded, isOpen, onComplete]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        showCloseButton={false}
+        mobilePresentation="fullscreen"
         className="max-w-lg w-full h-full rounded-none p-0 gap-0"
       >
         <DialogTitle className="sr-only">우편번호 검색</DialogTitle>

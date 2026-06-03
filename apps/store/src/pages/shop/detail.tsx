@@ -36,8 +36,8 @@ import { ProductCard } from "@/shared/composite/product-card";
 import { useMemo } from "react";
 import { useAddToCartItems } from "@/features/cart";
 import { useOrderStore } from "@/shared/store/order";
-import { useModalStore } from "@/shared/store/modal";
 import { toast } from "@/shared/lib/toast";
+import { showCartAddedToast } from "@/shared/lib/cart-toast";
 import { useProduct, useProducts, useToggleLike } from "@/entities/shop";
 import { analytics } from "@/shared/lib/analytics";
 import { ph } from "@/shared/lib/posthog";
@@ -50,7 +50,6 @@ export default function ShopDetailPage() {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
   const { addItemsToCart } = useAddToCartItems();
-  const { openModal } = useModalStore();
   const { setOrderItems } = useOrderStore();
   const [isPurchaseSheetOpen, setIsPurchaseSheetOpen] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -190,15 +189,7 @@ export default function ShopDetailPage() {
         return;
       }
 
-      openModal({
-        title: "장바구니",
-        description: "장바구니에 추가되었습니다.",
-        confirmText: "장바구니 보기",
-        cancelText: "닫기",
-        onConfirm: () => {
-          window.location.href = ROUTES.CART;
-        },
-      });
+      showCartAddedToast("장바구니에 추가되었습니다.");
       resetOptions();
     } finally {
       setIsAddingToCart(false);

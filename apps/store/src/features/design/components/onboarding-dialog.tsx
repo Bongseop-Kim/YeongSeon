@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/shared/ui-extended/button";
 import {
@@ -16,25 +16,24 @@ interface OnboardingDialogProps {
 
 export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
   const [currentPage, setCurrentPage] = useState(0);
+  const wasOpenRef = useRef(open);
   const hasPages = ONBOARDING_PAGES.length > 0;
   const safePageIndex = hasPages
     ? Math.min(currentPage, ONBOARDING_PAGES.length - 1)
     : 0;
   const page = ONBOARDING_PAGES[safePageIndex];
 
-  useEffect(() => {
+  if (open !== wasOpenRef.current) {
+    wasOpenRef.current = open;
     if (open) {
       setCurrentPage(0);
     }
-  }, [open]);
+  }
 
   if (!page) {
     return (
       <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-        <DialogContent
-          className="max-w-sm overflow-hidden p-0"
-          showCloseButton={false}
-        >
+        <DialogContent className="max-w-sm overflow-hidden p-0">
           <div className="px-6 pb-6 pt-5">
             <DialogTitle className="mb-2 text-lg font-bold">
               온보딩 안내
@@ -55,10 +54,7 @@ export function OnboardingDialog({ open, onClose }: OnboardingDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent
-        className="max-w-sm overflow-hidden p-0"
-        showCloseButton={false}
-      >
+      <DialogContent className="max-w-sm overflow-hidden p-0">
         <img
           src={page.imageSrc}
           alt={`${page.title} 예시 이미지`}

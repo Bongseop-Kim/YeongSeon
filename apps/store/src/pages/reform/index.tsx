@@ -10,13 +10,8 @@ import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
 import { Form } from "@/shared/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+import { Dialog } from "@/shared/ui-extended/dialog";
+import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 import {
   MobileReformSheet,
   TieItemCard,
@@ -737,37 +732,24 @@ const ReformPage = () => {
         open={bulkDialogOpen}
         onOpenChange={(open) => !open && setBulkDialogOpen(false)}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>일괄 적용</DialogTitle>
-          </DialogHeader>
+        <ResponsiveDialogScaffold
+          title="일괄 적용"
+          confirmLabel="적용"
+          onCancel={() => setBulkDialogOpen(false)}
+          onConfirm={async () => {
+            const didApply =
+              await bulkApplySectionRef.current?.handleBulkApply();
+            if (didApply) {
+              setBulkDialogOpen(false);
+            }
+          }}
+        >
           <BulkApplySection
             ref={bulkApplySectionRef}
             setValue={form.setValue}
             checkedIndices={checkedIndicesForBulk}
           />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setBulkDialogOpen(false)}
-            >
-              취소
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={async () => {
-                const didApply =
-                  await bulkApplySectionRef.current?.handleBulkApply();
-                if (didApply) {
-                  setBulkDialogOpen(false);
-                }
-              }}
-            >
-              적용
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+        </ResponsiveDialogScaffold>
       </Dialog>
     </>
   );

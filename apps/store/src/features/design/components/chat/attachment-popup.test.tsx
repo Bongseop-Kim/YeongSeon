@@ -2,12 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 
-const { addAttachment, removeAttachment, setDesignContext, onClose, state } =
-  vi.hoisted(() => ({
+const { addAttachment, removeAttachment, setDesignContext, state } = vi.hoisted(
+  () => ({
     addAttachment: vi.fn(),
     removeAttachment: vi.fn(),
     setDesignContext: vi.fn(),
-    onClose: vi.fn(),
     state: {
       designContext: {
         colors: [] as string[],
@@ -34,7 +33,8 @@ const { addAttachment, removeAttachment, setDesignContext, onClose, state } =
         file?: File;
       }>,
     },
-  }));
+  }),
+);
 
 vi.mock("@/features/design/store/design-chat-store", () => ({
   useDesignChatStore: <T,>(
@@ -60,7 +60,6 @@ describe("AttachmentPopup", () => {
     addAttachment.mockReset();
     removeAttachment.mockReset();
     setDesignContext.mockReset();
-    onClose.mockReset();
     state.pendingAttachments = [];
     state.designContext.colors = [];
     state.designContext.fabricMethod = "yarn-dyed";
@@ -77,7 +76,7 @@ describe("AttachmentPopup", () => {
     ];
     state.designContext.colors = ["#1a2c5b"];
 
-    render(<AttachmentPopup onClose={onClose} />);
+    render(<AttachmentPopup />);
 
     const nextColorButton = screen
       .getAllByRole("button")
@@ -115,7 +114,7 @@ describe("AttachmentPopup", () => {
       },
     ];
 
-    const { container } = render(<AttachmentPopup onClose={onClose} />);
+    const { container } = render(<AttachmentPopup />);
 
     expect(
       screen.queryByRole("button", { name: "이미지 첨부" }),
@@ -124,7 +123,7 @@ describe("AttachmentPopup", () => {
   });
 
   it("원단 방식과 생성 수량을 첨부 옵션 내부에서 변경한다", () => {
-    render(<AttachmentPopup onClose={onClose} />);
+    render(<AttachmentPopup />);
 
     fireEvent.click(screen.getByRole("button", { name: "날염 (프린팅)" }));
     fireEvent.click(screen.getByRole("button", { name: "2개" }));

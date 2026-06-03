@@ -1,12 +1,6 @@
 import { useRef, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
-import { Button } from "@/shared/ui-extended/button";
+import { Dialog } from "@/shared/ui/dialog";
+import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 import {
   CouponSelectModal,
   type CouponSelectModalRef,
@@ -67,25 +61,17 @@ export const useCouponSelect = () => {
 
   const dialog = state ? (
     <Dialog open onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="flex flex-col max-h-[min(600px,80dvh)]">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>쿠폰 사용</DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <CouponSelectModal
-            ref={couponRef}
-            currentCouponId={state.currentCouponId}
-          />
-        </div>
-        <DialogFooter className="shrink-0">
-          <Button variant="outline" className="flex-1" onClick={handleCancel}>
-            취소
-          </Button>
-          <Button className="flex-1" onClick={handleConfirm}>
-            적용
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+      <ResponsiveDialogScaffold
+        title="쿠폰 사용"
+        confirmLabel="적용"
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+      >
+        <CouponSelectModal
+          ref={couponRef}
+          currentCouponId={state.currentCouponId}
+        />
+      </ResponsiveDialogScaffold>
     </Dialog>
   ) : null;
 
