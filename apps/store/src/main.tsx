@@ -2,7 +2,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { OverlayScrollbars } from "overlayscrollbars";
 import "overlayscrollbars/overlayscrollbars.css";
-import "@seed-design/css/base.css";
 import "./index.css";
 import App from "./App.tsx";
 import { initSentry } from "@/app/providers/sentry";
