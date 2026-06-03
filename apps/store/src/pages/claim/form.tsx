@@ -344,15 +344,6 @@ const ClaimFormPage = () => {
                     ? "신청 중..."
                     : `${claimTypeLabel} 신청하기`}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  size="xl"
-                  onClick={() => navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)}
-                >
-                  주문 상세로 돌아가기
-                </Button>
               </div>
             }
           >

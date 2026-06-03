@@ -308,9 +308,6 @@ const OrderDetailPage = () => {
                 <Button variant="outline" onClick={() => refetch()}>
                   다시 시도
                 </Button>
-                <Button onClick={() => navigate(ROUTES.ORDER_LIST)}>
-                  주문 목록으로
-                </Button>
               </div>
             </div>
           </PageLayout>
@@ -385,16 +382,6 @@ const OrderDetailPage = () => {
                 </SummaryCard.Section>
               </SummaryCard>
             </div>
-          }
-          actionBar={
-            <Button
-              onClick={() => navigate(ROUTES.ORDER_LIST)}
-              variant="outline"
-              className="w-full"
-              size="xl"
-            >
-              주문 목록으로
-            </Button>
           }
         >
           <div className="space-y-8" data-testid="order-detail-root">
