@@ -12,6 +12,7 @@ import type { CreateClaimRequest } from "@yeongseon/shared/types/view/claim-inpu
 import {
   normalizeItemRow,
   parseCustomOrderData,
+  parseSampleOrderData,
   toOrderItemView,
 } from "@yeongseon/shared/mappers/shared-mapper";
 import {
@@ -41,6 +42,7 @@ const parseClaimItemField = (
     (v.type !== "product" &&
       v.type !== "reform" &&
       v.type !== "custom" &&
+      v.type !== "sample" &&
       v.type !== "token") ||
     typeof v.quantity !== "number"
   ) {
@@ -61,6 +63,11 @@ const parseClaimItemField = (
   if (v.type === "custom" && v.reformData == null) {
     throw new Error(
       `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "custom"인 경우 reformData(custom) 필드가 있어야 합니다.`,
+    );
+  }
+  if (v.type === "sample" && v.sampleData == null) {
+    throw new Error(
+      `클레임 목록 행(${i})의 item이 올바르지 않습니다: type이 "sample"인 경우 sampleData 필드가 있어야 합니다.`,
     );
   }
   let product: ClaimItemRowDTO["product"] = null;
@@ -338,6 +345,16 @@ const parseClaimItemField = (
     customData = parseCustomOrderData(raw);
   }
 
+  let sampleData: ClaimItemRowDTO["sampleData"] = null;
+  if (v.type === "sample" && v.sampleData != null) {
+    if (!isRecord(v.sampleData)) {
+      throw new Error(
+        `클레임 목록 행(${i})의 item.sampleData가 올바르지 않습니다: sampleData가 객체가 아닙니다 (item id: ${v.id}).`,
+      );
+    }
+    sampleData = parseSampleOrderData(v.sampleData);
+  }
+
   return {
     id: v.id,
     type: v.type,
@@ -346,6 +363,7 @@ const parseClaimItemField = (
     selectedOption,
     reformData,
     customData,
+    sampleData,
     appliedCoupon,
   };
 };

@@ -45,6 +45,8 @@ CREATE INDEX idx_order_items_order_id   ON public.order_items USING btree (order
 CREATE INDEX idx_order_items_product_id ON public.order_items USING btree (product_id);
 
 -- RLS
+GRANT SELECT ON TABLE public.order_items TO authenticated;
+
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own order items"

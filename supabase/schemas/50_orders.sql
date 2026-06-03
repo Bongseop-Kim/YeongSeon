@@ -92,6 +92,7 @@ CREATE POLICY "Admins can update order status"
   WITH CHECK (public.is_admin());
 
 -- Privilege hardening
+GRANT SELECT ON TABLE public.orders TO authenticated;
 REVOKE UPDATE ON TABLE public.orders FROM authenticated;
 GRANT UPDATE (status, courier_company, tracking_number, shipped_at, delivered_at, confirmed_at) ON TABLE public.orders TO authenticated;
 

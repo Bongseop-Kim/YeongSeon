@@ -84,6 +84,7 @@ CREATE POLICY "Admins can update claim status"
   WITH CHECK (public.is_admin());
 
 -- Privilege hardening
+GRANT SELECT, INSERT ON TABLE public.claims TO authenticated;
 REVOKE UPDATE ON TABLE public.claims FROM authenticated;
 GRANT UPDATE (status, return_courier_company, return_tracking_number,
               resend_courier_company, resend_tracking_number)

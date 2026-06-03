@@ -44,13 +44,14 @@ begin
     raise exception 'Invalid claim reason';
   end if;
 
-  -- 4. Order ownership check (FOR UPDATE: 처리 중 동시 상태 변경 방지)
+  -- 4. Order ownership check (advisory lock: 처리 중 동시 상태 변경 방지)
+  perform pg_advisory_xact_lock(hashtextextended(p_order_id::text, 0));
+
   select o.order_type, o.status
   into v_order_type, v_order_status
   from public.orders o
   where o.id = p_order_id
-    and o.user_id = v_user_id
-  for update;
+    and o.user_id = v_user_id;
 
   if not found then
     raise exception 'Order not found';
