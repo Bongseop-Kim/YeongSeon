@@ -1,19 +1,22 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Empty } from "@/shared/composite/empty";
+import { UtilityListPageShell } from "@/shared/composite/utility-list-page-shell";
 import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import { Badge } from "@/shared/ui/badge";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { useQuoteRequests } from "@/entities/quote-request";
-import { QuoteRequestCard } from "@/features/quote-request";
+import { QUOTE_REQUEST_BADGE_CLASS } from "@/features/quote-request";
 import { useDebouncedValue } from "@/shared/hooks/use-debounced-value";
 import { useSearch } from "@/shared/hooks/use-search";
 import { toDateString, type ListFilters } from "@/shared/lib/list-filters";
+import { CONTACT_METHOD_LABELS } from "@yeongseon/shared";
+import { formatDate } from "@yeongseon/shared/utils/format-date";
 
 export default function QuoteRequestListPage() {
-  const navigate = useNavigate();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
 
   useSearch({
@@ -54,82 +57,114 @@ export default function QuoteRequestListPage() {
     return result;
   }, [quoteRequests, debouncedKeyword, dateFrom, dateTo]);
 
-  if (isLoading) {
-    return (
-      <MainLayout>
-        <MainContent>
-          <div className="flex min-h-96 items-center justify-center">
-            <div className="text-zinc-500">견적 요청 내역을 불러오는 중...</div>
-          </div>
-        </MainContent>
-      </MainLayout>
-    );
-  }
+  const quoteRequestsByDate = useMemo(() => {
+    const grouped = new Map<string, typeof filteredQuoteRequests>();
+    for (const quoteRequest of filteredQuoteRequests) {
+      const dateKey = formatDate(quoteRequest.date);
+      const group = grouped.get(dateKey) ?? [];
+      if (!grouped.has(dateKey)) grouped.set(dateKey, group);
+      group.push(quoteRequest);
+    }
+    return Array.from(grouped.entries());
+  }, [filteredQuoteRequests]);
 
-  if (error) {
-    return (
+  return (
+    <UtilityListPageShell
+      isLoading={isLoading}
+      loadingMessage="견적 요청 내역을 불러오는 중..."
+      error={error}
+      errorTitle="견적 요청 내역을 불러올 수 없습니다."
+      breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST}
+    >
       <MainLayout>
         <MainContent>
           <PageLayout
             breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST}
             contentClassName="py-4 lg:py-8"
           >
-            <div>
-              <Empty
-                title="견적 요청 내역을 불러올 수 없습니다."
-                description={
-                  error instanceof Error
-                    ? error.message
-                    : "오류가 발생했습니다."
-                }
+            <div className="space-y-8 lg:space-y-10">
+              <UtilityPageIntro
+                eyebrow="Quote Requests"
+                title="견적 요청 내역"
+                description="주문 제작 상담과 견적 응답 상태를 시간순으로 확인합니다."
               />
-            </div>
-          </PageLayout>
-        </MainContent>
-      </MainLayout>
-    );
-  }
 
-  return (
-    <MainLayout>
-      <MainContent>
-        <PageLayout
-          breadcrumbs={PAGE_BREADCRUMBS.QUOTE_REQUEST}
-          contentClassName="py-4 lg:py-8"
-        >
-          <div className="space-y-8 lg:space-y-10">
-            <UtilityPageIntro
-              eyebrow="Quote Requests"
-              title="견적 요청 내역"
-              description="주문 제작 상담과 견적 응답 상태를 시간순으로 확인합니다."
-            />
-
-            {filteredQuoteRequests.length === 0 ? (
-              <div className="px-4 lg:px-0">
+              {quoteRequestsByDate.length === 0 ? (
                 <Empty
                   title="견적 요청 내역이 없습니다."
                   description="필요한 상품의 견적을 요청해보세요."
                 />
-              </div>
-            ) : (
-              filteredQuoteRequests.map((quoteRequest) => (
-                <QuoteRequestCard
-                  key={quoteRequest.id}
-                  quoteRequest={quoteRequest}
-                  onClick={() =>
-                    navigate(
-                      ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
-                        ":id",
-                        quoteRequest.id,
-                      ),
-                    )
-                  }
-                />
-              ))
-            )}
-          </div>
-        </PageLayout>
-      </MainContent>
-    </MainLayout>
+              ) : (
+                quoteRequestsByDate.map(([dateLabel, dateQuoteRequests]) => (
+                  <section key={dateLabel} className="space-y-0">
+                    <h2 className="sticky top-0 z-10 bg-background py-3 text-lg font-semibold tracking-tight text-zinc-950">
+                      {dateLabel}
+                    </h2>
+                    {dateQuoteRequests.map((quoteRequest) => (
+                      <Link
+                        key={quoteRequest.id}
+                        data-testid={`quote-request-card-${quoteRequest.id}`}
+                        className="block border-b border-stone-200 py-5"
+                        to={ROUTES.MY_PAGE_QUOTE_REQUEST_DETAIL.replace(
+                          ":id",
+                          quoteRequest.id,
+                        )}
+                      >
+                        <div className="flex flex-col gap-5">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    QUOTE_REQUEST_BADGE_CLASS[
+                                      quoteRequest.status
+                                    ]
+                                  }
+                                >
+                                  {quoteRequest.status}
+                                </Badge>
+                              </div>
+                              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+                                <span>
+                                  견적번호: {quoteRequest.quoteNumber}
+                                </span>
+                                <span className="text-stone-300">/</span>
+                                <span>수량 {quoteRequest.quantity}개</span>
+                                <span className="text-stone-300">/</span>
+                                <span>담당자: {quoteRequest.contactName}</span>
+                                <span className="text-stone-300">/</span>
+                                <span>
+                                  연락 방법:{" "}
+                                  {
+                                    CONTACT_METHOD_LABELS[
+                                      quoteRequest.contactMethod
+                                    ]
+                                  }
+                                </span>
+                                {quoteRequest.quotedAmount != null ? (
+                                  <>
+                                    <span className="text-stone-300">/</span>
+                                    <span className="font-medium text-zinc-700">
+                                      견적 금액:{" "}
+                                      {quoteRequest.quotedAmount.toLocaleString()}
+                                      원
+                                    </span>
+                                  </>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </section>
+                ))
+              )}
+            </div>
+          </PageLayout>
+        </MainContent>
+      </MainLayout>
+    </UtilityListPageShell>
   );
 }

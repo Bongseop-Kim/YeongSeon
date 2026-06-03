@@ -1,14 +1,17 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui-extended/button";
 import { Badge } from "@/shared/ui/badge";
-import { Label } from "@/shared/ui/label";
-import { Separator } from "@/shared/ui/separator";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
 import { ClaimStatusBadge } from "@/shared/composite/status-badge";
 import { Empty } from "@/shared/composite/empty";
+import { SummaryCard } from "@/shared/composite/summary-card";
+import {
+  UtilityPageIntro,
+  UtilityPageSection,
+} from "@/shared/composite/utility-page";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { CLAIM_REASON_LABELS } from "@yeongseon/shared/constants/claim-status";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
@@ -120,78 +123,142 @@ export default function ClaimDetailPage() {
     });
   };
 
+  const claimTypeLabel = getClaimTypeLabel(claim.type);
+  const reasonLabel = CLAIM_REASON_LABELS[claim.reason] ?? claim.reason;
+  const canCancelClaim = claim.status === "접수";
+  const claimSummary = (
+    <SummaryCard>
+      <SummaryCard.Header
+        title="클레임 요약"
+        description="접수된 요청과 처리 상태를 확인합니다."
+      />
+      <SummaryCard.Section>
+        <SummaryCard.Row label="신청 유형" value={claimTypeLabel} />
+        <SummaryCard.Row
+          label="처리 상태"
+          value={<ClaimStatusBadge status={claim.status} />}
+        />
+        <SummaryCard.Row label="선택 사유" value={reasonLabel} />
+        <SummaryCard.Row label="접수일" value={formatDate(claim.date)} />
+        <SummaryCard.Row label="클레임번호" value={claim.claimNumber} />
+        <SummaryCard.Row label="주문번호" value={claim.orderNumber} />
+      </SummaryCard.Section>
+    </SummaryCard>
+  );
+  const claimDetailActionBar = canCancelClaim ? (
+    <Button
+      variant="outline"
+      className="w-full"
+      size="xl"
+      onClick={handleCancelClaim}
+      disabled={cancelClaimMutation.isPending}
+    >
+      {cancelClaimMutation.isPending ? "취소 중..." : "신청 취소"}
+    </Button>
+  ) : null;
+  const claimIntroMeta = (
+    <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-600">
+      <span>클레임번호 {claim.claimNumber}</span>
+      <span className="text-stone-300">/</span>
+      <span>주문번호 {claim.orderNumber}</span>
+      <span className="text-stone-300">/</span>
+      <span>{formatDate(claim.date)}</span>
+      <span className="text-stone-300">/</span>
+      <Badge variant="outline">{claimTypeLabel}</Badge>
+      <ClaimStatusBadge status={claim.status} />
+    </div>
+  );
+
   return (
     <MainLayout>
-      <MainContent>
+      <MainContent className="overflow-visible">
         <PageLayout
           breadcrumbs={[
             ...PAGE_BREADCRUMBS.CLAIM_DETAIL.slice(0, -1),
-            { label: `${getClaimTypeLabel(claim.type)} 상세` },
+            { label: `${claimTypeLabel} 상세` },
           ]}
+          contentClassName="py-4 lg:py-8"
+          sidebarClassName="space-y-4"
+          sidebar={claimSummary}
+          actionBar={claimDetailActionBar}
         >
-          <Card>
-            {/* 헤더 */}
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">
-                  {formatDate(claim.date)}
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">
-                    {getClaimTypeLabel(claim.type)}
-                  </Badge>
-                  <ClaimStatusBadge status={claim.status} />
+          <div className="space-y-8" data-testid="claim-detail-root">
+            <UtilityPageIntro
+              eyebrow="Claim Detail"
+              title={`${claimTypeLabel} 상세`}
+              description="접수된 클레임의 대상 상품, 신청 사유와 처리 상태를 확인합니다."
+              meta={claimIntroMeta}
+            />
+
+            <UtilityPageSection
+              title="대상 상품"
+              description="클레임이 접수된 주문 상품입니다."
+            >
+              <div className="border-t border-stone-200 py-5">
+                <OrderItemCard item={claim.item} showQuantity showPrice />
+              </div>
+            </UtilityPageSection>
+
+            <UtilityPageSection
+              title="신청 사유"
+              description="접수 시 선택한 사유와 상세 내용을 확인합니다."
+            >
+              <div className="space-y-3 border-t border-stone-200 py-5">
+                <div className="border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
+                  <p className="text-xs text-zinc-500">사유</p>
+                  <p className="mt-1 text-sm text-zinc-700">{reasonLabel}</p>
                 </div>
+                {claim.description ? (
+                  <div className="border-l-2 border-stone-300 bg-stone-50/70 px-4 py-3">
+                    <p className="text-xs text-zinc-500">상세</p>
+                    <p className="mt-1 text-sm leading-6 text-zinc-700">
+                      {claim.description}
+                    </p>
+                  </div>
+                ) : null}
               </div>
-              <div className="flex items-center gap-2 text-sm text-zinc-500 mt-1">
-                <span>클레임번호: {claim.claimNumber}</span>
-                <span>·</span>
-                <span>주문번호: {claim.orderNumber}</span>
-              </div>
-            </CardHeader>
+            </UtilityPageSection>
 
-            <Separator />
-
-            {/* 주문 상품 */}
-            <CardContent className="py-4">
-              <OrderItemCard item={claim.item} showQuantity showPrice />
-            </CardContent>
-
-            <Separator />
-
-            {/* 사유 */}
-            <CardContent className="py-4 space-y-2">
-              <div className="p-3 bg-zinc-50 rounded-md">
-                <Label className="text-sm text-zinc-600">
-                  사유: {CLAIM_REASON_LABELS[claim.reason] ?? claim.reason}
-                </Label>
-              </div>
-              {claim.description && (
-                <div className="p-3 bg-zinc-50 rounded-md">
-                  <Label className="text-sm text-zinc-600">
-                    상세: {claim.description}
-                  </Label>
+            {claim.refundData ? (
+              <UtilityPageSection
+                title="환불 정보"
+                description="토큰 환불 요청에 반영된 환불 예정 금액입니다."
+              >
+                <div className="border-t border-stone-200 py-5">
+                  <dl className="border-l-2 border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-zinc-600">환불 토큰</dt>
+                      <dd className="font-medium text-zinc-950">
+                        {claim.refundData.paidTokenAmount}T
+                      </dd>
+                    </div>
+                    <div className="mt-2 flex justify-between gap-4">
+                      <dt className="text-zinc-600">보너스 토큰</dt>
+                      <dd className="font-medium text-zinc-950">
+                        {claim.refundData.bonusTokenAmount}T
+                      </dd>
+                    </div>
+                    <div className="mt-3 flex justify-between gap-4 border-t border-blue-100 pt-3 font-semibold">
+                      <dt className="text-zinc-700">환불 금액</dt>
+                      <dd className="text-zinc-950">
+                        {claim.refundData.refundAmount.toLocaleString()}원
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-              )}
-            </CardContent>
+              </UtilityPageSection>
+            ) : null}
 
-            {/* 신청 취소 버튼 — 접수 상태일 때만 렌더링 */}
-            {claim.status === "접수" && (
-              <>
-                <Separator />
-                <CardContent className="py-4">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleCancelClaim}
-                    disabled={cancelClaimMutation.isPending}
-                  >
-                    {cancelClaimMutation.isPending ? "취소 중..." : "신청 취소"}
-                  </Button>
-                </CardContent>
-              </>
-            )}
-          </Card>
+            {!claim.description && !claim.refundData ? (
+              <UtilityPageSection title="상세 메모">
+                <div className="border-t border-stone-200 py-5">
+                  <p className="text-sm text-zinc-500">
+                    추가로 입력된 상세 내용이 없습니다.
+                  </p>
+                </div>
+              </UtilityPageSection>
+            ) : null}
+          </div>
         </PageLayout>
       </MainContent>
     </MainLayout>
