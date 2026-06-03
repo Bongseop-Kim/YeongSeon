@@ -93,57 +93,22 @@ const TokenPurchasePage = () => {
               <p className="mb-3 text-sm font-semibold text-foreground">
                 토큰 사용 안내
               </p>
-              <div className="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
-                <div className="flex items-start gap-2 text-sm text-foreground-subtle">
-                  <span className="mt-0.5 shrink-0 font-mono text-xs font-bold text-foreground-muted">
-                    1
-                  </span>
-                  <span>
-                    OpenAI 텍스트 생성 —{" "}
-                    <span className="font-semibold text-foreground">
-                      1 token
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-foreground-subtle">
-                  <span className="mt-0.5 shrink-0 font-mono text-xs font-bold text-foreground-muted">
-                    2
-                  </span>
-                  <span>
-                    OpenAI 패턴 보정 —{" "}
-                    <span className="font-semibold text-foreground">
-                      5 tokens
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-foreground-subtle">
-                  <span className="mt-0.5 shrink-0 font-mono text-xs font-bold text-foreground-muted">
-                    3
-                  </span>
-                  <span>
-                    OpenAI 이미지 생성 —{" "}
-                    <span className="font-semibold text-foreground">
-                      5 tokens
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-foreground-subtle">
-                  <span className="mt-0.5 shrink-0 font-mono text-xs font-bold text-foreground-muted">
-                    4
-                  </span>
-                  <span>
-                    OpenAI 이미지 생성 —{" "}
-                    <span className="font-semibold text-foreground">
-                      5 tokens
-                    </span>
-                  </span>
-                </div>
+              <div className="space-y-2 text-sm text-foreground-subtle">
+                <p>
+                  현재 디자인 생성 서비스는 베타 모드로 운영 중이며, 기능 개선에
+                  따라 토큰 사용량과 차감 기준이 변동될 수 있습니다.
+                </p>
+                <p>
+                  디자인 생성 과정에는 텍스트 생성, 패턴 보정, 이미지 생성 등의
+                  단계가 포함될 수 있으며, 단계별 실제 사용량은 생성 방식과 모델
+                  설정에 따라 달라질 수 있습니다.
+                </p>
               </div>
               <p className="mt-3 text-xs text-foreground-muted">
-                이미지 생성 실패 시 채팅 토큰(1 token)만 차감됩니다. 구매 토큰은
-                결제 시점으로부터{" "}
+                구매 토큰은 결제 시점으로부터{" "}
                 <span className="font-semibold text-foreground">1년 이내</span>{" "}
-                사용할 수 있습니다.
+                사용할 수 있습니다. 사용량 정책이 확정되면 안내 문구에 최신
+                기준을 반영하겠습니다.
               </p>
             </div>
 

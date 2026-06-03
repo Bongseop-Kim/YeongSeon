@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Loader2, RotateCcw, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Loader2, MessageCircle, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "@/shared/lib/toast";
 
 import {
@@ -16,6 +17,8 @@ import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import { TiePreviewModal } from "@/features/design/components/chat/tie-preview-modal";
 import { tileRepeatStyle } from "@/features/design/components/preview/tile-preview-style";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
+import { openKakaoChannelChat } from "@/shared/lib/kakao-channel";
+import { ROUTES } from "@/shared/constants/ROUTES";
 
 interface DesignGenerationFeedProps {
   className?: string;
@@ -248,8 +251,28 @@ export function DesignGenerationFeed({
           </Button>
         </div>
       ) : generations.length === 0 && !isGenerating ? (
-        <div className="flex h-full items-center justify-center px-8 text-center text-sm text-muted-foreground">
-          하단 입력창에서 첫 디자인을 생성하면 결과가 여기에 표시됩니다.
+        <div className="flex h-full flex-col items-center justify-center gap-3 px-8 text-center text-sm text-muted-foreground">
+          <div className="max-w-xs space-y-1 leading-6">
+            <p className="font-medium text-gray-950">
+              현재 디자인 생성 서비스는 베타 서비스입니다.
+            </p>
+            <p>문의가 있으면 카카오톡 문의 버튼을 눌러 문의해주세요.</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-brand-kakao bg-brand-kakao text-brand-ink hover:bg-brand-kakao-hover"
+              onClick={() => void openKakaoChannelChat()}
+            >
+              <MessageCircle className="size-4" aria-hidden="true" />
+              카카오톡 문의
+            </Button>
+            <Button type="button" variant="outline" size="sm" asChild>
+              <Link to={ROUTES.TOKEN_PURCHASE}>토큰 충전하기</Link>
+            </Button>
+          </div>
         </div>
       ) : (
         generations.map((generation, index) => (

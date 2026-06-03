@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import Router from "@/app/router";
 import { Button } from "@/shared/ui-extended/button";
 import { ChevronLeft, ShoppingBagIcon } from "lucide-react";
@@ -28,11 +28,33 @@ import {
   FooterTitle,
 } from "@/shared/layout/footer";
 import { usePopup } from "@/shared/hooks/usePopup";
+import { KakaoChannelFloatingButton } from "@/widgets/kakao-channel-floating-button";
 
 const HEADER_BTN_CLASS =
   "border-white/18 bg-white/10 text-white hover:bg-white hover:text-black";
 const BRAND_LABEL = "ㅇㅅㅅㅇ";
 const BRAND_LOGO_SRC = "/logo/logo_no_bg.png";
+
+const MOBILE_ACTION_BAR_ROUTE_PATTERNS = [
+  ROUTES.CART,
+  ROUTES.CUSTOM_ORDER,
+  ROUTES.SAMPLE_ORDER,
+  ROUTES.REFORM,
+  ROUTES.ORDER_FORM,
+  ROUTES.CUSTOM_PAYMENT,
+  ROUTES.SAMPLE_PAYMENT,
+  ROUTES.TOKEN_PURCHASE_PAYMENT,
+  ROUTES.MY_PAGE_INQUIRY,
+  `${ROUTES.SHOP}/:id`,
+  `${ROUTES.CLAIM_FORM}/:type/:orderId/:itemId`,
+  `${ROUTES.CLAIM_DETAIL}/:claimId`,
+] as const;
+
+function hasMobileActionBar(pathname: string) {
+  return MOBILE_ACTION_BAR_ROUTE_PATTERNS.some((pattern) =>
+    Boolean(matchPath({ path: pattern, end: true }, pathname)),
+  );
+}
 
 function isActiveNavItem(pathname: string, href: string) {
   return href === ROUTES.HOME ? pathname === href : pathname.startsWith(href);
@@ -57,7 +79,10 @@ export default function AppLayout() {
   const signOutMutation = useSignOut();
   const { openPopup } = usePopup();
   const isHomePage = location.pathname === ROUTES.HOME;
+  const isDesignPage = location.pathname.startsWith(ROUTES.DESIGN);
   const shouldHideFooter = showHeader && !isHomePage && isMobile;
+  const shouldAvoidMobileActionBar =
+    isMobile && hasMobileActionBar(location.pathname);
   const isLocalAppEnv = import.meta.env.VITE_APP_ENV === "local";
 
   const handleSignOut = async () => {
@@ -252,6 +277,12 @@ export default function AppLayout() {
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         <Router />
+
+        {showHeader && !isDesignPage && (
+          <KakaoChannelFloatingButton
+            avoidMobileActionBar={shouldAvoidMobileActionBar}
+          />
+        )}
 
         {showHeader ? (
           <Footer
