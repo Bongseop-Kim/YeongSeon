@@ -20,7 +20,7 @@ export const PRODUCT_PAGE_SIZE = 20;
 const PRODUCT_LIST_KEY = ["products", "list"] as const;
 const PRODUCT_DETAIL_KEY = ["products", "detail"] as const;
 
-export const EMPTY_PRODUCT_FORM_VALUES: AdminProductFormValues = {
+const EMPTY_PRODUCT_FORM_VALUES: AdminProductFormValues = {
   code: null,
   name: "",
   category: "",
@@ -49,7 +49,7 @@ export function useAdminProductTable(params: {
   });
 }
 
-export function useAdminProductDetail(productId: number | null) {
+function useAdminProductDetail(productId: number | null) {
   return useQuery({
     queryKey: [...PRODUCT_DETAIL_KEY, productId],
     queryFn: () => getAdminProductDetail(productId ?? 0),

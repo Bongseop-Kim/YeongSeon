@@ -20,7 +20,7 @@ import type {
   AdminCustomerTokenBalanceRow,
 } from "@/features/customers/types/admin-customer";
 
-export interface AdminCustomerListResult {
+interface AdminCustomerListResult {
   rows: AdminCustomerListItem[];
   total: number;
 }

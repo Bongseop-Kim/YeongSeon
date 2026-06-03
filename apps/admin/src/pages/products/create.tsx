@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { ProductForm, useAdminProductCreateForm } from "@/features/products";
-import "@/features/products/components/products.css";
 
 export default function ProductCreate() {
   const formHook = useAdminProductCreateForm();

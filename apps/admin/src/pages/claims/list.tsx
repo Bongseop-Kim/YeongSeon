@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { ClaimListTable } from "@/features/claims";
-import "@/features/claims/components/claims.css";
 
 export default function ClaimList() {
   return (

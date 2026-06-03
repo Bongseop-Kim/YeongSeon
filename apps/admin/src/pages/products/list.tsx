@@ -2,7 +2,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ActionButton } from "seed-design/ui/action-button";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { ProductListTable } from "@/features/products";
-import "@/features/products/components/products.css";
 
 export default function ProductList() {
   const location = useLocation();

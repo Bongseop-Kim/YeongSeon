@@ -43,7 +43,7 @@ export interface ProductOptionRow {
   product_id: number;
 }
 
-export interface ProductPayload {
+interface ProductPayload {
   code: string | null;
   name: string;
   category: string;

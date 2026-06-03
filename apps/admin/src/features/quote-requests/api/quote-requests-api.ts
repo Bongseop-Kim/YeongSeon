@@ -15,7 +15,7 @@ import type {
   AdminQuoteRequestStatusLog,
 } from "@/features/quote-requests/types/admin-quote-request";
 
-export interface AdminQuoteRequestListResult {
+interface AdminQuoteRequestListResult {
   rows: AdminQuoteRequestListItem[];
   total: number;
 }

@@ -4,7 +4,6 @@ import { Callout } from "seed-design/ui/callout";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import { ProductForm, useAdminProductEditForm } from "@/features/products";
-import "@/features/products/components/products.css";
 
 function parseProductId(value: string | undefined): number | null {
   const id = Number(value);

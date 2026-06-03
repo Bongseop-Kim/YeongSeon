@@ -49,16 +49,3 @@ export interface AdminCustomerTokenRow {
   createdAt: string;
   workId: string | null;
 }
-
-export interface AdminTokenManageForm {
-  mode: "grant" | "deduct";
-  amount: number;
-  description: string;
-}
-
-// ── Constants ──────────────────────────────────────────────────
-
-export const ROLE_COLORS: Record<string, string> = {
-  admin: "red",
-  manager: "orange",
-};

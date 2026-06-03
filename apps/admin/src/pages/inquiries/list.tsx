@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { InquiryListTable } from "@/features/inquiries";
-import "@/features/inquiries/components/inquiries.css";
 
 export default function InquiryList() {
   return (

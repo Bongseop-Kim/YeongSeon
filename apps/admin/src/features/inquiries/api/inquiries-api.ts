@@ -10,7 +10,7 @@ import type {
   InquiryStatus,
 } from "@/features/inquiries/types/admin-inquiry";
 
-export interface AdminInquiryListResult {
+interface AdminInquiryListResult {
   rows: AdminInquiryListItem[];
   total: number;
 }

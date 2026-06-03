@@ -15,7 +15,7 @@ import type {
   AdminProductOption,
 } from "@/features/products/types/admin-product";
 
-export interface AdminProductListResult {
+interface AdminProductListResult {
   rows: AdminProductListItem[];
   total: number;
 }
@@ -117,7 +117,7 @@ export async function updateProduct(params: {
   });
 }
 
-export async function insertProductOptions({
+async function insertProductOptions({
   productId,
   options,
 }: {
@@ -135,7 +135,7 @@ export async function insertProductOptions({
   }
 }
 
-export async function saveProductOptions({
+async function saveProductOptions({
   productId,
   options,
 }: {

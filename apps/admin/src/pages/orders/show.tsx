@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { OrderDetailSection } from "@/features/orders";
-import "@/features/orders/components/orders.css";
 
 export default function OrderShow() {
   return (

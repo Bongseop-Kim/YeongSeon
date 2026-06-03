@@ -13,7 +13,6 @@ import {
   useCouponsQuery,
   type AdminCoupon,
 } from "@/features/coupons";
-import "@/features/coupons/components/coupon-admin.css";
 
 const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
 

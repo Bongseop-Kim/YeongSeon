@@ -1,3 +1,5 @@
+import "./components/products.css";
+
 export { ProductForm } from "./components/product-form";
 export { ProductListTable } from "./components/product-list-table";
 export {

@@ -1,4 +1,4 @@
-export interface AdminNavItem {
+interface AdminNavItem {
   key: string;
   label: string;
   path: string;

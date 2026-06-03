@@ -6,13 +6,13 @@ import {
 } from "seed-design/ui/segmented-control";
 import "./AdminSegmentedControl.css";
 
-export interface AdminSegmentedControlOption<T extends string> {
+interface AdminSegmentedControlOption<T extends string> {
   value: T;
   label: ReactNode;
   notification?: boolean;
 }
 
-export interface AdminSegmentedControlTabOption<
+interface AdminSegmentedControlTabOption<
   T extends string,
 > extends AdminSegmentedControlOption<T> {
   tabId: string;

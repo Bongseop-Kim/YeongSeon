@@ -25,6 +25,6 @@
       "project": ["src/**/*.ts"]
     }
   },
-  "ignoreDependencies": ["dependency-cruiser"],
+  "ignoreDependencies": ["dependency-cruiser", "@seed-design/react"],
   "ignoreBinaries": ["supabase", "only-allow"]
 }

@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { CustomerListTable } from "@/features/customers";
-import "@/features/customers/components/customers.css";
 
 export default function CustomerList() {
   return (

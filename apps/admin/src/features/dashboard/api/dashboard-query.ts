@@ -13,7 +13,7 @@ import type {
   SegmentValue,
 } from "@/features/dashboard/types/admin-dashboard";
 
-export type DashboardDateRange = [string | Dayjs, string | Dayjs];
+type DashboardDateRange = [string | Dayjs, string | Dayjs];
 
 function toDateString(value: string | Dayjs): string {
   return typeof value === "string" ? value : value.format("YYYY-MM-DD");

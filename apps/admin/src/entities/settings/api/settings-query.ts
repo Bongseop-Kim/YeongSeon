@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAdminSetting } from "@/features/settings/api/settings-api";
+import { getAdminSetting } from "./settings-api";
 
 const DEFAULT_COURIER_COMPANY_KEY = "default_courier_company";
 

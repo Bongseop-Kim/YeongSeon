@@ -1,3 +1,5 @@
+import "./components/customers.css";
+
 export { CustomerListTable } from "./components/customer-list-table";
 export { CustomerProfileSection } from "./components/customer-profile-section";
 export { CustomerOrdersTable } from "./components/customer-orders-table";

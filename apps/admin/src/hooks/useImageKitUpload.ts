@@ -8,7 +8,7 @@ interface ImageItem {
   fileId?: string;
 }
 
-export interface ImageKitUploadFile {
+interface ImageKitUploadFile {
   uid: string;
   name: string;
   status?: "error" | "done" | "uploading" | "removed";

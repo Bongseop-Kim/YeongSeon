@@ -4,7 +4,6 @@ import type { OrderType } from "@yeongseon/shared";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminSegmentedControl } from "@/components/AdminSegmentedControl";
 import { DomainOrderTable } from "@/features/orders";
-import "@/features/orders/components/orders.css";
 
 const VALID_ORDER_TYPES = Object.keys(ORDER_TYPE_LABELS) as OrderType[];
 const ORDER_TYPE_TABS = VALID_ORDER_TYPES.map((orderType) => ({

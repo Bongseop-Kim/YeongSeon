@@ -2,5 +2,4 @@ export { QuoteRequestDetailSection } from "./components/quote-request-detail-sec
 export {
   QuoteRequestDashboardTable,
   QuoteRequestListPanel,
-  QuoteRequestListTable,
 } from "./components/quote-request-list-table";

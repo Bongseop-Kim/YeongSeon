@@ -9,10 +9,8 @@ import {
 } from "react";
 import type { AdminSettingRowDTO } from "@yeongseon/shared";
 
-import {
-  getAdminSetting,
-  updateAdminSetting,
-} from "@/features/settings/api/settings-api";
+import { getAdminSetting } from "@/entities/settings";
+import { updateAdminSetting } from "@/features/settings/api/settings-api";
 import {
   DEFAULT_DESIGN_TOKEN_INITIAL_GRANT,
   sanitizeDesignTokenInitialGrantAmount,

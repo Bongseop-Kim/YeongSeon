@@ -10,10 +10,9 @@ import {
   useDashboardStats,
   DashboardRecentOrders,
   DashboardStatsRow,
+  type SegmentValue,
 } from "@/features/dashboard";
-import type { SegmentValue } from "@/features/dashboard";
-import { QuoteRequestDashboardTable } from "@/features/quote-requests/components/quote-request-list-table";
-import "@/features/dashboard/components/dashboard.css";
+import { QuoteRequestDashboardTable } from "@/features/quote-requests";
 
 type DashboardTab = "orders" | "quotes";
 type DashboardDateRange = [string, string];

@@ -12,7 +12,6 @@ import {
   CustomerProfileSection,
   CustomerTokenSection,
 } from "@/features/customers";
-import "@/features/customers/components/customers.css";
 
 export default function CustomerShow() {
   const { id } = useParams<{ id: string }>();

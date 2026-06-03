@@ -6,30 +6,27 @@ import { useForm } from "react-hook-form";
 import { Callout } from "seed-design/ui/callout";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
-import { isActiveIssuedStatus } from "@/features/coupons/api/coupons-api";
-import { toCouponFormValues } from "@/features/coupons/api/coupons-mapper";
 import {
+  CouponEditConfirmDialog,
+  CouponForm,
+  CouponIssueDialog,
+  CouponIssuedSection,
+  createDefaultCouponFormValues,
+  isActiveIssuedStatus,
+  isCouponPresetKey,
+  toCouponFormValues,
   useCouponQuery,
   useIssuedCouponsQuery,
   useIssueCouponsMutation,
   usePresetCouponUsersQuery,
   useRevokeIssuedCouponsMutation,
   useUpdateCouponMutation,
-} from "@/features/coupons/api/coupons-query";
-import { CouponEditConfirmDialog } from "@/features/coupons/components/coupon-edit-confirm-dialog";
-import type { CouponEditConfirmState } from "@/features/coupons/components/coupon-edit-confirm-dialog";
-import { CouponForm } from "@/features/coupons/components/coupon-form";
-import { CouponIssueDialog } from "@/features/coupons/components/coupon-issue-dialog";
-import { CouponIssuedSection } from "@/features/coupons/components/coupon-issued-section";
-import {
-  createDefaultCouponFormValues,
-  isCouponPresetKey,
   type AdminCouponFormValues,
+  type CouponEditConfirmState,
   type CouponPresetKey,
   type CouponUser,
   type IssuedCouponRow,
-} from "@/features/coupons/types/admin-coupon";
-import "@/features/coupons/components/coupon-admin.css";
+} from "@/features/coupons";
 
 const EMPTY_COUPON_USERS: CouponUser[] = [];
 const EMPTY_ISSUED_ROWS: IssuedCouponRow[] = [];

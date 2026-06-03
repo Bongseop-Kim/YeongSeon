@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
-import { QuoteRequestDetailSection } from "@/features/quote-requests/components/quote-request-detail-section";
-import "@/features/quote-requests/components/quote-requests.css";
+import { QuoteRequestDetailSection } from "@/features/quote-requests";
 
 export default function QuoteRequestShow() {
   const { id } = useParams<{ id: string }>();

@@ -8,7 +8,6 @@ import {
   createDefaultCouponFormValues,
   type AdminCouponFormValues,
 } from "@/features/coupons";
-import "@/features/coupons/components/coupon-admin.css";
 
 const DEFAULT_COUPON_FORM_VALUES = createDefaultCouponFormValues();
 

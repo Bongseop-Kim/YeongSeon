@@ -14,7 +14,7 @@ import type {
   AdminClaimStatusLogEntry,
 } from "@/features/claims/types/admin-claim";
 
-export interface AdminClaimListResult {
+interface AdminClaimListResult {
   rows: AdminClaimListItem[];
   total: number;
 }

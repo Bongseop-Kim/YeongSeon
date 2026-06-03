@@ -20,7 +20,7 @@ import type {
   AdminOrderListItem,
 } from "@/features/orders/types/admin-order";
 
-export interface AdminOrderListResult {
+interface AdminOrderListResult {
   rows: AdminOrderListItem[];
   total: number;
 }

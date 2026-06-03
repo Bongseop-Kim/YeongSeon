@@ -56,7 +56,7 @@ interface QuoteRequestListTableProps {
   isLoading?: boolean;
 }
 
-export function QuoteRequestListTable({
+function QuoteRequestListTable({
   rows,
   onRowClick,
   emptyText = "견적 요청이 없습니다.",

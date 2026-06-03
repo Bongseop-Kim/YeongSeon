@@ -18,9 +18,8 @@ import {
   type GenerationStatusFilter,
   useGenerationLogsQuery,
   useGenerationStatsQuery,
+  GENERATION_LOG_PAGE_SIZE,
 } from "@/features/generation-logs";
-import { GENERATION_LOG_PAGE_SIZE } from "@/features/generation-logs/constants";
-import "@/features/generation-logs/components/generation-logs.css";
 
 const EMPTY_SUMMARY = {
   totalRequests: 0,

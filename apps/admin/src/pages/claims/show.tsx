@@ -15,9 +15,8 @@ import {
   useClaimStatusUpdate,
   useClaimTrackingSave,
   useClaimTrackingState,
+  type AdminClaimStatusLogEntry,
 } from "@/features/claims";
-import type { AdminClaimStatusLogEntry } from "@/features/claims/types/admin-claim";
-import "@/features/claims/components/claims.css";
 
 const EMPTY_CLAIM_STATUS_LOGS: AdminClaimStatusLogEntry[] = [];
 

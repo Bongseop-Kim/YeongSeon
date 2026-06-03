@@ -1,6 +1,5 @@
 import { AdminPageHeader } from "@/components/AdminPageHeader";
-import { QuoteRequestListPanel } from "@/features/quote-requests/components/quote-request-list-table";
-import "@/features/quote-requests/components/quote-requests.css";
+import { QuoteRequestListPanel } from "@/features/quote-requests";
 
 export default function QuoteRequestList() {
   return (
