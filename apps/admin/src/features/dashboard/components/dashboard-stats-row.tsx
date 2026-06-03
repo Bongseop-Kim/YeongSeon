@@ -1,56 +1,52 @@
-import { Card, Col, Row, Statistic } from "antd";
-import {
-  ShoppingOutlined,
-  DollarOutlined,
-  ExceptionOutlined,
-  QuestionCircleOutlined,
-} from "@ant-design/icons";
+import { Text } from "seed-design/ui/text";
 import type { AdminDashboardStats } from "@/features/dashboard/types/admin-dashboard";
+import { formatMoney } from "@/utils/format-number";
+
+interface DashboardStatCard {
+  label: string;
+  value: string;
+  helper: string;
+}
 
 export function DashboardStatsRow({ stats }: { stats: AdminDashboardStats }) {
+  const cards: DashboardStatCard[] = [
+    {
+      label: "주문",
+      value: `${stats.orderCount.toLocaleString("ko-KR")}건`,
+      helper: "선택 기간 주문 수",
+    },
+    {
+      label: "매출",
+      value: formatMoney(stats.revenue),
+      helper: "선택 기간 결제 금액",
+    },
+    {
+      label: "미처리 클레임",
+      value: `${stats.pendingClaimCount.toLocaleString("ko-KR")}건`,
+      helper: "접수·처리중",
+    },
+    {
+      label: "미답변 문의",
+      value: `${stats.pendingInquiryCount.toLocaleString("ko-KR")}건`,
+      helper: "답변대기",
+    },
+  ];
+
   return (
-    <Row gutter={16} style={{ marginBottom: 24 }}>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="주문"
-            value={stats.orderCount}
-            suffix="건"
-            prefix={<ShoppingOutlined />}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="매출"
-            value={stats.revenue}
-            suffix="원"
-            prefix={<DollarOutlined />}
-            formatter={(v) => Number(v).toLocaleString()}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="미처리 클레임"
-            value={stats.pendingClaimCount}
-            suffix="건"
-            prefix={<ExceptionOutlined />}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="미답변 문의"
-            value={stats.pendingInquiryCount}
-            suffix="건"
-            prefix={<QuestionCircleOutlined />}
-          />
-        </Card>
-      </Col>
-    </Row>
+    <div className="dashboardStatsGrid" aria-label="대시보드 통계">
+      {cards.map((card) => (
+        <article key={card.label} className="dashboardStatCard">
+          <Text as="p" textStyle="t3Bold" className="dashboardStatLabel">
+            {card.label}
+          </Text>
+          <Text as="strong" textStyle="t5Bold" className="dashboardStatValue">
+            {card.value}
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="dashboardMutedText">
+            {card.helper}
+          </Text>
+        </article>
+      ))}
+    </div>
   );
 }

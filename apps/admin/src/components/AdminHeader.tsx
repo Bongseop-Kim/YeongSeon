@@ -1,41 +1,34 @@
-import { Button, theme } from "antd";
-import { BarsOutlined } from "@ant-design/icons";
-import { useResourceParams } from "@refinedev/core";
-import { useThemedLayoutContext } from "@refinedev/antd";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Text } from "seed-design/ui/text";
+import { useLocation } from "react-router-dom";
+import { getActiveNavItem } from "@/components/admin-navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import "./admin-layout.css";
 
-export const AdminHeader: React.FC = () => {
+interface AdminHeaderProps {
+  onMenuOpen: () => void;
+}
+
+export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
   const isMobile = useIsMobile();
-  const { token } = theme.useToken();
-  const { setMobileSiderOpen } = useThemedLayoutContext();
-  const { resource } = useResourceParams();
+  const location = useLocation();
 
   if (!isMobile) return null;
 
-  const label = (resource?.meta?.label as string) ?? "";
-
   return (
-    <div
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 999,
-        display: "flex",
-        alignItems: "center",
-        height: 48,
-        padding: "0 12px",
-        backgroundColor: token.colorBgContainer,
-        borderBottom: `1px solid ${token.colorBorderSecondary}`,
-      }}
-    >
-      <Button
-        type="text"
-        icon={<BarsOutlined />}
-        onClick={() => setMobileSiderOpen(true)}
+    <header className="adminHeader">
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        className="adminHeaderMenuButton"
+        onClick={onMenuOpen}
         aria-label="메뉴 열기"
-        style={{ marginRight: 8 }}
-      />
-      <span style={{ fontWeight: 600, fontSize: 16 }}>{label}</span>
-    </div>
+      >
+        ☰
+      </ActionButton>
+      <Text as="span" textStyle="t6Bold" className="adminHeaderTitle">
+        {getActiveNavItem(location.pathname).label}
+      </Text>
+    </header>
   );
-};
+}

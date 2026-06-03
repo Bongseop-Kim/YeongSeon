@@ -1,32 +1,44 @@
-import { Show } from "@refinedev/antd";
 import { useParams } from "react-router-dom";
-import { Typography } from "antd";
-import { CLAIM_STATUS_FLOW, CLAIM_ROLLBACK_FLOW } from "@yeongseon/shared";
+import { CLAIM_ROLLBACK_FLOW, CLAIM_STATUS_FLOW } from "@yeongseon/shared";
+import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
+  ClaimInfoSection,
+  ClaimStatusActions,
+  ClaimStatusLogTable,
+  ClaimTrackingSection,
+  OrderShippingSection,
   useAdminClaimDetail,
   useAdminClaimStatusLogs,
   useClaimStatusUpdate,
   useClaimTrackingSave,
   useClaimTrackingState,
-  ClaimInfoSection,
-  OrderShippingSection,
-  ClaimTrackingSection,
-  ClaimStatusActions,
-  ClaimStatusLogTable,
+  type AdminClaimStatusLogEntry,
 } from "@/features/claims";
 
-const { Title } = Typography;
+const EMPTY_CLAIM_STATUS_LOGS: AdminClaimStatusLogEntry[] = [];
 
 export default function ClaimShow() {
   const { id: claimId } = useParams<{ id: string }>();
-  const { claim, refetch } = useAdminClaimDetail(claimId);
-
-  const { logs } = useAdminClaimStatusLogs(claimId);
-  const { isUpdating, changeStatus, rollback } = useClaimStatusUpdate(
-    claimId,
-    refetch,
-  );
-  const { saveTracking, isPending: trackingPending } = useClaimTrackingSave();
+  const claimQuery = useAdminClaimDetail(claimId);
+  const claim = claimQuery.claim;
+  const logsQuery = useAdminClaimStatusLogs(claimId);
+  const {
+    isUpdating,
+    changeStatus,
+    rollback,
+    error: statusError,
+    successMessage: statusSuccessMessage,
+    notificationWarning,
+  } = useClaimStatusUpdate(claimId);
+  const {
+    saveTracking,
+    isPending: trackingPending,
+    error: trackingError,
+    successMessage: trackingSuccessMessage,
+  } = useClaimTrackingSave(claimId);
 
   const returnTrackingState = useClaimTrackingState(
     claim?.returnTracking,
@@ -50,46 +62,85 @@ export default function ClaimShow() {
   const showResendSection = claimType === "exchange";
 
   return (
-    <Show>
-      <Title level={5}>클레임 정보</Title>
-      {claim && <ClaimInfoSection claim={claim} />}
+    <main className="claimPage">
+      <AdminPageHeader
+        title="클레임 상세"
+        description="클레임 정보, 주문 배송, 수거·재발송 송장, 상태 이력을 관리합니다."
+        className="claimHeader"
+        titleClassName="claimTitle"
+        descriptionClassName="claimDescription"
+      />
 
-      <Title level={5}>주문 배송 정보</Title>
-      {claim && <OrderShippingSection shipping={claim.orderShipping} />}
+      {claimQuery.isLoading ? <AdminPanelSkeleton lines={5} /> : null}
+      {claimQuery.error ? (
+        <Callout tone="critical" description={claimQuery.error.message} />
+      ) : null}
+      {!claimQuery.isLoading && !claimQuery.error && !claim ? (
+        <Callout tone="warning" description="클레임 정보를 찾을 수 없습니다." />
+      ) : null}
 
-      {showReturnSection && claimId && (
-        <>
-          <Title level={5}>수거 정보</Title>
-          <ClaimTrackingSection
-            claimId={claimId}
-            trackingType="return"
-            courierCompany={returnTrackingState.courierCompany}
-            trackingNumber={returnTrackingState.trackingNumber}
-            onCourierChange={returnTrackingState.setCourierCompany}
-            onTrackingNumberChange={returnTrackingState.setTrackingNumber}
-            onSave={saveTracking}
-            isPending={trackingPending}
-          />
-        </>
-      )}
+      {statusSuccessMessage ? (
+        <Callout tone="positive" description={statusSuccessMessage} />
+      ) : null}
+      {notificationWarning ? (
+        <Callout tone="warning" description={notificationWarning} />
+      ) : null}
+      {statusError ? (
+        <Callout
+          tone="critical"
+          description={`상태 변경 실패: ${statusError.message}`}
+        />
+      ) : null}
+      {trackingSuccessMessage ? (
+        <Callout tone="positive" description={trackingSuccessMessage} />
+      ) : null}
+      {trackingError ? (
+        <Callout
+          tone="critical"
+          description={`배송 정보 저장 실패: ${trackingError.message}`}
+        />
+      ) : null}
 
-      {showResendSection && claimId && (
-        <>
-          <Title level={5}>재발송 정보</Title>
-          <ClaimTrackingSection
-            claimId={claimId}
-            trackingType="resend"
-            courierCompany={resendTrackingState.courierCompany}
-            trackingNumber={resendTrackingState.trackingNumber}
-            onCourierChange={resendTrackingState.setCourierCompany}
-            onTrackingNumberChange={resendTrackingState.setTrackingNumber}
-            onSave={saveTracking}
-            isPending={trackingPending}
-          />
-        </>
-      )}
+      {claim ? <ClaimInfoSection claim={claim} /> : null}
+      {claim ? <OrderShippingSection shipping={claim.orderShipping} /> : null}
 
-      {claim && (
+      {showReturnSection && claimId ? (
+        <ClaimTrackingSection
+          trackingType="return"
+          courierCompany={returnTrackingState.courierCompany}
+          trackingNumber={returnTrackingState.trackingNumber}
+          onCourierChange={returnTrackingState.setCourierCompany}
+          onTrackingNumberChange={returnTrackingState.setTrackingNumber}
+          onSave={() => {
+            void saveTracking(
+              "return",
+              returnTrackingState.courierCompany,
+              returnTrackingState.trackingNumber,
+            );
+          }}
+          isPending={trackingPending}
+        />
+      ) : null}
+
+      {showResendSection && claimId ? (
+        <ClaimTrackingSection
+          trackingType="resend"
+          courierCompany={resendTrackingState.courierCompany}
+          trackingNumber={resendTrackingState.trackingNumber}
+          onCourierChange={resendTrackingState.setCourierCompany}
+          onTrackingNumberChange={resendTrackingState.setTrackingNumber}
+          onSave={() => {
+            void saveTracking(
+              "resend",
+              resendTrackingState.courierCompany,
+              resendTrackingState.trackingNumber,
+            );
+          }}
+          isPending={trackingPending}
+        />
+      ) : null}
+
+      {claim ? (
         <ClaimStatusActions
           claim={claim}
           nextStatus={nextStatus}
@@ -98,10 +149,23 @@ export default function ClaimShow() {
           onRollback={rollback}
           isUpdating={isUpdating}
         />
-      )}
+      ) : null}
 
-      <Title level={5}>상태 변경 이력</Title>
-      <ClaimStatusLogTable logs={logs} />
-    </Show>
+      <section className="claimPanel" aria-labelledby="claim-status-log-title">
+        <AdminPanelHeader
+          title="상태 변경 이력"
+          id="claim-status-log-title"
+          className="claimPanelHeader"
+          titleClassName="claimPanelTitle"
+        />
+        {logsQuery.error ? (
+          <Callout tone="critical" description={logsQuery.error.message} />
+        ) : null}
+        <ClaimStatusLogTable
+          logs={logsQuery.data ?? EMPTY_CLAIM_STATUS_LOGS}
+          isLoading={logsQuery.isFetching}
+        />
+      </section>
+    </main>
   );
 }

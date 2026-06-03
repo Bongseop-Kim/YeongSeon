@@ -1,0 +1,107 @@
+.adminDetailList {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--admin-detail-list-columns),
+    minmax(0, 1fr)
+  );
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+}
+
+.adminDetailListColumns2 {
+  --admin-detail-list-columns: 2;
+}
+
+.adminDetailListColumns3 {
+  --admin-detail-list-columns: 3;
+}
+
+.adminDetailItem {
+  display: grid;
+  grid-template-columns: minmax(120px, 36%) 1fr;
+  min-height: 48px;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+}
+
+.adminDetailListColumns2 > .adminDetailItem:nth-last-child(-n + 2),
+.adminDetailListColumns3 > .adminDetailItem:last-child {
+  border-bottom: 0;
+}
+
+.adminDetailItemFull {
+  grid-column: 1 / -1;
+}
+
+.adminDetailItemFull:nth-last-child(2) {
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+}
+
+.adminDetailLabel,
+.adminDetailValue {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.adminDetailLabel {
+  background: var(--seed-color-bg-neutral-weak);
+  color: var(--seed-color-fg-neutral-muted);
+  font-weight: 600;
+}
+
+.adminDetailValue {
+  color: var(--seed-color-fg-neutral);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 840px) {
+  .adminDetailList,
+  .adminDetailItem {
+    grid-template-columns: 1fr;
+  }
+
+  .adminDetailList {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .adminDetailItem,
+  .adminDetailListColumns2 > .adminDetailItem:nth-last-child(-n + 2),
+  .adminDetailListColumns3 > .adminDetailItem:last-child,
+  .adminDetailItemFull:nth-last-child(2) {
+    gap: 4px;
+    min-height: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  }
+
+  .adminDetailItem:last-child {
+    border-bottom: 0;
+  }
+
+  .adminDetailLabel,
+  .adminDetailValue {
+    align-items: flex-start;
+    padding: 0;
+  }
+
+  .adminDetailLabel {
+    background: transparent;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .adminDetailValue {
+    font-size: 15px;
+    line-height: 22px;
+  }
+}

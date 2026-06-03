@@ -1,576 +1,369 @@
-import { Edit, useForm } from "@refinedev/antd";
+import { Text } from "seed-design/ui/text";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
+import type { ReactNode } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { Callout } from "seed-design/ui/callout";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
-  Form,
-  Input,
-  Button,
-  Modal,
-  Table,
-  Tag,
-  Space,
-  message,
-  Switch,
-} from "antd";
-import { useInvalidate, useList } from "@refinedev/core";
-import { supabase } from "@/lib/supabase";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
-import dayjs from "dayjs";
-import { CouponForm } from "@/features/coupons";
+  CouponEditConfirmDialog,
+  CouponForm,
+  CouponIssueDialog,
+  CouponIssuedSection,
+  createDefaultCouponFormValues,
+  isActiveIssuedStatus,
+  isCouponPresetKey,
+  toCouponFormValues,
+  useCouponQuery,
+  useIssuedCouponsQuery,
+  useIssueCouponsMutation,
+  usePresetCouponUsersQuery,
+  useRevokeIssuedCouponsMutation,
+  useUpdateCouponMutation,
+  type AdminCouponFormValues,
+  type CouponEditConfirmState,
+  type CouponPresetKey,
+  type CouponUser,
+  type IssuedCouponRow,
+} from "@/features/coupons";
 
-type CouponUser = {
-  id: string;
-  name: string | null;
-  phone: string | null;
-  birth: string | null;
-  created_at: string | null;
-};
+const EMPTY_COUPON_USERS: CouponUser[] = [];
+const EMPTY_ISSUED_ROWS: IssuedCouponRow[] = [];
 
-type IssuedCouponRow = {
-  id: string;
-  userId?: string | null;
-  couponId?: string | null;
-  userName?: string | null;
-  userEmail?: string | null;
-  status?: string | null;
-  issuedAt?: string | null;
-};
+interface CouponEditState {
+  notice: string | null;
+  issueDialogOpen: boolean;
+  selectedPreset: CouponPresetKey;
+  excludeIssuedUsers: boolean;
+  keyword: string;
+  selectedUserIds: Set<string>;
+  selectedIssuedIds: Set<string>;
+  confirmState: CouponEditConfirmState | null;
+}
 
-type PresetKey =
-  | "all"
-  | "new30"
-  | "birthdayThisMonth"
-  | "purchased"
-  | "notPurchased"
-  | "dormant";
+type CouponEditAction =
+  | { type: "noticeChanged"; notice: string | null }
+  | { type: "issueDialogOpened" }
+  | { type: "issueDialogClosed" }
+  | { type: "presetSelected"; preset: CouponPresetKey }
+  | { type: "excludeIssuedUsersChanged"; checked: boolean }
+  | { type: "keywordChanged"; keyword: string }
+  | { type: "selectedUserIdsChanged"; ids: Set<string> }
+  | { type: "selectedIssuedIdsChanged"; ids: Set<string> }
+  | { type: "confirmRequested"; confirmState: CouponEditConfirmState }
+  | { type: "confirmCleared" }
+  | { type: "issueSucceeded"; notice: string }
+  | { type: "revokeSucceeded"; notice: string };
 
-const PRESET_LABELS: Record<PresetKey, string> = {
-  all: "전체 고객",
-  new30: "신규 가입 (30일)",
-  birthdayThisMonth: "생일 고객 (이번 달)",
-  purchased: "구매 고객",
-  notPurchased: "미구매 고객",
-  dormant: "휴면 고객",
-};
+function createInitialCouponEditState(): CouponEditState {
+  return {
+    notice: null,
+    issueDialogOpen: false,
+    selectedPreset: "all",
+    excludeIssuedUsers: true,
+    keyword: "",
+    selectedUserIds: new Set(),
+    selectedIssuedIds: new Set(),
+    confirmState: null,
+  };
+}
 
-export default function CouponEdit() {
-  const { formProps, saveButtonProps, id } = useForm({
-    resource: "coupons",
-    redirect: "list",
+function couponEditReducer(
+  state: CouponEditState,
+  action: CouponEditAction,
+): CouponEditState {
+  switch (action.type) {
+    case "noticeChanged":
+      return { ...state, notice: action.notice };
+    case "issueDialogOpened":
+      return { ...state, issueDialogOpen: true };
+    case "issueDialogClosed":
+      return { ...state, issueDialogOpen: false };
+    case "presetSelected":
+      return {
+        ...state,
+        selectedPreset: action.preset,
+        selectedUserIds: new Set(),
+      };
+    case "excludeIssuedUsersChanged":
+      return {
+        ...state,
+        excludeIssuedUsers: action.checked,
+        selectedUserIds: new Set(),
+      };
+    case "keywordChanged":
+      return { ...state, keyword: action.keyword, selectedUserIds: new Set() };
+    case "selectedUserIdsChanged":
+      return { ...state, selectedUserIds: action.ids };
+    case "selectedIssuedIdsChanged":
+      return { ...state, selectedIssuedIds: action.ids };
+    case "confirmRequested":
+      return { ...state, confirmState: action.confirmState };
+    case "confirmCleared":
+      return { ...state, confirmState: null };
+    case "issueSucceeded":
+      return {
+        ...state,
+        notice: action.notice,
+        issueDialogOpen: false,
+        selectedUserIds: new Set(),
+      };
+    case "revokeSucceeded":
+      return {
+        ...state,
+        notice: action.notice,
+        selectedIssuedIds: new Set(),
+      };
+  }
+}
+
+export default function CouponEdit(): ReactNode {
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const couponQuery = useCouponQuery(id);
+  const issuedQuery = useIssuedCouponsQuery(id);
+  const updateMutation = useUpdateCouponMutation(id);
+  const issueMutation = useIssueCouponsMutation(id);
+  const revokeMutation = useRevokeIssuedCouponsMutation(id);
+  const [state, dispatch] = useReducer(
+    couponEditReducer,
+    undefined,
+    createInitialCouponEditState,
+  );
+
+  const presetUsersQuery = usePresetCouponUsersQuery({
+    couponId: id,
+    preset: state.selectedPreset,
+    excludeIssuedUsers: state.excludeIssuedUsers,
+    enabled: state.issueDialogOpen,
   });
 
-  const invalidate = useInvalidate();
-  const [modal, modalContextHolder] = Modal.useModal();
-
-  const [issueModal, setIssueModal] = useState(false);
-  const [users, setUsers] = useState<CouponUser[]>([]);
-  const [selectedUserIds, setSelectedUserIds] = useState<React.Key[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<PresetKey>("all");
-  const [excludeIssuedUsers, setExcludeIssuedUsers] = useState(true);
-  const [keyword, setKeyword] = useState("");
-  const [loadingPreset, setLoadingPreset] = useState(false);
-  const [issuing, setIssuing] = useState(false);
-
-  const [selectedIssuedIds, setSelectedIssuedIds] = useState<React.Key[]>([]);
-  const [selectedIssuedRows, setSelectedIssuedRows] = useState<
-    IssuedCouponRow[]
-  >([]);
-  const [revoking, setRevoking] = useState(false);
-
-  const loadIdRef = useRef(0);
-
-  const couponId = id;
-
-  const { result: issuedResult } = useList<IssuedCouponRow>({
-    resource: "admin_user_coupon_view",
-    filters: [{ field: "couponId", operator: "eq", value: couponId }],
-    queryOptions: { enabled: !!couponId },
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty, dirtyFields },
+  } = useForm<AdminCouponFormValues>({
+    defaultValues: createDefaultCouponFormValues(),
   });
+  const dirtyCount = Object.keys(dirtyFields).length;
 
-  const issuedRows = issuedResult.data ?? [];
+  useEffect(() => {
+    if (couponQuery.data) {
+      reset(toCouponFormValues(couponQuery.data));
+    }
+  }, [couponQuery.data, reset]);
 
-  const isActiveIssuedStatus = (status?: string | null) => {
-    const normalized = (status ?? "").trim().toLowerCase();
-    return (
-      normalized === "active" ||
-      normalized === "활성" ||
-      normalized === "발급" ||
-      normalized === "사용가능" ||
-      normalized === "미사용"
+  const issuedRows = issuedQuery.data ?? EMPTY_ISSUED_ROWS;
+  const presetUsers = presetUsersQuery.data ?? EMPTY_COUPON_USERS;
+  const filteredUsers = useMemo(() => {
+    const query = state.keyword.trim().toLowerCase();
+    if (!query) return presetUsers;
+    return presetUsers.filter((user) =>
+      (user.name ?? "").toLowerCase().includes(query),
     );
-  };
+  }, [presetUsers, state.keyword]);
 
-  const loadCustomers = async (): Promise<CouponUser[]> => {
-    const pageSize = 1000;
-    const allData: CouponUser[] = [];
-    let from = 0;
+  const selectedIssuedRows = useMemo(
+    () => issuedRows.filter((row) => state.selectedIssuedIds.has(row.id)),
+    [issuedRows, state.selectedIssuedIds],
+  );
 
-    while (true) {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, phone, birth, created_at")
-        .eq("role", "customer")
-        .eq("is_active", true)
-        .range(from, from + pageSize - 1);
-
-      if (error) {
-        throw error;
-      }
-
-      const rows = (data ?? []) as CouponUser[];
-      allData.push(...rows);
-
-      if (rows.length < pageSize) {
-        break;
-      }
-      from += pageSize;
-    }
-
-    return allData;
-  };
-
-  const loadPurchasedUserIds = async (): Promise<Set<string>> => {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("user_id")
-      .eq("status", "완료");
-
-    if (error) {
-      throw error;
-    }
-
-    return new Set((data ?? []).map((row) => row.user_id).filter(Boolean));
-  };
-
-  const loadAlreadyIssuedUserIds = async (): Promise<Set<string>> => {
-    if (!couponId || !excludeIssuedUsers) {
-      return new Set();
-    }
-
-    const { data, error } = await supabase
-      .from("user_coupons")
-      .select("user_id")
-      .eq("coupon_id", couponId);
-
-    if (error) {
-      throw error;
-    }
-
-    return new Set((data ?? []).map((row) => row.user_id).filter(Boolean));
-  };
-
-  const applyPreset = useCallback(
-    async (preset: PresetKey) => {
-      if (!couponId) {
+  const requestRevoke = useCallback(
+    (rows: IssuedCouponRow[]) => {
+      const targetRows = rows.filter((row) => isActiveIssuedStatus(row.status));
+      if (targetRows.length === 0) {
+        dispatch({
+          type: "noticeChanged",
+          notice: "회수할 항목을 선택해주세요.",
+        });
         return;
       }
 
-      loadIdRef.current += 1;
-      const requestId = loadIdRef.current;
-
-      setLoadingPreset(true);
-      setSelectedUserIds([]);
-
-      try {
-        const [allCustomers, alreadyIssued] = await Promise.all([
-          loadCustomers(),
-          loadAlreadyIssuedUserIds(),
-        ]);
-
-        if (requestId !== loadIdRef.current) return;
-
-        const now = dayjs();
-        const start30d = now.subtract(30, "day");
-        const start90d = now.subtract(90, "day");
-
-        let presetUsers = allCustomers;
-
-        switch (preset) {
-          case "new30":
-            presetUsers = allCustomers.filter(
-              (user) =>
-                user.created_at && dayjs(user.created_at).isAfter(start30d),
-            );
-            break;
-
-          case "birthdayThisMonth": {
-            const targetMonth = now.month();
-            presetUsers = allCustomers.filter((user) => {
-              if (!user.birth) {
-                return false;
-              }
-
-              const birthDate = dayjs(user.birth);
-              return birthDate.isValid() && birthDate.month() === targetMonth;
+      dispatch({
+        type: "confirmRequested",
+        confirmState: {
+          title: `${targetRows.length}건을 회수하시겠습니까?`,
+          description: "회수된 쿠폰은 고객이 사용할 수 없습니다.",
+          actionLabel: "회수",
+          onConfirm: () => {
+            revokeMutation.mutate(targetRows, {
+              onSuccess: () => {
+                dispatch({
+                  type: "revokeSucceeded",
+                  notice: `${targetRows.length}건 회수 완료`,
+                });
+              },
             });
-            break;
-          }
-
-          case "purchased": {
-            const purchasedUserIds = await loadPurchasedUserIds();
-            if (requestId !== loadIdRef.current) return;
-            presetUsers = allCustomers.filter((user) =>
-              purchasedUserIds.has(user.id),
-            );
-            break;
-          }
-
-          case "notPurchased": {
-            const purchasedUserIds = await loadPurchasedUserIds();
-            if (requestId !== loadIdRef.current) return;
-            presetUsers = allCustomers.filter(
-              (user) => !purchasedUserIds.has(user.id),
-            );
-            break;
-          }
-
-          case "dormant": {
-            const { data: completedOrders, error } = await supabase
-              .from("orders")
-              .select("user_id, created_at")
-              .eq("status", "완료");
-
-            if (error) {
-              throw error;
-            }
-
-            if (requestId !== loadIdRef.current) return;
-
-            const latestOrderByUser = new Map<string, dayjs.Dayjs>();
-
-            for (const row of completedOrders ?? []) {
-              if (!row.user_id || !row.created_at) {
-                continue;
-              }
-
-              const orderDate = dayjs(row.created_at);
-              const prev = latestOrderByUser.get(row.user_id);
-
-              if (!prev || orderDate.isAfter(prev)) {
-                latestOrderByUser.set(row.user_id, orderDate);
-              }
-            }
-
-            presetUsers = allCustomers.filter((user) => {
-              const latest = latestOrderByUser.get(user.id);
-              return !!latest && latest.isBefore(start90d);
-            });
-            break;
-          }
-
-          case "all":
-          default:
-            break;
-        }
-
-        if (excludeIssuedUsers) {
-          presetUsers = presetUsers.filter(
-            (user) => !alreadyIssued.has(user.id),
-          );
-        }
-
-        if (requestId !== loadIdRef.current) return;
-        setUsers(presetUsers);
-      } catch (error) {
-        if (requestId !== loadIdRef.current) return;
-        console.error(error);
-        message.error("대상 고객 조회에 실패했습니다.");
-        setUsers([]);
-      } finally {
-        if (requestId === loadIdRef.current) {
-          setLoadingPreset(false);
-        }
-      }
+          },
+        },
+      });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- API 호출 함수들은 deps에서 의도적으로 제외: couponId/excludeIssuedUsers 변경 시에만 재실행
-    [couponId, excludeIssuedUsers],
+    [revokeMutation],
   );
 
-  useEffect(() => {
-    if (!issueModal || !couponId) {
-      return;
-    }
-
-    applyPreset(selectedPreset);
-  }, [issueModal, selectedPreset, couponId, excludeIssuedUsers, applyPreset]);
-
-  const filteredUsers = useMemo(() => {
-    if (!keyword.trim()) {
-      return users;
-    }
-
-    const q = keyword.trim().toLowerCase();
-    return users.filter((user) => (user.name ?? "").toLowerCase().includes(q));
-  }, [users, keyword]);
-
-  const refreshIssuedList = async () => {
-    await invalidate({
-      resource: "admin_user_coupon_view",
-      invalidates: ["list"],
+  const submitCoupon = handleSubmit((values) => {
+    updateMutation.mutate(values, {
+      onSuccess: () => {
+        dispatch({
+          type: "noticeChanged",
+          notice: "쿠폰 정보를 저장했습니다.",
+        });
+        navigate({ pathname: "/coupons", search: location.search });
+      },
     });
-  };
+  });
 
-  const handleBulkIssue = () => {
-    if (!couponId) {
-      return;
-    }
-
-    const targetIds = selectedUserIds.map(String);
-
+  function requestBulkIssue(): void {
+    const targetIds = Array.from(state.selectedUserIds);
     if (!targetIds.length) {
-      message.warning("발급할 고객을 선택해주세요.");
+      dispatch({
+        type: "noticeChanged",
+        notice: "발급할 고객을 선택해주세요.",
+      });
       return;
     }
 
-    modal.confirm({
-      title: `${targetIds.length}명에게 발급하시겠습니까?`,
-      okText: "발급",
-      cancelText: "취소",
-      onOk: async () => {
-        setIssuing(true);
-        try {
-          const { error } = await supabase.from("user_coupons").upsert(
-            targetIds.map((userId) => ({
-              user_id: userId,
-              coupon_id: couponId,
-              status: "active",
-            })),
-            { onConflict: "user_id,coupon_id" },
-          );
-
-          if (error) {
-            throw error;
-          }
-
-          message.success(`${targetIds.length}명 발급 완료`);
-          setIssueModal(false);
-          setSelectedUserIds([]);
-          await refreshIssuedList();
-        } catch (error) {
-          console.error(error);
-          message.error("일괄 발급에 실패했습니다.");
-        } finally {
-          setIssuing(false);
-        }
+    dispatch({
+      type: "confirmRequested",
+      confirmState: {
+        title: `${targetIds.length}명에게 발급하시겠습니까?`,
+        description: "이미 같은 쿠폰을 가진 고객은 활성 상태로 갱신됩니다.",
+        actionLabel: "발급",
+        onConfirm: () => {
+          issueMutation.mutate(targetIds, {
+            onSuccess: () => {
+              dispatch({
+                type: "issueSucceeded",
+                notice: `${targetIds.length}명 발급 완료`,
+              });
+            },
+          });
+        },
       },
     });
-  };
+  }
 
-  const revokeCoupons = (rows: IssuedCouponRow[]) => {
-    const targetRows = rows.filter(
-      (row) => row && isActiveIssuedStatus(row.status),
-    );
-
-    if (!targetRows.length) {
-      message.warning("회수할 항목을 선택해주세요.");
+  function selectPreset(value: string): void {
+    if (!isCouponPresetKey(value)) {
       return;
     }
 
-    const rowsWithId = targetRows.filter((row) => !!row.id);
-    const rowsWithoutId = targetRows.filter((row) => !row.id);
+    dispatch({ type: "presetSelected", preset: value });
+  }
 
-    const idsToRevoke = Array.from(
-      new Set(
-        rowsWithId
-          .map((row) => row.id)
-          .filter((value): value is string => !!value),
-      ),
+  const errorMessage =
+    couponQuery.error?.message ??
+    updateMutation.error?.message ??
+    issuedQuery.error?.message ??
+    presetUsersQuery.error?.message ??
+    issueMutation.error?.message ??
+    revokeMutation.error?.message ??
+    null;
+
+  if (couponQuery.isLoading) {
+    return (
+      <main className="couponPage adminSettingsPage">
+        <AdminPanelSkeleton lines={5} />
+      </main>
     );
-    const userIdsToRevoke = Array.from(
-      new Set(
-        rowsWithoutId
-          .map((row) => row.userId)
-          .filter((value): value is string => !!value),
-      ),
-    );
-
-    modal.confirm({
-      title: `${targetRows.length}건을 회수하시겠습니까?`,
-      okText: "회수",
-      cancelText: "취소",
-      onOk: async () => {
-        setRevoking(true);
-        try {
-          if (idsToRevoke.length === 0 && userIdsToRevoke.length === 0) {
-            throw { message: "회수 대상 식별자(id/userId)가 없습니다." };
-          }
-
-          if (idsToRevoke.length > 0) {
-            const { error } = await supabase
-              .from("user_coupons")
-              .update({ status: "revoked" })
-              .in("id", idsToRevoke);
-            if (error) throw error;
-          }
-
-          if (couponId && userIdsToRevoke.length > 0) {
-            const { error } = await supabase
-              .from("user_coupons")
-              .update({ status: "revoked" })
-              .eq("coupon_id", couponId)
-              .in("user_id", userIdsToRevoke)
-              .eq("status", "active");
-            if (error) throw error;
-          }
-
-          message.success(`${targetRows.length}건 회수 완료`);
-          setSelectedIssuedIds([]);
-          setSelectedIssuedRows([]);
-          await refreshIssuedList();
-        } catch (error) {
-          console.error(error);
-          const detail =
-            error && typeof error === "object" && "message" in error
-              ? String(error.message)
-              : "";
-          message.error(
-            `일괄 회수에 실패했습니다.${detail ? ` (${detail})` : ""}`,
-          );
-        } finally {
-          setRevoking(false);
-        }
-      },
-    });
-  };
+  }
 
   return (
-    <Edit saveButtonProps={saveButtonProps}>
-      {modalContextHolder}
-      <Form {...formProps} layout="vertical">
-        <CouponForm
-          form={formProps.form}
-          expiryDateItemProps={{
-            getValueProps: (value) => ({
-              value: value ? dayjs(value) : undefined,
-            }),
-            getValueFromEvent: (date: dayjs.Dayjs | null) =>
-              date?.format("YYYY-MM-DD") ?? null,
-          }}
-        />
-      </Form>
+    <main className="couponPage adminSettingsPage">
+      <AdminPageHeader
+        title="쿠폰 수정"
+        description="쿠폰 정보와 발급 내역을 관리합니다."
+        className="couponPageHeader"
+        titleGroupClassName="couponPageTitleGroup"
+        titleClassName="couponPageTitle"
+        descriptionClassName="couponPageDescription"
+      />
 
-      <Space size={12} style={{ marginTop: 16, marginBottom: 16 }}>
-        <Button type="primary" onClick={() => setIssueModal(true)}>
-          쿠폰 발급
-        </Button>
-        <Button
-          danger
-          disabled={!selectedIssuedIds.length}
-          loading={revoking}
-          onClick={() => revokeCoupons(selectedIssuedRows)}
+      {state.notice ? (
+        <Callout
+          tone="positive"
+          description={state.notice}
+          role="status"
+          aria-live="polite"
+        />
+      ) : null}
+      {errorMessage ? (
+        <Callout tone="critical" description={errorMessage} role="alert" />
+      ) : null}
+
+      <section
+        className="couponPanel adminSettingsCard"
+        aria-labelledby="coupon-edit-form-title"
+      >
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="coupon-edit-form-title"
+          className="couponPanelTitle"
         >
-          일괄 회수 ({selectedIssuedIds.length}건)
-        </Button>
-      </Space>
-
-      <Table<IssuedCouponRow>
-        dataSource={issuedRows}
-        rowKey="id"
-        pagination={false}
-        size="small"
-        title={() => `발급 내역 (${issuedRows.length}건)`}
-        rowSelection={{
-          selectedRowKeys: selectedIssuedIds,
-          onChange: (keys, rows) => {
-            setSelectedIssuedIds(keys);
-            setSelectedIssuedRows(rows as IssuedCouponRow[]);
-          },
-          getCheckboxProps: (record) => ({
-            disabled: !isActiveIssuedStatus(record.status),
-          }),
-        }}
-      >
-        <Table.Column dataIndex="userName" title="이름" />
-        <Table.Column dataIndex="userEmail" title="이메일" />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(v: string) => <Tag>{v}</Tag>}
-        />
-        <Table.Column dataIndex="issuedAt" title="발급일" />
-        <Table.Column
-          title="회수"
-          render={(_: unknown, record) => (
-            <Button
-              size="small"
-              danger
-              disabled={!isActiveIssuedStatus(record.status)}
-              loading={revoking}
-              onClick={() => revokeCoupons([record as IssuedCouponRow])}
-            >
-              회수
-            </Button>
-          )}
-        />
-      </Table>
-
-      <Modal
-        title="쿠폰 발급"
-        open={issueModal}
-        onCancel={() => setIssueModal(false)}
-        onOk={handleBulkIssue}
-        okText="선택 발급"
-        cancelText="취소"
-        confirmLoading={issuing}
-        width="90vw"
-        style={{ maxWidth: 860 }}
-      >
-        <Space wrap style={{ marginBottom: 12 }}>
-          {(Object.keys(PRESET_LABELS) as PresetKey[]).map((preset) => (
-            <Tag.CheckableTag
-              key={preset}
-              checked={selectedPreset === preset}
-              onChange={(checked) => {
-                if (checked) {
-                  setSelectedPreset(preset);
-                }
-              }}
-            >
-              {PRESET_LABELS[preset]}
-            </Tag.CheckableTag>
-          ))}
-        </Space>
-
-        <Space style={{ display: "block", marginBottom: 12 }}>
-          <Switch
-            checked={excludeIssuedUsers}
-            onChange={setExcludeIssuedUsers}
+          기본 정보
+        </Text>
+        <form onSubmit={submitCoupon} noValidate>
+          <CouponForm
+            control={control}
+            errors={errors}
+            submitting={updateMutation.isPending}
+            submitLabel="저장"
+            isDirty={isDirty}
+            dirtyCount={dirtyCount}
+            onCancel={() => {
+              if (couponQuery.data) {
+                reset(toCouponFormValues(couponQuery.data));
+              }
+            }}
           />
-          <span>중복 발급 방지</span>
-        </Space>
+        </form>
+      </section>
 
-        <Input.Search
-          value={keyword}
-          placeholder="고객명 검색"
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            setKeyword(e.target.value)
+      <CouponIssuedSection
+        issuedRows={issuedRows}
+        selectedIssuedIds={state.selectedIssuedIds}
+        selectedIssuedRows={selectedIssuedRows}
+        isFetching={issuedQuery.isFetching}
+        isRevoking={revokeMutation.isPending}
+        onSelectedIssuedIdsChange={(ids) =>
+          dispatch({ type: "selectedIssuedIdsChanged", ids })
+        }
+        onOpenIssueDialog={() => dispatch({ type: "issueDialogOpened" })}
+        onRevoke={requestRevoke}
+      />
+
+      {state.issueDialogOpen ? (
+        <CouponIssueDialog
+          selectedPreset={state.selectedPreset}
+          excludeIssuedUsers={state.excludeIssuedUsers}
+          keyword={state.keyword}
+          users={filteredUsers}
+          selectedUserIds={state.selectedUserIds}
+          isFetching={presetUsersQuery.isFetching}
+          isIssuing={issueMutation.isPending}
+          onClose={() => dispatch({ type: "issueDialogClosed" })}
+          onPresetChange={selectPreset}
+          onExcludeIssuedUsersChange={(checked) =>
+            dispatch({ type: "excludeIssuedUsersChanged", checked })
           }
-          style={{ marginBottom: 12 }}
-          allowClear
+          onKeywordChange={(keyword) =>
+            dispatch({ type: "keywordChanged", keyword })
+          }
+          onSelectedUserIdsChange={(ids) =>
+            dispatch({ type: "selectedUserIdsChanged", ids })
+          }
+          onIssue={requestBulkIssue}
         />
+      ) : null}
 
-        <div style={{ marginBottom: 8 }}>{selectedUserIds.length}명 선택됨</div>
-
-        <Table
-          loading={loadingPreset}
-          dataSource={filteredUsers}
-          rowKey="id"
-          size="small"
-          pagination={{ pageSize: 10 }}
-          rowSelection={{
-            selectedRowKeys: selectedUserIds,
-            onChange: setSelectedUserIds,
-          }}
-        >
-          <Table.Column dataIndex="name" title="이름" />
-          <Table.Column dataIndex="phone" title="전화번호" />
-        </Table>
-      </Modal>
-    </Edit>
+      <CouponEditConfirmDialog
+        confirmState={state.confirmState}
+        onClose={() => dispatch({ type: "confirmCleared" })}
+      />
+    </main>
   );
 }

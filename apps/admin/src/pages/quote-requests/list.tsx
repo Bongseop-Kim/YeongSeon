@@ -1,10 +1,17 @@
-import { List } from "@refinedev/antd";
-import { QuoteRequestListTable } from "@/features/quote-requests";
+import { AdminPageHeader } from "@/components/AdminPageHeader";
+import { QuoteRequestListPanel } from "@/features/quote-requests";
 
 export default function QuoteRequestList() {
   return (
-    <List>
-      <QuoteRequestListTable />
-    </List>
+    <main className="quoteRequestPage">
+      <AdminPageHeader
+        title="견적 관리"
+        description="맞춤 제작 견적 요청과 진행 상태를 확인합니다."
+        className="quoteRequestHeader"
+        titleClassName="quoteRequestTitle"
+        descriptionClassName="quoteRequestDescription"
+      />
+      <QuoteRequestListPanel />
+    </main>
   );
 }

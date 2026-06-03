@@ -1,76 +1,112 @@
-import { useLogin } from "@refinedev/core";
-import { Button, Card, Form, Input, Typography, Alert, Space } from "antd";
-import { LockOutlined, MailOutlined } from "@ant-design/icons";
-import { useState } from "react";
-
-const { Title } = Typography;
+import { Text } from "seed-design/ui/text";
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
+import { loginAdmin } from "@/features/auth/api/auth-api";
+import "./auth.css";
 
 export function LoginForm() {
-  const { mutate: login, isPending } = useLogin();
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const onFinish = (values: { email: string; password: string }) => {
-    setError(null);
-    login(values, {
-      onError: (err) => {
-        setError(err?.message ?? "로그인에 실패했습니다.");
-      },
-    });
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setErrorMessage("이메일을 입력하세요.");
+      return;
+    }
+    if (!password) {
+      setErrorMessage("비밀번호를 입력하세요.");
+      return;
+    }
+
+    setIsPending(true);
+    try {
+      await loginAdmin({ email: trimmedEmail, password });
+      navigate("/", { replace: true });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "로그인에 실패했습니다.",
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        background: "#f0f2f5",
-      }}
-    >
-      <Card style={{ maxWidth: 400, width: "100%", margin: "0 16px" }}>
-        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-          <Title level={3} style={{ textAlign: "center", margin: 0 }}>
+    <main className="authPage">
+      <section className="authCard" aria-labelledby="admin-login-title">
+        <div className="authTitleGroup">
+          <Text
+            as="h1"
+            textStyle="screenTitle"
+            id="admin-login-title"
+            className="authTitle"
+          >
             ESSE SION 관리자
-          </Title>
+          </Text>
+          <Text as="p" textStyle="t4Regular" className="authDescription">
+            관리자 권한이 있는 계정으로 로그인하세요.
+          </Text>
+        </div>
 
-          {error && <Alert message={error} type="error" showIcon />}
+        {errorMessage ? (
+          <Callout tone="critical" description={errorMessage} role="alert" />
+        ) : null}
 
-          <Form layout="vertical" onFinish={onFinish} autoComplete="off">
-            <Form.Item
+        <form className="authForm" autoComplete="off" onSubmit={handleSubmit}>
+          <TextField
+            label="이메일"
+            value={email}
+            disabled={isPending}
+            onValueChange={({ value }) => setEmail(value)}
+          >
+            <TextFieldInput
+              id="admin-email"
               name="email"
-              rules={[{ required: true, message: "이메일을 입력하세요" }]}
-            >
-              <Input
-                prefix={<MailOutlined />}
-                placeholder="이메일"
-                size="large"
-              />
-            </Form.Item>
-            <Form.Item
+              type="email"
+              inputMode="email"
+              autoComplete="username"
+              placeholder="admin@example.com"
+              disabled={isPending}
+            />
+          </TextField>
+
+          <TextField
+            label="비밀번호"
+            value={password}
+            disabled={isPending}
+            onValueChange={({ value }) => setPassword(value)}
+          >
+            <TextFieldInput
+              id="admin-password"
               name="password"
-              rules={[{ required: true, message: "비밀번호를 입력하세요" }]}
+              type="password"
+              autoComplete="current-password"
+              placeholder="비밀번호"
+              disabled={isPending}
+            />
+          </TextField>
+
+          <div className="authActions">
+            <ActionButton
+              type="submit"
+              loading={isPending}
+              disabled={isPending}
             >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="비밀번호"
-                size="large"
-              />
-            </Form.Item>
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                size="large"
-                block
-                loading={isPending}
-              >
-                로그인
-              </Button>
-            </Form.Item>
-          </Form>
-        </Space>
-      </Card>
-    </div>
+              로그인
+            </ActionButton>
+          </div>
+        </form>
+      </section>
+    </main>
   );
 }

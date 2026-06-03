@@ -1,72 +1,287 @@
-import type { ComponentProps } from "react";
-import { useEffect } from "react";
-import { DatePicker, Form, Input, InputNumber, Select, Switch } from "antd";
-import type { FormInstance } from "antd";
+import { Text } from "seed-design/ui/text";
+import type { HTMLInputTypeAttribute, ReactNode } from "react";
+import { useController, type Control, type FieldErrors } from "react-hook-form";
+import { ActionButton } from "seed-design/ui/action-button";
+import {
+  RadioSelectBoxItem,
+  RadioSelectBoxRoot,
+} from "seed-design/ui/select-box";
+import { Switch } from "seed-design/ui/switch";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldTextarea,
+} from "seed-design/ui/text-field";
+import type {
+  AdminCouponFormValues,
+  CouponDiscountType,
+} from "@/features/coupons/types/admin-coupon";
+import "./coupon-admin.css";
 
 interface CouponFormProps {
-  form?: FormInstance;
-  expiryDateItemProps?: Omit<ComponentProps<typeof Form.Item>, "children">;
+  control: Control<AdminCouponFormValues>;
+  errors: FieldErrors<AdminCouponFormValues>;
+  submitting: boolean;
+  submitLabel: string;
+  isDirty: boolean;
+  dirtyCount: number;
+  onCancel: () => void;
 }
 
-export function CouponForm({ form, expiryDateItemProps }: CouponFormProps) {
-  const discountType = Form.useWatch("discount_type", form);
+interface FieldErrorProps {
+  message?: string;
+}
 
-  useEffect(() => {
-    if (discountType !== "percentage") {
-      form?.setFieldsValue({ max_discount_amount: undefined });
+interface ControlledTextFieldProps {
+  control: Control<AdminCouponFormValues>;
+  name: keyof AdminCouponFormValues;
+  label: string;
+  type?: HTMLInputTypeAttribute;
+  required?: boolean;
+  error?: string;
+  textarea?: boolean;
+  min?: number;
+  className?: string;
+}
+
+function isCouponDiscountType(value: string): value is CouponDiscountType {
+  return value === "percentage" || value === "fixed";
+}
+
+function FieldError({ message }: FieldErrorProps): ReactNode {
+  return message ? <>{message}</> : null;
+}
+
+function createNumberValidator(
+  label: string,
+  min = 0,
+): (value: unknown) => true | string {
+  return (nextValue) => {
+    const value = Number(nextValue);
+
+    if (nextValue == null || !Number.isInteger(value) || value < min) {
+      return `${label}은 ${min} 이상의 정수로 입력해주세요.`;
     }
-  }, [discountType, form]);
+
+    return true;
+  };
+}
+
+function ControlledTextField({
+  control,
+  name,
+  label,
+  type = "text",
+  required,
+  error,
+  textarea,
+  min,
+  className,
+}: ControlledTextFieldProps): ReactNode {
+  const validate =
+    type === "number" ? createNumberValidator(label, min) : undefined;
+  const { field } = useController({
+    control,
+    name,
+    rules: {
+      required: required ? `${label}을 입력해주세요.` : false,
+      validate,
+    },
+  });
+  const value = field.value == null ? "" : String(field.value);
 
   return (
-    <>
-      <Form.Item label="쿠폰명" name="name" rules={[{ required: true }]}>
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label="할인유형"
-        name="discount_type"
-        rules={[{ required: true }]}
-      >
-        <Select
-          options={[
-            { label: "퍼센트(%)", value: "percentage" },
-            { label: "고정금액(원)", value: "fixed" },
-          ]}
+    <TextField
+      className={className}
+      label={label}
+      name={name}
+      value={value}
+      required={required}
+      showRequiredIndicator={required}
+      invalid={Boolean(error)}
+      errorMessage={<FieldError message={error} />}
+      onValueChange={({ value: nextValue }) => {
+        if (type === "number") {
+          field.onChange(nextValue === "" ? null : Number(nextValue));
+          return;
+        }
+        field.onChange(nextValue);
+      }}
+    >
+      {textarea ? (
+        <TextFieldTextarea
+          name={name}
+          autoComplete="off"
+          onBlur={field.onBlur}
         />
-      </Form.Item>
-      <Form.Item
+      ) : (
+        <TextFieldInput
+          ref={field.ref}
+          name={name}
+          type={type}
+          autoComplete="off"
+          min={type === "number" ? (min ?? 0) : undefined}
+          inputMode={type === "number" ? "numeric" : undefined}
+          onBlur={field.onBlur}
+        />
+      )}
+    </TextField>
+  );
+}
+
+export function CouponForm({
+  control,
+  errors,
+  submitting,
+  submitLabel,
+  isDirty,
+  dirtyCount,
+  onCancel,
+}: CouponFormProps): ReactNode {
+  const { field: discountTypeField } = useController({
+    control,
+    name: "discountType",
+    rules: { required: "할인유형을 선택해주세요" },
+  });
+  const { field: isActiveField } = useController({
+    control,
+    name: "isActive",
+  });
+  const { field: maxDiscountAmountField } = useController({
+    control,
+    name: "maxDiscountAmount",
+  });
+
+  const discountType = discountTypeField.value;
+
+  return (
+    <div className="couponForm adminSettingsForm">
+      <ControlledTextField
+        className="adminSettingsField"
+        control={control}
+        name="name"
+        label="쿠폰명"
+        required
+        error={errors.name?.message}
+      />
+
+      <RadioSelectBoxRoot
+        className="adminSettingsField"
+        label="할인유형"
+        name={discountTypeField.name}
+        value={discountTypeField.value}
+        onValueChange={(value) => {
+          if (!isCouponDiscountType(value)) {
+            return;
+          }
+
+          discountTypeField.onChange(value);
+          if (value !== "percentage") {
+            maxDiscountAmountField.onChange(null);
+          }
+        }}
+        invalid={Boolean(errors.discountType)}
+        errorMessage={<FieldError message={errors.discountType?.message} />}
+        showRequiredIndicator
+        columns={2}
+      >
+        <RadioSelectBoxItem value="percentage" label="퍼센트(%)" />
+        <RadioSelectBoxItem value="fixed" label="고정금액(원)" />
+      </RadioSelectBoxRoot>
+
+      <ControlledTextField
+        className="adminSettingsField"
+        control={control}
+        name="discountValue"
         label="할인값"
-        name="discount_value"
-        rules={[{ required: true }]}
-      >
-        <InputNumber min={0} style={{ width: "100%" }} />
-      </Form.Item>
+        type="number"
+        min={1}
+        required
+        error={errors.discountValue?.message}
+      />
+
       {discountType === "percentage" ? (
-        <Form.Item
+        <ControlledTextField
+          className="adminSettingsField"
+          control={control}
+          name="maxDiscountAmount"
           label="최대할인금액"
-          name="max_discount_amount"
-          rules={[{ required: true, message: "최대할인금액을 입력해주세요" }]}
-        >
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
+          type="number"
+          min={1}
+          required
+          error={errors.maxDiscountAmount?.message}
+        />
       ) : null}
-      <Form.Item label="설명" name="description">
-        <Input.TextArea rows={2} />
-      </Form.Item>
-      <Form.Item
+
+      <ControlledTextField
+        className="adminSettingsFieldFull"
+        control={control}
+        name="description"
+        label="설명"
+        textarea
+        error={errors.description?.message}
+      />
+
+      <ControlledTextField
+        className="adminSettingsField"
+        control={control}
+        name="expiryDate"
         label="만료일"
-        name="expiry_date"
-        rules={[{ required: true }]}
-        {...expiryDateItemProps}
-      >
-        <DatePicker style={{ width: "100%" }} />
-      </Form.Item>
-      <Form.Item label="추가정보" name="additional_info">
-        <Input.TextArea rows={2} />
-      </Form.Item>
-      <Form.Item label="활성" name="is_active" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-    </>
+        type="date"
+        required
+        error={errors.expiryDate?.message}
+      />
+
+      <ControlledTextField
+        className="adminSettingsFieldFull"
+        control={control}
+        name="additionalInfo"
+        label="추가정보"
+        textarea
+        error={errors.additionalInfo?.message}
+      />
+
+      <div className="couponFormActions adminSettingsActionRow">
+        <div className="couponActionMeta">
+          <Switch
+            checked={isActiveField.value}
+            onCheckedChange={isActiveField.onChange}
+            label="활성"
+            inputProps={{
+              name: isActiveField.name,
+              onBlur: isActiveField.onBlur,
+            }}
+          />
+          {isDirty ? (
+            <Text
+              as="p"
+              textStyle="t4Regular"
+              className="couponSaveSummary adminSettingsActionSummary"
+            >
+              저장하지 않은 변경사항 {dirtyCount}개가 있습니다.
+            </Text>
+          ) : null}
+        </div>
+        <div className="couponActionButtons">
+          {isDirty ? (
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              disabled={submitting}
+              onClick={onCancel}
+            >
+              변경 취소
+            </ActionButton>
+          ) : null}
+          <ActionButton
+            type="submit"
+            loading={submitting}
+            disabled={submitting || !isDirty}
+          >
+            {submitLabel}
+          </ActionButton>
+        </div>
+      </div>
+    </div>
   );
 }

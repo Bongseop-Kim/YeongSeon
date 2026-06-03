@@ -1,8 +1,23 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import type { ButtonHTMLAttributes } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { GenerationLogTable } from "@/features/generation-logs/components/generation-log-table";
 import type { AdminGenerationLogGroup } from "@/features/generation-logs/types/admin-generation-log";
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    size: _size,
+    variant: _variant,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement> & {
+    loading?: boolean;
+    size?: string;
+    variant?: string;
+  }) => <button {...props}>{children}</button>,
+}));
 
 const group: AdminGenerationLogGroup = {
   workflowId: "workflow-1",

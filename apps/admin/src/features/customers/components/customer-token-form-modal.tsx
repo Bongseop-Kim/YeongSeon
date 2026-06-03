@@ -1,7 +1,14 @@
-import { useEffect } from "react";
-import { Button, Form, Input, InputNumber, Modal } from "antd";
+import { Text } from "seed-design/ui/text";
+import { useEffect, useState, type FormEvent } from "react";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldTextarea,
+} from "seed-design/ui/text-field";
 import { useManageCustomerTokensMutation } from "@/features/customers/api/customers-query";
-import type { AdminTokenManageForm } from "@/features/customers/types/admin-customer";
+import "./customers.css";
 
 interface CustomerTokenFormModalProps {
   userId: string;
@@ -10,14 +17,14 @@ interface CustomerTokenFormModalProps {
   onClose: () => void;
 }
 
-type CustomerTokenFormValues = AdminTokenManageForm;
-
 const MODAL_TITLE: Record<CustomerTokenFormModalProps["mode"], string> = {
   grant: "토큰 지급",
   deduct: "토큰 차감",
 };
 
-const { TextArea } = Input;
+function isValidTokenAmount(amount: number): boolean {
+  return Number.isInteger(amount) && amount >= 1;
+}
 
 export function CustomerTokenFormModal({
   userId,
@@ -25,82 +32,112 @@ export function CustomerTokenFormModal({
   open,
   onClose,
 }: CustomerTokenFormModalProps) {
-  const [form] = Form.useForm<CustomerTokenFormValues>();
   const mutation = useManageCustomerTokensMutation();
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    form.setFieldValue("mode", mode);
-
     if (!open) {
-      form.resetFields();
+      setAmount("");
+      setDescription("");
+      setNotice(null);
     }
-  }, [form, mode, open]);
+  }, [open]);
 
-  const handleFinish = async (values: CustomerTokenFormValues) => {
-    const amount = mode === "deduct" ? -values.amount : values.amount;
+  if (!open) return null;
 
+  const parsedAmount = Number(amount);
+  const trimmedDescription = description.trim();
+  const canSubmit =
+    isValidTokenAmount(parsedAmount) && trimmedDescription.length > 0;
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
+    event.preventDefault();
+    if (!canSubmit) {
+      setNotice("수량과 설명을 입력해주세요.");
+      return;
+    }
+
+    setNotice(null);
     try {
       await mutation.mutateAsync({
         userId,
-        amount,
-        description: values.description,
+        amount: mode === "deduct" ? -parsedAmount : parsedAmount,
+        description: trimmedDescription,
       });
-
-      form.resetFields();
       onClose();
     } catch {
-      // Mutation onError already handles user-facing errors.
+      // mutation.error로 렌더링한다.
     }
   };
 
   return (
-    <Modal
-      title={MODAL_TITLE[mode]}
-      open={open}
-      closable={!mutation.isPending}
-      maskClosable={!mutation.isPending}
-      onCancel={mutation.isPending ? undefined : onClose}
-      footer={null}
-      destroyOnHidden
-    >
-      <Form<CustomerTokenFormValues>
-        form={form}
-        layout="vertical"
-        initialValues={{ mode, amount: undefined, description: "" }}
-        onFinish={handleFinish}
+    <div className="customerModalBackdrop" role="presentation">
+      <section
+        className="customerModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customer-token-modal-title"
       >
-        <Form.Item name="mode" hidden>
-          <Input />
-        </Form.Item>
-
-        <Form.Item
-          label="수량"
-          name="amount"
-          rules={[
-            { required: true, message: "수량을 입력해주세요." },
-            { type: "number", min: 1, message: "1 이상의 값을 입력해주세요." },
-          ]}
-        >
-          <InputNumber min={1} style={{ width: "100%" }} />
-        </Form.Item>
-
-        <Form.Item
-          label="설명"
-          name="description"
-          rules={[{ required: true, message: "설명을 입력해주세요." }]}
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={mutation.isPending}
-          block
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-token-modal-title"
+          className="customerModalTitle"
         >
           {MODAL_TITLE[mode]}
-        </Button>
-      </Form>
-    </Modal>
+        </Text>
+        {notice ? <Callout tone="warning" description={notice} /> : null}
+        {mutation.error ? (
+          <Callout
+            tone="critical"
+            description={`토큰 처리에 실패했습니다: ${mutation.error.message}`}
+          />
+        ) : null}
+        <form className="customerTokenForm" onSubmit={handleSubmit} noValidate>
+          <TextField
+            label="수량"
+            value={amount}
+            onValueChange={({ value }) => setAmount(value)}
+            invalid={amount.length > 0 && !isValidTokenAmount(parsedAmount)}
+            errorMessage="1 이상의 정수를 입력해주세요."
+          >
+            <TextFieldInput
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+            />
+          </TextField>
+          <TextField
+            label="설명"
+            value={description}
+            onValueChange={({ value }) => setDescription(value)}
+          >
+            <TextFieldTextarea aria-label="토큰 처리 설명" />
+          </TextField>
+          <div className="customerFormActions">
+            <ActionButton
+              type="submit"
+              loading={mutation.isPending}
+              disabled={!canSubmit || mutation.isPending}
+            >
+              {MODAL_TITLE[mode]}
+            </ActionButton>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              disabled={mutation.isPending}
+              onClick={onClose}
+            >
+              취소
+            </ActionButton>
+          </div>
+        </form>
+      </section>
+    </div>
   );
 }

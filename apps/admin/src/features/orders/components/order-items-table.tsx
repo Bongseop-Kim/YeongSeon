@@ -1,71 +1,96 @@
-import { Table } from "antd";
-import { useNavigation } from "@refinedev/core";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import { AdminDataTable } from "@/components/AdminDataTable";
 import type { AdminOrderItem } from "@/features/orders/types/admin-order";
+import { ActionButton } from "seed-design/ui/action-button";
 
 interface OrderItemsTableProps {
   items: AdminOrderItem[];
+  isLoading?: boolean;
 }
 
-export function OrderItemsTable({ items }: OrderItemsTableProps) {
-  const { edit } = useNavigation();
+function getItemName(record: AdminOrderItem): string {
+  if (record.type === "custom") return "주문 제작";
+  if (record.type === "sample") return "샘플 제작";
+  if (record.type === "reform") return "넥타이 수선";
+  if (record.type === "token") {
+    const label = record.planKey ?? "토큰";
+    return `토큰 구매 (${label}, ${record.tokenAmount ?? "-"}개)`;
+  }
+  return record.productName ?? "-";
+}
 
-  return (
-    <Table dataSource={items} rowKey="id" pagination={false}>
-      <Table.Column
-        dataIndex="productName"
-        title="상품명"
-        render={(_: unknown, record: AdminOrderItem) => {
-          if (record.type === "custom") return "주문 제작";
-          if (record.type === "sample") return "샘플 제작";
-          if (record.type === "reform") return "넥타이 수선";
-          if (record.type === "token") {
-            const label = record.planKey ?? "토큰";
-            return `토큰 구매 (${label}, ${record.tokenAmount ?? "-"}개)`;
-          }
-          if (!record.productName) return "-";
-          if (record.productId != null) {
-            const { productId } = record;
+function formatPrice(value: number): string {
+  return `${value.toLocaleString()}원`;
+}
+
+export function OrderItemsTable({
+  items,
+  isLoading = false,
+}: OrderItemsTableProps) {
+  const navigate = useNavigate();
+  const columns = useMemo<ColumnDef<AdminOrderItem>[]>(
+    () => [
+      {
+        id: "name",
+        header: "상품명",
+        cell: ({ row }) => {
+          const record = row.original;
+          const name = getItemName(record);
+          if (record.type === "product" && record.productId != null) {
             return (
-              <button
+              <ActionButton
                 type="button"
-                aria-label={record.productName}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  edit("products", productId);
-                }}
-                style={{
-                  cursor: "pointer",
-                  background: "none",
-                  border: "none",
-                  padding: 0,
+                className="orderLinkButton"
+                variant="ghost"
+                size="small"
+                aria-label={name}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigate(`/products/edit/${record.productId}`);
                 }}
               >
-                {record.productName}
-              </button>
+                {name}
+              </ActionButton>
             );
           }
-          return record.productName;
-        }}
-      />
-      <Table.Column dataIndex="quantity" title="수량" />
-      <Table.Column
-        dataIndex="unitPrice"
-        title="단가"
-        render={(v: number) => `${v?.toLocaleString()}원`}
-      />
-      <Table.Column
-        dataIndex="discountAmount"
-        title="할인"
-        render={(v: number) => `${v?.toLocaleString()}원`}
-      />
-      <Table.Column
-        title="소계"
-        render={(_: unknown, record: AdminOrderItem) => {
-          const subtotal =
-            record.unitPrice * record.quantity - record.lineDiscountAmount;
-          return `${subtotal.toLocaleString()}원`;
-        }}
-      />
-    </Table>
+          return name;
+        },
+      },
+      { accessorKey: "quantity", header: "수량" },
+      {
+        accessorKey: "unitPrice",
+        header: "단가",
+        cell: ({ row }) => formatPrice(row.original.unitPrice),
+      },
+      {
+        accessorKey: "discountAmount",
+        header: "할인",
+        cell: ({ row }) => formatPrice(row.original.discountAmount),
+      },
+      {
+        id: "subtotal",
+        header: "소계",
+        cell: ({ row }) => {
+          const record = row.original;
+          return formatPrice(
+            record.unitPrice * record.quantity - record.lineDiscountAmount,
+          );
+        },
+      },
+    ],
+    [navigate],
+  );
+
+  return (
+    <AdminDataTable
+      data={items}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyText="주문 아이템이 없습니다."
+      minWidth={720}
+      isLoading={isLoading}
+    />
   );
 }

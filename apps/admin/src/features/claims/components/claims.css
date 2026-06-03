@@ -1,0 +1,141 @@
+.claimPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.claimHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.claimTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.claimDescription,
+.claimMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.claimPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.claimPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.claimPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.claimToolbar,
+.claimPagination,
+.claimActions,
+.claimTrackingForm,
+.claimInlineRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.claimToolbar {
+  align-items: flex-end;
+}
+
+.claimFilterField {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.claimDetailLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.claimDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+
+.claimDetailItem {
+  display: grid;
+  gap: 4px;
+}
+
+.claimDetailItem dd {
+  margin: 0;
+}
+
+.claimTextButton {
+  font-weight: 700;
+}
+
+.claimTrackingForm {
+  align-items: flex-end;
+}
+
+.claimTrackingField {
+  flex: 1 1 180px;
+  display: grid;
+  gap: 6px;
+}
+
+.claimModalBody {
+  display: grid;
+  gap: 12px;
+}
+
+.claimModalText {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .claimPage {
+    padding: 16px;
+  }
+
+  .claimToolbar,
+  .claimTrackingForm,
+  .claimActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .claimFilterField,
+  .claimTrackingField,
+  .claimActions > button {
+    width: 100%;
+  }
+
+  .claimDetailGrid {
+    grid-template-columns: 1fr;
+  }
+}

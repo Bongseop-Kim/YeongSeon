@@ -1,8 +1,53 @@
-import { App } from "antd";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ClaimStatusActions } from "@/features/claims/components/claim-status-actions";
 import type { AdminClaimDetail } from "@/features/claims/types/admin-claim";
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    ...props
+  }: {
+    children?: ReactNode;
+    loading?: boolean;
+  }) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("seed-design/ui/alert-dialog", () => ({
+  AlertDialogRoot: ({
+    children,
+    open,
+  }: {
+    children?: ReactNode;
+    open?: boolean;
+  }) => (open ? <>{children}</> : null),
+  AlertDialogContent: ({ children }: { children?: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  AlertDialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
+  AlertDialogFooter: ({ children }: { children?: ReactNode }) => (
+    <footer>{children}</footer>
+  ),
+  AlertDialogHeader: ({ children }: { children?: ReactNode }) => (
+    <header>{children}</header>
+  ),
+  AlertDialogTitle: ({ children }: { children?: ReactNode }) => (
+    <h2>{children}</h2>
+  ),
+  AlertDialogAction: ({ children, ...props }: { children?: ReactNode }) => (
+    <button {...props}>{children}</button>
+  ),
+}));
+
+vi.mock("seed-design/ui/callout", () => ({
+  Callout: ({ description }: { description?: ReactNode }) => (
+    <div role="alert">{description}</div>
+  ),
+}));
 
 function createClaim(
   overrides: Partial<AdminClaimDetail> = {},
@@ -42,19 +87,17 @@ function createClaim(
 
 describe("ClaimStatusActions", () => {
   it("공용 메모 입력 없이 롤백 모달에서만 사유를 받는다", async () => {
-    const onRollback = vi.fn().mockResolvedValue(undefined);
+    const onRollback = vi.fn().mockResolvedValue(true);
 
     render(
-      <App>
-        <ClaimStatusActions
-          claim={createClaim()}
-          nextStatus="처리중"
-          rollbackStatus="대기"
-          onStatusChange={vi.fn().mockResolvedValue(undefined)}
-          onRollback={onRollback}
-          isUpdating={false}
-        />
-      </App>,
+      <ClaimStatusActions
+        claim={createClaim()}
+        nextStatus="처리중"
+        rollbackStatus="대기"
+        onStatusChange={vi.fn().mockResolvedValue(true)}
+        onRollback={onRollback}
+        isUpdating={false}
+      />,
     );
 
     expect(
@@ -67,6 +110,9 @@ describe("ClaimStatusActions", () => {
     });
 
     expect(onRollback).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "롤백 사유를 입력해주세요.",
+    );
 
     fireEvent.change(screen.getByPlaceholderText("롤백 사유 (필수)"), {
       target: { value: "오처리 복구" },

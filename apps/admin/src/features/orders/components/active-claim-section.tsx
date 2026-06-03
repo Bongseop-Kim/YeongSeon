@@ -1,46 +1,49 @@
-import { Button, Descriptions, Tag } from "antd";
-import { useNavigation } from "@refinedev/core";
-import { CLAIM_STATUS_COLORS, CLAIM_TYPE_LABELS } from "@yeongseon/shared";
+import { useNavigate } from "react-router-dom";
+import { CLAIM_TYPE_LABELS } from "@yeongseon/shared";
+import { ActionButton } from "seed-design/ui/action-button";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminActiveClaimSummary } from "@/features/orders/types/admin-order";
+import { OrderDetailGrid, OrderDetailItem } from "./order-detail-grid";
+import { Text } from "seed-design/ui/text";
 
 interface ActiveClaimSectionProps {
   claim: AdminActiveClaimSummary;
 }
 
 export function ActiveClaimSection({ claim }: ActiveClaimSectionProps) {
-  const { show } = useNavigation();
+  const navigate = useNavigate();
 
   return (
-    <section style={{ marginBottom: 24 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-          gap: 12,
-        }}
-      >
-        <span style={{ fontSize: 16, fontWeight: 600 }}>활성 클레임</span>
-        <Button onClick={() => show("admin_claim_list_view", claim.id)}>
+    <section className="orderPanel" aria-labelledby="active-claim-title">
+      <div className="orderPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="active-claim-title"
+          className="orderSectionTitle"
+        >
+          활성 클레임
+        </Text>
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          onClick={() => navigate(`/claims/show/${claim.id}`)}
+        >
           클레임 상세 바로가기
-        </Button>
+        </ActionButton>
       </div>
-
-      <Descriptions bordered column={{ xs: 1, sm: 2, md: 2 }}>
-        <Descriptions.Item label="클레임번호">
+      <OrderDetailGrid>
+        <OrderDetailItem label="클레임번호">
           {claim.claimNumber}
-        </Descriptions.Item>
-        <Descriptions.Item label="유형">
+        </OrderDetailItem>
+        <OrderDetailItem label="유형">
           {CLAIM_TYPE_LABELS[claim.type]}
-        </Descriptions.Item>
-        <Descriptions.Item label="상태">
-          <Tag color={CLAIM_STATUS_COLORS[claim.status]}>{claim.status}</Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="요청 수량">
-          {claim.quantity}
-        </Descriptions.Item>
-      </Descriptions>
+        </OrderDetailItem>
+        <OrderDetailItem label="상태">
+          <StatusBadge>{claim.status}</StatusBadge>
+        </OrderDetailItem>
+        <OrderDetailItem label="요청 수량">{claim.quantity}</OrderDetailItem>
+      </OrderDetailGrid>
     </section>
   );
 }

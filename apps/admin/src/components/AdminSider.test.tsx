@@ -1,81 +1,29 @@
 import { render, screen } from "@testing-library/react";
-import type { CSSProperties, ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AdminSider } from "@/components/AdminSider";
 
-const useMenuMock = vi.hoisted(() => vi.fn());
-const useLinkMock = vi.hoisted(() => vi.fn());
 const useIsMobileMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/hooks/useIsMobile", () => ({
   useIsMobile: useIsMobileMock,
 }));
 
-vi.mock("@refinedev/core", async () => {
-  const { Fragment } = await import("react");
+vi.mock("@/providers/auth-provider", () => ({
+  logoutAdmin: vi.fn(),
+}));
 
-  return {
-    CanAccess: ({ children }: { children: ReactNode }) => (
-      <Fragment>{children}</Fragment>
-    ),
-    useTranslate: () => (_key: string, fallback: string) => fallback,
-    useLogout: () => ({ mutate: vi.fn() }),
-    useIsExistAuthentication: () => false,
-    useMenu: useMenuMock,
-    useLink: useLinkMock,
-    useWarnAboutChange: () => ({
-      warnWhen: false,
-      setWarnWhen: vi.fn(),
-    }),
-  };
-});
-
-vi.mock("@refinedev/antd", async () => {
-  return {
-    ThemedTitle: ({ collapsed }: { collapsed: boolean }) => (
-      <div>{collapsed ? "collapsed" : "expanded"}</div>
-    ),
-    useThemedLayoutContext: () => ({
-      siderCollapsed: false,
-      setSiderCollapsed: vi.fn(),
-      mobileSiderOpen: false,
-      setMobileSiderOpen: vi.fn(),
-    }),
-  };
-});
-
-function createFixture(overrides?: {
-  isMobile?: boolean;
-  menuItems?: Array<{
-    key: string;
-    name: string;
-    label: string;
-    children: [];
-    meta: Record<string, never>;
-    list: string;
-  }>;
-  selectedKey?: string;
-  defaultOpenKeys?: string[];
-}) {
-  const menuItems = overrides?.menuItems ?? [
-    {
-      key: "orders",
-      name: "orders",
-      label: "주문 관리",
-      children: [],
-      meta: {},
-      list: "/orders",
-    },
-  ];
-
-  return {
-    isMobile: overrides?.isMobile ?? false,
-    menuData: {
-      menuItems,
-      selectedKey: overrides?.selectedKey ?? "orders",
-      defaultOpenKeys: overrides?.defaultOpenKeys ?? [],
-    },
-  };
+function renderSider(path = "/orders") {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <AdminSider
+        collapsed={false}
+        mobileOpen={false}
+        onCollapsedChange={() => undefined}
+        onMobileOpenChange={() => undefined}
+      />
+    </MemoryRouter>,
+  );
 }
 
 describe("AdminSider", () => {
@@ -84,64 +32,24 @@ describe("AdminSider", () => {
     vi.clearAllMocks();
   });
 
-  it("선택된 메뉴도 다시 클릭할 수 있다", async () => {
-    const fixture = createFixture();
+  it("선택된 메뉴도 다시 클릭할 수 있다", () => {
+    useIsMobileMock.mockReturnValue(false);
 
-    useIsMobileMock.mockImplementation(() => fixture.isMobile);
-    useMenuMock.mockImplementation(() => fixture.menuData);
-    useLinkMock.mockImplementation(
-      () =>
-        ({
-          to,
-          children,
-          style,
-        }: {
-          to: string;
-          children: ReactNode;
-          style?: CSSProperties;
-        }) => (
-          <a href={to} style={style}>
-            {children}
-          </a>
-        ),
+    renderSider();
+
+    expect(screen.getByRole("link", { name: "주문 관리" })).toHaveAttribute(
+      "href",
+      "/orders",
     );
-
-    render(<AdminSider />);
-
-    expect(
-      await screen.findByRole("link", { name: "주문 관리" }),
-    ).not.toHaveStyle({
-      pointerEvents: "none",
-    });
   });
 
-  it("local 환경에서는 sider를 파란색으로 표시한다", async () => {
-    const fixture = createFixture();
-
+  it("local 환경에서는 sider를 파란색으로 표시한다", () => {
     vi.stubEnv("VITE_APP_ENV", "local");
-    useIsMobileMock.mockImplementation(() => fixture.isMobile);
-    useMenuMock.mockImplementation(() => fixture.menuData);
-    useLinkMock.mockImplementation(
-      () =>
-        ({
-          to,
-          children,
-          style,
-        }: {
-          to: string;
-          children: ReactNode;
-          style?: CSSProperties;
-        }) => (
-          <a href={to} style={style}>
-            {children}
-          </a>
-        ),
-    );
+    useIsMobileMock.mockReturnValue(false);
 
-    const { container } = render(<AdminSider />);
-    await screen.findByRole("link", { name: "주문 관리" });
-    const sider = container.querySelector(".ant-layout-sider");
+    const { container } = renderSider();
+    const sider = container.querySelector(".adminSider");
 
-    expect(sider).toHaveStyle("background-color: #001f4d");
+    expect(sider).toHaveClass("adminSiderLocal");
   });
 });

@@ -1,13 +1,14 @@
-import {
-  CLAIM_STATUS_COLORS,
-  CLAIM_TYPE_LABELS,
-  ORDER_STATUS_COLORS,
-} from "@yeongseon/shared";
-import { Table, Tag } from "antd";
+import { Text } from "seed-design/ui/text";
+import type { ColumnDef } from "@tanstack/react-table";
+import { CLAIM_TYPE_LABELS } from "@yeongseon/shared";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminOrderHistoryEntry } from "@/features/orders/types/admin-order";
+import { OrderStatusBadge } from "./order-status-badge";
 
 interface StatusLogTableProps {
   logs: AdminOrderHistoryEntry[];
+  isLoading?: boolean;
 }
 
 function renderDate(value: string) {
@@ -16,74 +17,81 @@ function renderDate(value: string) {
   return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString("ko-KR");
 }
 
-function getStatusColor(log: AdminOrderHistoryEntry, status: string) {
-  return log.kind === "claim"
-    ? CLAIM_STATUS_COLORS[status]
-    : ORDER_STATUS_COLORS[status];
-}
+const columns: ColumnDef<AdminOrderHistoryEntry>[] = [
+  {
+    accessorKey: "createdAt",
+    header: "일시",
+    cell: ({ row }) => renderDate(row.original.createdAt),
+  },
+  {
+    accessorKey: "kind",
+    header: "이력 종류",
+    cell: ({ row }) => (
+      <StatusBadge tone={row.original.kind === "claim" ? "warning" : "brand"}>
+        {row.original.kind === "claim" ? "클레임" : "주문"}
+      </StatusBadge>
+    ),
+  },
+  {
+    id: "claimInfo",
+    header: "클레임 정보",
+    cell: ({ row }) =>
+      row.original.kind === "claim" ? (
+        <Text as="span" textStyle="t4Regular">
+          <StatusBadge>{CLAIM_TYPE_LABELS[row.original.claimType]}</StatusBadge>{" "}
+          {row.original.claimNumber}
+        </Text>
+      ) : (
+        "-"
+      ),
+  },
+  {
+    accessorKey: "previousStatus",
+    header: "이전 상태",
+    cell: ({ row }) => (
+      <OrderStatusBadge>{row.original.previousStatus}</OrderStatusBadge>
+    ),
+  },
+  {
+    accessorKey: "newStatus",
+    header: "변경 상태",
+    cell: ({ row }) => (
+      <OrderStatusBadge>{row.original.newStatus}</OrderStatusBadge>
+    ),
+  },
+  {
+    accessorKey: "changedBy",
+    header: "변경자",
+    cell: ({ row }) => row.original.changedBy ?? "-",
+  },
+  {
+    accessorKey: "memo",
+    header: "메모",
+    cell: ({ row }) => row.original.memo ?? "-",
+  },
+  {
+    accessorKey: "isRollback",
+    header: "구분",
+    cell: ({ row }) => (
+      <StatusBadge tone={row.original.isRollback ? "critical" : "neutral"}>
+        {row.original.isRollback ? "롤백" : "정상"}
+      </StatusBadge>
+    ),
+  },
+];
 
-export function StatusLogTable({ logs }: StatusLogTableProps) {
+export function StatusLogTable({
+  logs,
+  isLoading = false,
+}: StatusLogTableProps) {
   return (
-    <Table
-      dataSource={logs}
-      rowKey={(record) => `${record.kind}:${record.id}`}
-      pagination={false}
-      style={{ marginBottom: 24 }}
-    >
-      <Table.Column dataIndex="createdAt" title="일시" render={renderDate} />
-      <Table.Column
-        dataIndex="kind"
-        title="이력 종류"
-        render={(value: AdminOrderHistoryEntry["kind"]) => (
-          <Tag color={value === "claim" ? "gold" : "blue"}>
-            {value === "claim" ? "클레임" : "주문"}
-          </Tag>
-        )}
-      />
-      <Table.Column<AdminOrderHistoryEntry>
-        title="클레임 정보"
-        render={(_, record) =>
-          record.kind === "claim" ? (
-            <>
-              <Tag color="purple">{CLAIM_TYPE_LABELS[record.claimType]}</Tag>
-              {record.claimNumber}
-            </>
-          ) : (
-            "-"
-          )
-        }
-      />
-      <Table.Column<AdminOrderHistoryEntry>
-        dataIndex="previousStatus"
-        title="이전 상태"
-        render={(value: string, record) => (
-          <Tag color={getStatusColor(record, value)}>{value}</Tag>
-        )}
-      />
-      <Table.Column<AdminOrderHistoryEntry>
-        dataIndex="newStatus"
-        title="변경 상태"
-        render={(value: string, record) => (
-          <Tag color={getStatusColor(record, value)}>{value}</Tag>
-        )}
-      />
-      <Table.Column
-        dataIndex="changedBy"
-        title="변경자"
-        render={(value: string | null | undefined) => value ?? "-"}
-      />
-      <Table.Column
-        dataIndex="memo"
-        title="메모"
-        render={(value: string | null) => value ?? "-"}
-      />
-      <Table.Column
-        dataIndex="isRollback"
-        title="구분"
-        render={(value: boolean) =>
-          value ? <Tag color="red">롤백</Tag> : <Tag color="default">정상</Tag>
-        }
-      />
-    </Table>
+    <AdminDataTable
+      data={logs}
+      columns={columns}
+      getRowId={(row) => `${row.kind}:${row.id}`}
+      emptyText="상태 변경 이력이 없습니다."
+      minWidth={960}
+      isLoading={isLoading}
+    />
   );
 }

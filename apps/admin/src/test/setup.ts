@@ -15,6 +15,20 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
+if (!window.CSS) {
+  Object.defineProperty(window, "CSS", {
+    configurable: true,
+    value: {},
+  });
+}
+
+if (!window.CSS.supports) {
+  Object.defineProperty(window.CSS, "supports", {
+    configurable: true,
+    value: () => true,
+  });
+}
+
 const originalGetComputedStyle = window.getComputedStyle.bind(window);
 const normalizePseudoElement = (pseudoElt?: string | null) =>
   pseudoElt && pseudoElt !== "" ? undefined : pseudoElt;

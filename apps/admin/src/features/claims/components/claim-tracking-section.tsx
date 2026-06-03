@@ -1,27 +1,39 @@
-import { Button, Flex, Input, Select } from "antd";
+import { Text } from "seed-design/ui/text";
 import {
   COURIER_COMPANY_NAMES,
   buildTrackingUrl,
 } from "@yeongseon/shared/constants/courier-companies";
+import { ActionButton } from "seed-design/ui/action-button";
+import { TextField, TextFieldInput } from "seed-design/ui/text-field";
+import { AdminSelectField } from "@/components/AdminSelectField";
+import "./claims.css";
+
+const COURIER_OPTIONS = COURIER_COMPANY_NAMES.map((name) => ({
+  label: name,
+  value: name,
+}));
+
+const TRACKING_TITLE = {
+  return: "수거 정보",
+  resend: "재발송 정보",
+} as const;
+
+const TRACKING_LABEL = {
+  return: "수거추적",
+  resend: "배송추적",
+} as const;
 
 interface ClaimTrackingSectionProps {
-  claimId: string;
   trackingType: "return" | "resend";
   courierCompany: string;
   trackingNumber: string;
   onCourierChange: (value: string) => void;
   onTrackingNumberChange: (value: string) => void;
-  onSave: (
-    claimId: string,
-    trackingType: "return" | "resend",
-    courierCompany: string,
-    trackingNumber: string,
-  ) => void;
+  onSave: () => void;
   isPending: boolean;
 }
 
 export function ClaimTrackingSection({
-  claimId,
   trackingType,
   courierCompany,
   trackingNumber,
@@ -35,41 +47,56 @@ export function ClaimTrackingSection({
       ? buildTrackingUrl(courierCompany, trackingNumber)
       : null;
 
-  const trackingLabel = trackingType === "return" ? "수거추적" : "배송추적";
-
   return (
-    <Flex wrap="wrap" gap={8} style={{ width: "100%", marginBottom: 24 }}>
-      <Select
-        value={courierCompany || undefined}
-        placeholder="택배사 선택"
-        onChange={(value) => onCourierChange(value ?? "")}
-        style={{ flex: 1, minWidth: 140 }}
-        options={COURIER_COMPANY_NAMES.map((name) => ({
-          label: name,
-          value: name,
-        }))}
-        allowClear
-      />
-      <Input
-        value={trackingNumber}
-        placeholder="송장번호"
-        onChange={(e) => onTrackingNumberChange(e.target.value)}
-        style={{ flex: 1, minWidth: 140 }}
-      />
-      <Button
-        type="primary"
-        onClick={() =>
-          onSave(claimId, trackingType, courierCompany, trackingNumber)
-        }
-        loading={isPending}
+    <section
+      className="claimPanel"
+      aria-labelledby={`${trackingType}-tracking-title`}
+    >
+      <Text
+        as="h2"
+        textStyle="t6Bold"
+        id={`${trackingType}-tracking-title`}
+        className="claimPanelTitle"
       >
-        저장
-      </Button>
-      {trackingUrl && (
-        <Button href={trackingUrl} target="_blank" rel="noopener noreferrer">
-          {trackingLabel}
-        </Button>
-      )}
-    </Flex>
+        {TRACKING_TITLE[trackingType]}
+      </Text>
+      <div className="claimTrackingForm">
+        <AdminSelectField
+          className="claimTrackingField"
+          label="택배사"
+          name={`${trackingType}-courier-company`}
+          value={courierCompany}
+          onChange={(event) => onCourierChange(event.target.value)}
+        >
+          <option value="">택배사 선택</option>
+          {COURIER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AdminSelectField>
+        <TextField
+          className="claimTrackingField"
+          label="송장번호"
+          value={trackingNumber}
+          onValueChange={({ value }) => onTrackingNumberChange(value)}
+        >
+          <TextFieldInput
+            name={`${trackingType}-tracking-number`}
+            placeholder="송장번호"
+          />
+        </TextField>
+        <ActionButton type="button" loading={isPending} onClick={onSave}>
+          저장
+        </ActionButton>
+        {trackingUrl ? (
+          <ActionButton asChild variant="neutralWeak">
+            <a href={trackingUrl} target="_blank" rel="noopener noreferrer">
+              {TRACKING_LABEL[trackingType]}
+            </a>
+          </ActionButton>
+        ) : null}
+      </div>
+    </section>
   );
 }

@@ -1,51 +1,148 @@
-import { Table, Tag, Select, Space } from "antd";
-import { useNavigation } from "@refinedev/core";
+import { Text } from "seed-design/ui/text";
+import { useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import {
-  INQUIRY_STATUS_COLORS,
+  AdminFilterField,
+  AdminFilterSelect,
+} from "@/components/AdminFilterControls";
+import { StatusBadge } from "@/components/StatusBadge";
+import {
   INQUIRY_STATUS_OPTIONS,
+  type AdminInquiryListItem,
+  type InquiryStatus,
 } from "@/features/inquiries/types/admin-inquiry";
-import { useAdminInquiryTable } from "@/features/inquiries/api/inquiries-query";
-import type { AdminInquiryListItem } from "@/features/inquiries/types/admin-inquiry";
+import {
+  INQUIRY_PAGE_SIZE,
+  useAdminInquiryTable,
+} from "@/features/inquiries/api/inquiries-query";
+import "./inquiries.css";
+
+const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
+
+function parsePageParam(value: string | null): number {
+  return Math.max(1, Number(value ?? "1") || 1);
+}
+
+function statusTone(status: InquiryStatus) {
+  return status === "답변완료" ? "positive" : "warning";
+}
 
 export function InquiryListTable() {
-  const { show } = useNavigation();
-  const { tableProps, setFilters } = useAdminInquiryTable();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parsePageParam(searchParams.get("page"));
+  const status = (searchParams.get("status") || null) as InquiryStatus | null;
+  const query = useAdminInquiryTable({ page, status });
+  const rows = query.data?.rows ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / INQUIRY_PAGE_SIZE));
+
+  const columns = useMemo<ColumnDef<AdminInquiryListItem>[]>(
+    () => [
+      { accessorKey: "title", header: "제목" },
+      { accessorKey: "category", header: "유형" },
+      {
+        accessorKey: "status",
+        header: "상태",
+        cell: ({ row }) => (
+          <StatusBadge tone={statusTone(row.original.status)}>
+            {row.original.status}
+          </StatusBadge>
+        ),
+      },
+      { accessorKey: "date", header: "작성일" },
+    ],
+    [],
+  );
+
+  const setStatus = (nextStatus: string): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (nextStatus) next.set("status", nextStatus);
+      else next.delete("status");
+      return next;
+    });
+  };
+
+  const updatePage = (nextPage: number): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(nextPage));
+      return next;
+    });
+  };
 
   return (
-    <>
-      <Space style={{ marginBottom: 16 }}>
-        <Select
-          placeholder="상태"
-          allowClear
-          options={INQUIRY_STATUS_OPTIONS}
-          onChange={(value) => {
-            setFilters([
-              { field: "status", operator: "eq", value: value || undefined },
-            ]);
-          }}
-          style={{ width: 120 }}
-        />
-      </Space>
+    <section className="inquiryPanel" aria-labelledby="inquiry-list-title">
+      <AdminPanelHeader
+        title="문의 목록"
+        id="inquiry-list-title"
+        className="inquiryPanelHeader"
+        titleClassName="inquiryPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
 
-      <Table
-        {...tableProps}
-        rowKey="id"
-        onRow={(record: AdminInquiryListItem) => ({
-          onClick: () => show("inquiries", record.id),
-          style: { cursor: "pointer" },
-        })}
+      <form
+        className="inquiryToolbar"
+        aria-label="문의 목록 필터"
+        onSubmit={(event) => event.preventDefault()}
       >
-        <Table.Column dataIndex="title" title="제목" />
-        <Table.Column dataIndex="category" title="유형" />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(v: AdminInquiryListItem["status"]) => (
-            <Tag color={INQUIRY_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-        <Table.Column dataIndex="date" title="작성일" />
-      </Table>
-    </>
+        <AdminFilterField>
+          <AdminFilterSelect
+            label="상태"
+            name="inquiry-status"
+            value={status ?? ""}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">전체</option>
+            {INQUIRY_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </AdminFilterSelect>
+        </AdminFilterField>
+      </form>
+
+      {query.error ? (
+        <Callout tone="critical" description={query.error.message} />
+      ) : null}
+      <AdminDataTable
+        data={rows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        emptyText="문의가 없습니다."
+        onRowClick={(row) => navigate(`/inquiries/show/${row.id}`)}
+        getRowActionLabel={(row) => `${row.title} 문의 상세 보기`}
+        isLoading={query.isFetching}
+      />
+      <nav className="inquiryPagination" aria-label="문의 페이지네이션">
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page <= 1}
+          onClick={() => updatePage(page - 1)}
+        >
+          이전
+        </ActionButton>
+        <Text as="span" textStyle="t4Regular">
+          {page} / {totalPages}
+        </Text>
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page >= totalPages}
+          onClick={() => updatePage(page + 1)}
+        >
+          다음
+        </ActionButton>
+      </nav>
+    </section>
   );
 }

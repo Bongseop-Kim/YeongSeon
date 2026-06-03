@@ -55,3 +55,38 @@ export interface AdminProductOption {
   additionalPrice: number;
   stock: number | null;
 }
+
+export interface AdminProductFormOption extends AdminProductOption {
+  formKey: string;
+}
+
+export interface AdminProductDetail {
+  id: number;
+  code: string | null;
+  name: string;
+  category: string;
+  color: string;
+  pattern: string;
+  material: string;
+  info: string;
+  price: number;
+  stock: number | null;
+  image: string | null;
+  detailImages: string[];
+  optionLabel: string | null;
+  options: AdminProductOption[];
+}
+
+export interface AdminProductFormValues {
+  code: string | null;
+  name: string;
+  category: string;
+  color: string;
+  pattern: string;
+  material: string;
+  info: string;
+  price: number | null;
+  stock: number | null;
+  optionLabel: string;
+  options: AdminProductFormOption[];
+}

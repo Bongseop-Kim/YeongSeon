@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { GenerationLogDetailPage } from "@/features/generation-logs/components/generation-log-detail-page";
@@ -20,6 +21,37 @@ vi.mock("@/features/generation-logs/api/generation-logs-query", () => ({
     data: mocks.workflowLogs,
     isLoading: false,
   }),
+}));
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    size: _size,
+    variant: _variant,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement> & {
+    loading?: boolean;
+    size?: string;
+    variant?: string;
+  }) => <button {...props}>{children}</button>,
+}));
+
+vi.mock("seed-design/ui/callout", () => ({
+  Callout: ({
+    description,
+    role,
+    title,
+  }: {
+    description?: ReactNode;
+    role?: string;
+    title?: ReactNode;
+  }) => (
+    <div role={role}>
+      {title ? <p>{title}</p> : null}
+      {description ? <p>{description}</p> : null}
+    </div>
+  ),
 }));
 
 const tileRoleOnlyLog: AdminGenerationLogItem = {
@@ -191,9 +223,7 @@ describe("GenerationLogDetailPage", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("logged_request_fields")).not.toBeInTheDocument();
     expect(screen.queryByText("logged_result_fields")).not.toBeInTheDocument();
-    expect(
-      screen.getByText("기본 정보 & API 전송/실행 로그"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("선택 결과 실행 정보")).toBeInTheDocument();
   });
 
   it("레거시 입력 이미지 저장 실패 안내를 표시하지 않는다", () => {
@@ -234,6 +264,6 @@ describe("GenerationLogDetailPage", () => {
     expect(screen.getByText("생성 결과 세트")).toBeInTheDocument();
     expect(screen.getAllByAltText(/생성 결과/)).toHaveLength(4);
     expect(screen.getByText("4/4 성공")).toBeInTheDocument();
-    expect(screen.getByText("Variant 4")).toBeInTheDocument();
+    expect(screen.getByText("결과 4")).toBeInTheDocument();
   });
 });

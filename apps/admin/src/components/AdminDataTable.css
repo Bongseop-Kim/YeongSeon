@@ -1,0 +1,50 @@
+.adminDataTableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+}
+
+.adminDataTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.adminDataTable th,
+.adminDataTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.adminDataTable th {
+  color: var(--seed-color-fg-neutral-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.adminDataTable tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.adminDataTableRowButton {
+  cursor: pointer;
+}
+
+.adminDataTableRowButton:hover {
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.adminDataTableRowButton:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: -2px;
+}
+
+.adminDataTableEmpty {
+  padding: 28px;
+  text-align: center;
+  color: var(--seed-color-fg-neutral-muted);
+}

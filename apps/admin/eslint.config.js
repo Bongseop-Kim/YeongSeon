@@ -9,6 +9,9 @@ import {
 } from "../../eslint.app-config.js";
 
 export default tseslint.config([
+  {
+    ignores: ["seed-design/**"],
+  },
   ...rootConfig,
   appDisableDirectiveConfig,
   {

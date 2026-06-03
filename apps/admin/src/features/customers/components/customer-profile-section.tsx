@@ -1,6 +1,8 @@
-import { Descriptions, Tag } from "antd";
-import { ROLE_COLORS } from "@/features/customers/types/admin-customer";
+import { Text } from "seed-design/ui/text";
+import { AdminDetailItem, AdminDetailList } from "@/components/AdminDetailList";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminCustomerDetail } from "@/features/customers/types/admin-customer";
+import "./customers.css";
 
 interface Props {
   customer: AdminCustomerDetail;
@@ -8,31 +10,37 @@ interface Props {
 
 export function CustomerProfileSection({ customer }: Props) {
   return (
-    <Descriptions
-      bordered
-      column={{ xs: 1, sm: 1, md: 2 }}
-      style={{ marginBottom: 24 }}
-    >
-      <Descriptions.Item label="이름">{customer.name}</Descriptions.Item>
-      <Descriptions.Item label="전화번호">
-        {customer.phone ?? "-"}
-      </Descriptions.Item>
-      <Descriptions.Item label="역할">
-        <Tag color={ROLE_COLORS[customer.role] ?? "default"}>
-          {customer.role}
-        </Tag>
-      </Descriptions.Item>
-      <Descriptions.Item label="활성">
-        <Tag color={customer.isActive ? "green" : "default"}>
-          {customer.isActive ? "활성" : "비활성"}
-        </Tag>
-      </Descriptions.Item>
-      <Descriptions.Item label="가입일">
-        {customer.createdAt?.slice(0, 10)}
-      </Descriptions.Item>
-      <Descriptions.Item label="생년월일">
-        {customer.birth ?? "-"}
-      </Descriptions.Item>
-    </Descriptions>
+    <section className="customerPanel" aria-labelledby="customer-profile-title">
+      <div className="customerPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="customer-profile-title"
+          className="customerPanelTitle"
+        >
+          기본 정보
+        </Text>
+      </div>
+      <AdminDetailList>
+        <AdminDetailItem label="이름">{customer.name}</AdminDetailItem>
+        <AdminDetailItem label="전화번호">
+          {customer.phone ?? "-"}
+        </AdminDetailItem>
+        <AdminDetailItem label="역할">
+          <StatusBadge>{customer.role}</StatusBadge>
+        </AdminDetailItem>
+        <AdminDetailItem label="활성">
+          <StatusBadge tone={customer.isActive ? "positive" : "neutral"}>
+            {customer.isActive ? "활성" : "비활성"}
+          </StatusBadge>
+        </AdminDetailItem>
+        <AdminDetailItem label="가입일">
+          {customer.createdAt.slice(0, 10)}
+        </AdminDetailItem>
+        <AdminDetailItem label="생년월일">
+          {customer.birth ?? "-"}
+        </AdminDetailItem>
+      </AdminDetailList>
+    </section>
   );
 }

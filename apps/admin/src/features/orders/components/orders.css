@@ -1,0 +1,170 @@
+.orderPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.orderPageTitleGroup,
+.orderPanelTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderPageTitle,
+.orderPanelTitle,
+.orderSectionTitle,
+.orderSubsectionTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.orderPageTitle {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.orderPageDescription,
+.orderPanelDescription,
+.orderMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.orderPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+}
+
+.orderPanelHeader,
+.orderToolbar,
+.orderPagination,
+.orderActionRow,
+.orderDetailActions,
+.orderImageGrid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orderPanelHeader {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.orderPanelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.orderSectionTitle {
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.orderSubsectionTitle {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+.orderToolbar {
+  align-items: flex-end;
+}
+
+.orderField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.orderTrackingControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.orderTrackingActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+  padding-top: 16px;
+}
+
+.orderSearchField {
+  min-width: 240px;
+}
+
+.orderLinkButton {
+  font-weight: 600;
+}
+
+.orderImageGrid {
+  align-items: flex-start;
+}
+
+.orderPreviewImage {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.orderRepairCard,
+.orderOptionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.orderModalBody {
+  display: grid;
+  gap: 12px;
+}
+
+.orderDangerText {
+  margin: 0;
+  color: var(--seed-color-fg-critical);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+@media (max-width: 840px) {
+  .orderPanelHeader,
+  .orderDetailActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .orderTrackingControls {
+    grid-template-columns: 1fr;
+  }
+
+  .orderTrackingActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

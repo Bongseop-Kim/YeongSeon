@@ -1,105 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAdminCustomerOrders } from "@/features/customers/api/customers-query";
+import { getAdminCustomerOrders } from "@/features/customers/api/customers-api";
 
-const {
-  useTableMock,
-  useListMock,
-  useShowMock,
-  useQueryMock,
-  useMutationMock,
-  useQueryClientMock,
-  toAdminCustomerOrderRowMock,
-} = vi.hoisted(() => ({
-  useTableMock: vi.fn(),
-  useListMock: vi.fn(),
-  useShowMock: vi.fn(),
-  useQueryMock: vi.fn(),
-  useMutationMock: vi.fn(),
-  useQueryClientMock: vi.fn(),
-  toAdminCustomerOrderRowMock: vi.fn((value) => value),
+const { fromMock, selectMock, eqMock, orderMock } = vi.hoisted(() => ({
+  fromMock: vi.fn(),
+  selectMock: vi.fn(),
+  eqMock: vi.fn(),
+  orderMock: vi.fn(),
 }));
 
-vi.mock("@refinedev/antd", () => ({
-  useTable: useTableMock,
-}));
-
-vi.mock("@refinedev/core", () => ({
-  useList: useListMock,
-  useShow: useShowMock,
-}));
-
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: useQueryMock,
-  useMutation: useMutationMock,
-  useQueryClient: useQueryClientMock,
-}));
-
-vi.mock("antd", () => ({
-  message: {
-    success: vi.fn(),
-    error: vi.fn(),
+vi.mock("@/lib/supabase", () => ({
+  supabase: {
+    from: fromMock,
   },
 }));
 
-vi.mock("@/features/customers/api/customers-mapper", () => ({
-  toAdminCustomerListItem: vi.fn((value) => value),
-  toAdminCustomerDetail: vi.fn((value) => value),
-  toAdminCustomerOrderRow: toAdminCustomerOrderRowMock,
-  toAdminCustomerCouponRow: vi.fn((value) => value),
-  toAdminCustomerTokenRow: vi.fn((value) => value),
-}));
-
-vi.mock("@/features/customers/api/customers-api", () => ({
-  getCustomerTokenBalances: vi.fn(),
-  getCustomerTokenHistory: vi.fn(),
-  manageCustomerTokens: vi.fn(),
-}));
-
-describe("customers query contract", () => {
+describe("customers api contract", () => {
   beforeEach(() => {
-    useTableMock.mockReset();
-    useListMock.mockReset();
-    useShowMock.mockReset();
-    useQueryMock.mockReset();
-    useMutationMock.mockReset();
-    useQueryClientMock.mockReset();
+    fromMock.mockReset();
+    selectMock.mockReset();
+    eqMock.mockReset();
+    orderMock.mockReset();
 
-    useListMock.mockReturnValue({
-      result: {
-        data: [],
-        total: 0,
-      },
-      query: {
-        isLoading: false,
-      },
-    });
-    useShowMock.mockReturnValue({
-      result: undefined,
-      query: {
-        refetch: vi.fn(),
-        isLoading: false,
-        isError: false,
-      },
-    });
-    useQueryMock.mockReturnValue({ data: undefined });
-    useMutationMock.mockReturnValue({
-      mutate: vi.fn(),
-      mutateAsync: vi.fn(),
-      isPending: false,
-    });
-    useQueryClientMock.mockReturnValue({
-      invalidateQueries: vi.fn(),
-    });
+    fromMock.mockReturnValue({ select: selectMock });
+    selectMock.mockReturnValue({ eq: eqMock });
+    eqMock.mockReturnValue({ order: orderMock });
+    orderMock.mockResolvedValue({ data: [], error: null });
   });
 
-  it("고객 상세의 주문 목록은 createdAt으로 정렬한다", () => {
-    useAdminCustomerOrders("user-1");
+  it("고객 상세의 주문 목록은 createdAt으로 정렬한다", async () => {
+    await getAdminCustomerOrders("user-1");
 
-    expect(useListMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resource: "admin_order_list_view",
-        sorters: [{ field: "createdAt", order: "desc" }],
-      }),
-    );
+    expect(fromMock).toHaveBeenCalledWith("admin_order_list_view");
+    expect(eqMock).toHaveBeenCalledWith("userId", "user-1");
+    expect(orderMock).toHaveBeenCalledWith("createdAt", { ascending: false });
   });
 });

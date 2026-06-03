@@ -1,43 +1,52 @@
-import { Table, Tag } from "antd";
-import { useNavigation } from "@refinedev/core";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import { StatusBadge } from "@/components/StatusBadge";
 import type { AdminCustomerCouponRow } from "@/features/customers/types/admin-customer";
 
 interface Props {
   coupons: AdminCustomerCouponRow[];
+  isLoading?: boolean;
 }
 
-export function CustomerCouponsTable({ coupons }: Props) {
-  const { edit } = useNavigation();
+export function CustomerCouponsTable({ coupons, isLoading = false }: Props) {
+  const navigate = useNavigate();
+  const columns = useMemo<ColumnDef<AdminCustomerCouponRow>[]>(
+    () => [
+      { accessorKey: "couponId", header: "쿠폰 ID" },
+      {
+        accessorKey: "status",
+        header: "상태",
+        cell: ({ row }) => <StatusBadge>{row.original.status}</StatusBadge>,
+      },
+      {
+        accessorKey: "issuedAt",
+        header: "발급일",
+        cell: ({ row }) => row.original.issuedAt.slice(0, 10),
+      },
+      {
+        accessorKey: "expiresAt",
+        header: "만료일",
+        cell: ({ row }) => row.original.expiresAt?.slice(0, 10) ?? "-",
+      },
+    ],
+    [],
+  );
+
+  const openCouponEditor = (coupon: AdminCustomerCouponRow): void => {
+    if (coupon.couponId) navigate(`/coupons/edit/${coupon.couponId}`);
+  };
 
   return (
-    <Table
-      dataSource={coupons}
-      rowKey="id"
-      pagination={false}
-      size="small"
-      onRow={(record: AdminCustomerCouponRow) => ({
-        onClick: record.couponId
-          ? () => edit("coupons", record.couponId)
-          : undefined,
-        style: { cursor: record.couponId ? "pointer" : "default" },
-      })}
-    >
-      <Table.Column dataIndex="couponId" title="쿠폰 ID" />
-      <Table.Column
-        dataIndex="status"
-        title="상태"
-        render={(v: string) => <Tag>{v}</Tag>}
-      />
-      <Table.Column
-        dataIndex="issuedAt"
-        title="발급일"
-        render={(v: string) => v?.slice(0, 10)}
-      />
-      <Table.Column
-        dataIndex="expiresAt"
-        title="만료일"
-        render={(v: string | null) => v?.slice(0, 10) ?? "-"}
-      />
-    </Table>
+    <AdminDataTable
+      data={coupons}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyText="보유 쿠폰이 없습니다."
+      onRowClick={openCouponEditor}
+      getRowActionLabel={(row) => `${row.couponId} 쿠폰 수정`}
+      isLoading={isLoading}
+    />
   );
 }

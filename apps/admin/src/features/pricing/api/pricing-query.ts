@@ -1,9 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { message } from "antd";
-import { supabase } from "@/lib/supabase";
-import type { PricingConstantRow } from "@/features/pricing/types/admin-pricing";
-
-// ── 토큰 구매 가격 ────────────────────────────────────────────
+import {
+  getFabricPrices,
+  getPricingConstants,
+  getPricingRowsByKeys,
+  getSampleCouponAmounts,
+  updatePricingConstant,
+  upsertSampleCouponAmounts,
+  upsertTokenPricing,
+} from "@/features/pricing/api/pricing-api";
+import type {
+  TokenPricingKey,
+  TokenTierUI,
+} from "@/features/pricing/types/admin-pricing";
 
 const TOKEN_PRICING_KEY = ["pricing", "token"] as const;
 
@@ -15,16 +23,6 @@ const TOKEN_PRICING_SETTINGS = [
   { key: "token_plan_pro_price", label: "Pro", field: "price" },
   { key: "token_plan_pro_amount", label: "Pro", field: "amount" },
 ] as const;
-
-export type TokenPricingKey = (typeof TOKEN_PRICING_SETTINGS)[number]["key"];
-
-export interface TokenTierUI {
-  label: string;
-  priceKey: TokenPricingKey;
-  amountKey: TokenPricingKey;
-  price: number;
-  amount: number;
-}
 
 export const TOKEN_PRICING_TIERS: Array<{
   label: string;
@@ -52,13 +50,8 @@ export function useTokenPricing() {
   return useQuery({
     queryKey: TOKEN_PRICING_KEY,
     queryFn: async (): Promise<TokenTierUI[]> => {
-      const keys = TOKEN_PRICING_SETTINGS.map((s) => s.key);
-      const { data, error } = await supabase
-        .from("pricing_constants")
-        .select("key, amount")
-        .in("key", keys);
-      if (error) throw error;
-      const rows = (data ?? []) as PricingConstantRow[];
+      const keys = TOKEN_PRICING_SETTINGS.map((setting) => setting.key);
+      const rows = await getPricingRowsByKeys(keys);
       const rowMap = new Map(rows.map((row) => [row.key, row.amount]));
 
       return TOKEN_PRICING_TIERS.map(({ label, priceKey, amountKey }) => ({
@@ -75,28 +68,9 @@ export function useTokenPricing() {
 export function useUpdateTokenPricing() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (tiers: TokenTierUI[]) => {
-      const rows: PricingConstantRow[] = tiers.flatMap(
-        ({ priceKey, amountKey, price, amount }) => [
-          { key: priceKey, amount: price },
-          { key: amountKey, amount: amount },
-        ],
-      );
-      const { error } = await supabase.from("pricing_constants").upsert(
-        rows.map(({ key, amount }) => ({
-          key,
-          amount,
-          category: "token",
-        })),
-        { onConflict: "key" },
-      );
-      if (error) throw error;
-    },
+    mutationFn: upsertTokenPricing,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
-    },
-    onError: (error: Error) => {
-      message.error(`저장 실패: ${error.message}`);
+      void queryClient.invalidateQueries({ queryKey: TOKEN_PRICING_KEY });
     },
   });
 }
@@ -107,48 +81,23 @@ const FABRIC_PRICES_KEY = ["pricing", "fabric"] as const;
 export function usePricingConstants() {
   return useQuery({
     queryKey: PRICING_CONSTANTS_KEY,
-    queryFn: async (): Promise<PricingConstantRow[]> => {
-      const { data, error } = await supabase
-        .from("pricing_constants")
-        .select("key, amount")
-        .in("category", ["custom_order", "reform"])
-        .order("key");
-      if (error) throw error;
-      return data;
-    },
+    queryFn: getPricingConstants,
   });
 }
 
 export function useFabricPrices() {
   return useQuery({
     queryKey: FABRIC_PRICES_KEY,
-    queryFn: async (): Promise<PricingConstantRow[]> => {
-      const { data, error } = await supabase
-        .from("pricing_constants")
-        .select("key, amount")
-        .eq("category", "fabric")
-        .order("key");
-      if (error) throw error;
-      return data;
-    },
+    queryFn: getFabricPrices,
   });
 }
 
 export function useUpdatePricingConstant() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ key, amount }: PricingConstantRow) => {
-      const { error } = await supabase
-        .from("pricing_constants")
-        .update({ amount })
-        .eq("key", key);
-      if (error) throw error;
-    },
+    mutationFn: updatePricingConstant,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PRICING_CONSTANTS_KEY });
-    },
-    onError: (error: Error) => {
-      message.error(`저장 실패: ${error.message}`);
+      void queryClient.invalidateQueries({ queryKey: PRICING_CONSTANTS_KEY });
     },
   });
 }
@@ -156,25 +105,13 @@ export function useUpdatePricingConstant() {
 export function useUpdateFabricPrice() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ key, amount }: PricingConstantRow) => {
-      const { error } = await supabase
-        .from("pricing_constants")
-        .update({ amount })
-        .eq("key", key);
-      if (error) throw error;
-    },
+    mutationFn: updatePricingConstant,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: FABRIC_PRICES_KEY });
-    },
-    onError: (error: Error) => {
-      message.error(`저장 실패: ${error.message}`);
+      void queryClient.invalidateQueries({ queryKey: FABRIC_PRICES_KEY });
     },
   });
 }
 
-// ── 샘플 할인 쿠폰 금액 (타입별 5종) ─────────────────────────
-// ⚠️ 원본은 pricing_constants(category='sample_discount')이며,
-// coupons 테이블의 SAMPLE_DISCOUNT_* row는 RPC가 자동 동기화합니다.
 const SAMPLE_DISCOUNT_QUERY_KEY = ["pricing", "sample-discount"] as const;
 
 export const SAMPLE_DISCOUNT_KEYS = [
@@ -185,45 +122,21 @@ export const SAMPLE_DISCOUNT_KEYS = [
   "sample_discount_fabric_and_sewing_yarn_dyed",
 ] as const;
 
-export type SampleDiscountKey = (typeof SAMPLE_DISCOUNT_KEYS)[number];
-
 export function useSampleCouponAmounts() {
   return useQuery({
     queryKey: SAMPLE_DISCOUNT_QUERY_KEY,
-    queryFn: async (): Promise<Record<SampleDiscountKey, number>> => {
-      const { data, error } = await supabase
-        .from("pricing_constants")
-        .select("key, amount")
-        .eq("category", "sample_discount");
-      if (error) throw error;
-      return Object.fromEntries(
-        (data ?? []).map((row) => [row.key, row.amount]),
-      ) as Record<SampleDiscountKey, number>;
-    },
+    queryFn: () => getSampleCouponAmounts(SAMPLE_DISCOUNT_KEYS),
   });
 }
 
 export function useUpdateSampleCouponAmounts() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (
-      mutations: { key: SampleDiscountKey; amount: number }[],
-    ) => {
-      const { error } = await supabase.from("pricing_constants").upsert(
-        mutations.map(({ key, amount }) => ({
-          key,
-          amount,
-          category: "sample_discount",
-        })),
-        { onConflict: "key" },
-      );
-      if (error) throw error;
-    },
+    mutationFn: upsertSampleCouponAmounts,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SAMPLE_DISCOUNT_QUERY_KEY });
-    },
-    onError: (error: Error) => {
-      message.error(`저장 실패: ${error.message}`);
+      void queryClient.invalidateQueries({
+        queryKey: SAMPLE_DISCOUNT_QUERY_KEY,
+      });
     },
   });
 }

@@ -14,12 +14,18 @@ import type {
   GenerationStatsData,
 } from "@/features/generation-logs/types/admin-generation-log";
 
-export function useGenerationStatsQuery(dateRange: [Dayjs, Dayjs]): {
+type GenerationDateRange = [string | Dayjs, string | Dayjs];
+
+function toDateString(value: string | Dayjs): string {
+  return typeof value === "string" ? value : value.format("YYYY-MM-DD");
+}
+
+export function useGenerationStatsQuery(dateRange: GenerationDateRange): {
   data: GenerationStatsData | undefined;
   isLoading: boolean;
 } {
-  const startDate = dateRange[0].format("YYYY-MM-DD");
-  const endDate = dateRange[1].format("YYYY-MM-DD");
+  const startDate = toDateString(dateRange[0]);
+  const endDate = toDateString(dateRange[1]);
   return useQuery({
     queryKey: ["generation-logs", "stats", startDate, endDate],
     queryFn: () => getGenerationStats(startDate, endDate),
@@ -27,7 +33,7 @@ export function useGenerationStatsQuery(dateRange: [Dayjs, Dayjs]): {
 }
 
 export function useGenerationLogsQuery(params: {
-  dateRange: [Dayjs, Dayjs];
+  dateRange: GenerationDateRange;
   aiModel: string | null;
   page: number;
   requestType?: GenerationRequestTypeFilter | null;
@@ -38,8 +44,8 @@ export function useGenerationLogsQuery(params: {
   hasMore: boolean;
   isLoading: boolean;
 } {
-  const startDate = params.dateRange[0].format("YYYY-MM-DD");
-  const endDate = params.dateRange[1].format("YYYY-MM-DD");
+  const startDate = toDateString(params.dateRange[0]);
+  const endDate = toDateString(params.dateRange[1]);
   const normalizedPage = Math.max(1, Math.floor(Number(params.page) || 1));
 
   const query = useQuery({

@@ -1,82 +1,48 @@
-import { useState } from "react";
-import { useTable } from "@refinedev/antd";
-import { useShow, useInvalidate } from "@refinedev/core";
-import { message } from "antd";
-import type { TableProps } from "antd";
-import type { AdminInquiryRowDTO } from "@yeongseon/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  toAdminInquiryListItem,
-  toAdminInquiryDetail,
-} from "@/features/inquiries/api/inquiries-mapper";
-import { answerInquiry } from "@/features/inquiries/api/inquiries-api";
-import type {
-  AdminInquiryListItem,
-  AdminInquiryDetail,
-} from "@/features/inquiries/types/admin-inquiry";
+  answerInquiry,
+  getAdminInquiries,
+  getAdminInquiryDetail,
+} from "@/features/inquiries/api/inquiries-api";
+import type { InquiryStatus } from "@/features/inquiries/types/admin-inquiry";
 
-// ── List ───────────────────────────────────────────────────────
+export const INQUIRY_PAGE_SIZE = 20;
 
-export function useAdminInquiryTable() {
-  const { tableProps: rawTableProps, setFilters } =
-    useTable<AdminInquiryRowDTO>({
-      resource: "inquiries",
-      sorters: { initial: [{ field: "created_at", order: "desc" }] },
-      syncWithLocation: true,
-    });
-
-  const tableProps: TableProps<AdminInquiryListItem> = {
-    loading: rawTableProps.loading,
-    pagination: rawTableProps.pagination,
-    onChange:
-      rawTableProps.onChange as TableProps<AdminInquiryListItem>["onChange"],
-    dataSource: (rawTableProps.dataSource ?? []).map(toAdminInquiryListItem),
-  };
-
-  return { tableProps, setFilters };
-}
-
-// ── Detail ────────────────────────────────────────────────────
-
-export function useAdminInquiryDetail() {
-  const { query } = useShow<AdminInquiryRowDTO>({
-    resource: "inquiries",
-    meta: { select: "*, products(id, name, image)" },
+export function useAdminInquiryTable(params: {
+  page: number;
+  status?: InquiryStatus | null;
+}) {
+  return useQuery({
+    queryKey: ["inquiries", "list", params.page, params.status ?? null],
+    queryFn: () =>
+      getAdminInquiries({
+        page: params.page,
+        pageSize: INQUIRY_PAGE_SIZE,
+        status: params.status ?? null,
+      }),
   });
-
-  const rawData = query.data?.data;
-  const detail: AdminInquiryDetail | undefined = rawData
-    ? toAdminInquiryDetail(rawData)
-    : undefined;
-
-  return { detail, isLoading: query.isLoading, refetch: query.refetch };
 }
 
-// ── Answer mutation ────────────────────────────────────────────
+export function useAdminInquiryDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: ["inquiries", "detail", id],
+    queryFn: () => getAdminInquiryDetail(id ?? ""),
+    enabled: Boolean(id),
+  });
+}
 
-export function useAnswerInquiry(refetchDetail?: () => void) {
-  const invalidate = useInvalidate();
-  const [isPending, setIsPending] = useState(false);
-
-  const answer = async (
-    inquiryId: string,
-    answerText: string,
-  ): Promise<boolean> => {
-    setIsPending(true);
-    try {
-      await answerInquiry({ inquiryId, answer: answerText });
-      message.success("답변이 등록되었습니다.");
-      invalidate({ resource: "inquiries", invalidates: ["list"] });
-      refetchDetail?.();
-      return true;
-    } catch (err) {
-      message.error(
-        `답변 등록 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
-      );
-      return false;
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  return { answer, isPending };
+export function useAnswerInquiry(inquiryId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (answer: string) =>
+      answerInquiry({ inquiryId: inquiryId ?? "", answer }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["inquiries", "list"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["inquiries", "detail", inquiryId],
+        }),
+      ]);
+    },
+  });
 }

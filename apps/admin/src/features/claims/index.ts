@@ -1,3 +1,5 @@
+import "./components/claims.css";
+
 export { ClaimListTable } from "./components/claim-list-table";
 export { ClaimInfoSection } from "./components/claim-info-section";
 export { OrderShippingSection } from "./components/order-shipping-section";
@@ -11,3 +13,4 @@ export {
   useClaimTrackingSave,
   useClaimTrackingState,
 } from "./api/claims-query";
+export type { AdminClaimStatusLogEntry } from "./types/admin-claim";

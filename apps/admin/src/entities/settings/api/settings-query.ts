@@ -1,16 +1,13 @@
-import { useOne } from "@refinedev/core";
-import type { AdminSettingRowDTO } from "@yeongseon/shared";
+import { useQuery } from "@tanstack/react-query";
+import { getAdminSetting } from "./settings-api";
 
 const DEFAULT_COURIER_COMPANY_KEY = "default_courier_company";
-const SETTING_RESOURCE = "admin_settings";
-const SETTING_ID_META = { idColumnName: "key" } as const;
 
 export function useDefaultCourier(): string | undefined {
-  const { result } = useOne<AdminSettingRowDTO>({
-    resource: SETTING_RESOURCE,
-    id: DEFAULT_COURIER_COMPANY_KEY,
-    meta: SETTING_ID_META,
+  const { data } = useQuery({
+    queryKey: ["admin-settings", DEFAULT_COURIER_COMPANY_KEY],
+    queryFn: () => getAdminSetting(DEFAULT_COURIER_COMPANY_KEY),
   });
 
-  return result?.value ?? undefined;
+  return data?.value ?? undefined;
 }

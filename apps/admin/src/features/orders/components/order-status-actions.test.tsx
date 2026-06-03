@@ -1,4 +1,4 @@
-import { App } from "antd";
+import type { ButtonHTMLAttributes } from "react";
 import {
   act,
   fireEvent,
@@ -8,6 +8,22 @@ import {
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OrderStatusActions } from "@/features/orders/components/order-status-actions";
+
+vi.mock("seed-design/ui/action-button", () => ({
+  ActionButton: ({
+    children,
+    loading: _loading,
+    ...props
+  }: ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean }) => (
+    <button {...props}>{children}</button>
+  ),
+}));
+
+vi.mock("seed-design/ui/callout", () => ({
+  Callout: ({ description, role }: { description?: string; role?: string }) => (
+    <div role={role}>{description}</div>
+  ),
+}));
 import type { AdminOrderDetail } from "@/features/orders/types/admin-order";
 
 function createOrder(
@@ -43,16 +59,14 @@ describe("OrderStatusActions", () => {
     const onRollback = vi.fn().mockResolvedValue(true);
 
     render(
-      <App>
-        <OrderStatusActions
-          order={createOrder()}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={vi.fn().mockResolvedValue(undefined)}
-          onRollback={onRollback}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder()}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={vi.fn().mockResolvedValue(undefined)}
+        onRollback={onRollback}
+        isUpdating={false}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "대기중으로 롤백" }));
@@ -79,16 +93,14 @@ describe("OrderStatusActions", () => {
     const onStatusChange = vi.fn().mockResolvedValue(false);
 
     render(
-      <App>
-        <OrderStatusActions
-          order={createOrder()}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={onStatusChange}
-          onRollback={vi.fn().mockResolvedValue(true)}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder()}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={onStatusChange}
+        onRollback={vi.fn().mockResolvedValue(true)}
+        isUpdating={false}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "진행중으로 변경" }));
@@ -104,16 +116,14 @@ describe("OrderStatusActions", () => {
     const onRollback = vi.fn().mockResolvedValue(false);
 
     render(
-      <App>
-        <OrderStatusActions
-          order={createOrder()}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={vi.fn().mockResolvedValue(true)}
-          onRollback={onRollback}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder()}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={vi.fn().mockResolvedValue(true)}
+        onRollback={onRollback}
+        isUpdating={false}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "대기중으로 롤백" }));
@@ -132,16 +142,14 @@ describe("OrderStatusActions", () => {
     const onStatusChange = vi.fn().mockResolvedValue(false);
 
     render(
-      <App>
-        <OrderStatusActions
-          order={createOrder()}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={onStatusChange}
-          onRollback={vi.fn().mockResolvedValue(true)}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder()}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={onStatusChange}
+        onRollback={vi.fn().mockResolvedValue(true)}
+        isUpdating={false}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "취소 처리" }));
@@ -155,24 +163,22 @@ describe("OrderStatusActions", () => {
 
   it("활성 클레임이 있으면 상태 액션 버튼이 모두 비활성화되고 안내 문구가 보인다", () => {
     render(
-      <App>
-        <OrderStatusActions
-          order={createOrder({
-            activeClaim: {
-              id: "claim-1",
-              claimNumber: "CLM-001",
-              type: "exchange",
-              status: "수거요청",
-              quantity: 1,
-            },
-          })}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={vi.fn().mockResolvedValue(true)}
-          onRollback={vi.fn().mockResolvedValue(true)}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder({
+          activeClaim: {
+            id: "claim-1",
+            claimNumber: "CLM-001",
+            type: "exchange",
+            status: "수거요청",
+            quantity: 1,
+          },
+        })}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={vi.fn().mockResolvedValue(true)}
+        onRollback={vi.fn().mockResolvedValue(true)}
+        isUpdating={false}
+      />,
     );
 
     expect(
@@ -193,16 +199,14 @@ describe("OrderStatusActions", () => {
     const onStatusChange = vi.fn().mockResolvedValue(true);
 
     const { rerender } = render(
-      <App>
-        <OrderStatusActions
-          order={createOrder()}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={onStatusChange}
-          onRollback={vi.fn().mockResolvedValue(true)}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder()}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={onStatusChange}
+        onRollback={vi.fn().mockResolvedValue(true)}
+        isUpdating={false}
+      />,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "진행중으로 변경" }));
@@ -210,33 +214,28 @@ describe("OrderStatusActions", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
     rerender(
-      <App>
-        <OrderStatusActions
-          order={createOrder({
-            activeClaim: {
-              id: "claim-1",
-              claimNumber: "CLM-001",
-              type: "exchange",
-              status: "수거요청",
-              quantity: 1,
-            },
-          })}
-          nextStatus="진행중"
-          rollbackStatus="대기중"
-          onStatusChange={onStatusChange}
-          onRollback={vi.fn().mockResolvedValue(true)}
-          isUpdating={false}
-        />
-      </App>,
+      <OrderStatusActions
+        order={createOrder({
+          activeClaim: {
+            id: "claim-1",
+            claimNumber: "CLM-001",
+            type: "exchange",
+            status: "수거요청",
+            quantity: 1,
+          },
+        })}
+        nextStatus="진행중"
+        rollbackStatus="대기중"
+        onStatusChange={onStatusChange}
+        onRollback={vi.fn().mockResolvedValue(true)}
+        isUpdating={false}
+      />,
     );
 
     expect(
       screen.getByRole("button", { name: "진행중으로 변경" }),
     ).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "변경" }));
-
-    await waitFor(() => {
-      expect(onStatusChange).not.toHaveBeenCalled();
-    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(onStatusChange).not.toHaveBeenCalled();
   });
 });

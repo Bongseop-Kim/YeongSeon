@@ -1,7 +1,5 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { UploadFile } from "antd/es/upload";
-
 type LoadHookOptions = {
   publicKey?: string;
 };
@@ -9,16 +7,9 @@ type LoadHookOptions = {
 async function loadHook(options: LoadHookOptions = {}) {
   const uploadMock = vi.fn();
   const invokeMock = vi.fn();
-  const messageErrorMock = vi.fn();
-
   vi.resetModules();
   vi.doMock("@imagekit/react", () => ({
     upload: uploadMock,
-  }));
-  vi.doMock("antd", () => ({
-    message: {
-      error: messageErrorMock,
-    },
   }));
   vi.doMock("@/lib/supabase", () => ({
     supabase: {
@@ -37,13 +28,21 @@ async function loadHook(options: LoadHookOptions = {}) {
     useImageKitUpload: mod.useImageKitUpload,
     uploadMock,
     invokeMock,
-    messageErrorMock,
   };
 }
 
+interface UploadFileFixture {
+  uid: string;
+  name: string;
+  status?: "error" | "done" | "uploading" | "removed";
+  url?: string;
+  thumbUrl?: string;
+  fileId?: string;
+}
+
 function createUploadFile(
-  overrides?: Partial<UploadFile>,
-): UploadFile & { uid: string } {
+  overrides?: Partial<UploadFileFixture>,
+): UploadFileFixture {
   return {
     uid: "file-1",
     name: "image-1.jpg",
@@ -60,7 +59,6 @@ function createRcFile(name: string, uid: string) {
 afterEach(() => {
   vi.clearAllMocks();
   vi.doUnmock("@imagekit/react");
-  vi.doUnmock("antd");
   vi.doUnmock("@/lib/supabase");
   vi.doUnmock("@/lib/imagekit");
 });
@@ -112,9 +110,7 @@ describe("useImageKitUpload", () => {
       ]);
     });
 
-    const existing = result.current.fileList[0] as UploadFile & {
-      fileId?: string;
-    };
+    const existing = result.current.fileList[0];
 
     act(() => {
       result.current.handleChange({
@@ -123,7 +119,7 @@ describe("useImageKitUpload", () => {
             uid: existing.uid,
             name: existing.name,
             status: "done",
-          } as UploadFile,
+          },
         ],
       });
     });
@@ -286,7 +282,7 @@ describe("useImageKitUpload", () => {
   });
 
   it("public key가 없으면 에러를 알리고 onError를 호출한다", async () => {
-    const { useImageKitUpload, messageErrorMock, invokeMock } = await loadHook({
+    const { useImageKitUpload, invokeMock } = await loadHook({
       publicKey: "",
     });
     const { result } = renderHook(() => useImageKitUpload());
@@ -299,16 +295,13 @@ describe("useImageKitUpload", () => {
       });
     });
 
-    expect(messageErrorMock).toHaveBeenCalledWith(
-      "Missing IMAGEKIT_PUBLIC_KEY",
-    );
+    expect(result.current.error).toBe("Missing IMAGEKIT_PUBLIC_KEY");
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
     expect(invokeMock).not.toHaveBeenCalled();
   });
 
   it("업로드 실패 시 에러를 노출하고 대상 파일을 제거한다", async () => {
-    const { useImageKitUpload, invokeMock, messageErrorMock } =
-      await loadHook();
+    const { useImageKitUpload, invokeMock } = await loadHook();
     const { result } = renderHook(() => useImageKitUpload());
     const rcFile = createRcFile("failed.jpg", "upload-4");
     const onError = vi.fn();
@@ -337,9 +330,7 @@ describe("useImageKitUpload", () => {
       });
     });
 
-    expect(messageErrorMock).toHaveBeenCalledWith(
-      "ImageKit 인증에 실패했습니다.",
-    );
+    expect(result.current.error).toBe("ImageKit 인증에 실패했습니다.");
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
     expect(result.current.fileList).toEqual([]);
     expect(result.current.uploading).toBe(false);

@@ -1,69 +1,51 @@
-import { Card, Col, Row, Statistic } from "antd";
-import {
-  ThunderboltOutlined,
-  PictureOutlined,
-  DollarOutlined,
-  BarChartOutlined,
-} from "@ant-design/icons";
+import { Text } from "seed-design/ui/text";
 import type { GenerationSummaryStats } from "@/features/generation-logs/types/admin-generation-log";
+import "./generation-logs.css";
 
 interface GenerationLogStatsProps {
   stats: GenerationSummaryStats;
 }
 
-function formatStatisticNumber(v: string | number | undefined): string {
-  if (v == null) return "0";
-
-  const numericValue = Number(v);
-  return Number.isNaN(numericValue) ? "0" : numericValue.toLocaleString();
+function formatStatisticNumber(value: number): string {
+  return value.toLocaleString();
 }
 
 export function GenerationLogStats({ stats }: GenerationLogStatsProps) {
+  const cards = [
+    {
+      label: "총 생성 요청",
+      value: `${formatStatisticNumber(stats.totalRequests)}건`,
+    },
+    {
+      label: "이미지 생성 성공률",
+      value: `${stats.imageSuccessRate.toFixed(1)}%`,
+    },
+    {
+      label: "총 토큰 소비",
+      value: `${formatStatisticNumber(stats.totalTokensConsumed)}개`,
+    },
+    {
+      label: "평균 응답 시간",
+      value: `${formatStatisticNumber(stats.avgTotalLatencyMs)}ms`,
+    },
+  ];
+
   return (
-    <Row gutter={16} style={{ marginBottom: 24 }}>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="총 생성 요청"
-            value={stats.totalRequests}
-            suffix="건"
-            prefix={<BarChartOutlined />}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="이미지 생성 성공률"
-            value={stats.imageSuccessRate}
-            suffix="%"
-            precision={1}
-            prefix={<PictureOutlined />}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="총 토큰 소비"
-            value={stats.totalTokensConsumed}
-            suffix="개"
-            prefix={<DollarOutlined />}
-            formatter={formatStatisticNumber}
-          />
-        </Card>
-      </Col>
-      <Col xs={24} sm={12} md={6}>
-        <Card>
-          <Statistic
-            title="평균 응답 시간"
-            value={stats.avgTotalLatencyMs}
-            suffix="ms"
-            prefix={<ThunderboltOutlined />}
-            formatter={formatStatisticNumber}
-          />
-        </Card>
-      </Col>
-    </Row>
+    <section className="generationLogStatsGrid" aria-label="AI 생성 로그 요약">
+      {cards.map((card) => (
+        <div key={card.label} className="generationLogStatCard">
+          <Text as="span" textStyle="t3Bold" className="generationLogStatLabel">
+            {card.label}
+          </Text>
+          <Text
+            as="strong"
+            textStyle="t5Bold"
+            className="generationLogStatValue"
+          >
+            {card.value}
+          </Text>
+        </div>
+      ))}
+    </section>
   );
 }

@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Text } from "seed-design/ui/text";
+import { AdminDetailItem, AdminDetailList } from "@/components/AdminDetailList";
 import { formatMoney } from "@/utils/format-number";
 import type { QuoteRequestOptions } from "@/features/quote-requests/types/admin-quote-request";
 
@@ -9,14 +10,6 @@ interface Props {
 }
 
 const normalize = (value: string) => value.trim().toLowerCase();
-
-const detailColors = {
-  border: "#d6d3d1",
-  surface: "#fff",
-  surfaceMuted: "#f5f5f4",
-  textMuted: "#78716c",
-  textPrimary: "#18181b",
-};
 
 const formatUnitPrice = (quotedAmount: number | null, quantity: number) => {
   if (quotedAmount === null || quantity <= 0) return "-";
@@ -84,53 +77,6 @@ const getLabelOptionsLabel = (options: QuoteRequestOptions) => {
   return labels.length > 0 ? labels.join(", ") : "라벨 없음";
 };
 
-function SummaryItem({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div style={{ minWidth: 0 }}>
-      <p style={{ margin: 0, color: detailColors.textMuted, fontSize: 12 }}>
-        {label}
-      </p>
-      <div
-        style={{
-          marginTop: 8,
-          color: detailColors.textPrimary,
-          fontSize: 14,
-          fontWeight: 600,
-          lineHeight: 1.55,
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function OptionRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "5rem minmax(0, 1fr)",
-        gap: 12,
-        lineHeight: 1.6,
-      }}
-    >
-      <dt style={{ color: detailColors.textMuted }}>{label}</dt>
-      <dd
-        style={{ margin: 0, color: detailColors.textPrimary, fontWeight: 500 }}
-      >
-        {value}
-      </dd>
-    </div>
-  );
-}
-
 export function CustomOrderOptionsDetail({
   options,
   quantity,
@@ -138,86 +84,56 @@ export function CustomOrderOptionsDetail({
 }: Props) {
   return (
     <section
+      className="quoteRequestPanel"
+      aria-labelledby="quote-custom-options-title"
       data-testid="admin-custom-order-specification"
-      style={{
-        marginBottom: 24,
-        overflow: "hidden",
-        border: `1px solid ${detailColors.border}`,
-        borderRadius: 8,
-        background: detailColors.surface,
-      }}
     >
-      <div
-        style={{
-          borderBottom: `1px solid ${detailColors.border}`,
-          background: detailColors.surfaceMuted,
-          padding: "16px 20px",
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            color: detailColors.textPrimary,
-            fontSize: 18,
-            fontWeight: 600,
-            letterSpacing: "-0.01em",
-          }}
+      <div className="quoteRequestPanelHeader">
+        <Text
+          as="h2"
+          textStyle="t6Bold"
+          id="quote-custom-options-title"
+          className="quoteRequestPanelTitle"
         >
           주문 사양 확인
-        </h3>
+        </Text>
       </div>
 
-      <div
-        style={{
-          borderBottom: `1px solid ${detailColors.border}`,
-          padding: 20,
-        }}
-      >
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            gap: 24,
-          }}
-        >
-          <SummaryItem label="제작 품목">맞춤 제작 넥타이</SummaryItem>
-          <SummaryItem label="수량">{quantity.toLocaleString()}개</SummaryItem>
-          <SummaryItem label="단가">
-            {formatUnitPrice(quotedAmount, quantity)}
-          </SummaryItem>
-          <SummaryItem label="견적 금액">
-            {formatMoney(quotedAmount)}
-          </SummaryItem>
-        </div>
-      </div>
+      <AdminDetailList>
+        <AdminDetailItem label="제작 품목">맞춤 제작 넥타이</AdminDetailItem>
+        <AdminDetailItem label="수량">
+          {quantity.toLocaleString()}개
+        </AdminDetailItem>
+        <AdminDetailItem label="단가">
+          {formatUnitPrice(quotedAmount, quantity)}
+        </AdminDetailItem>
+        <AdminDetailItem label="견적 금액">
+          {formatMoney(quotedAmount)}
+        </AdminDetailItem>
+      </AdminDetailList>
 
-      <div style={{ padding: 20 }}>
-        <h4
-          style={{
-            margin: 0,
-            color: detailColors.textPrimary,
-            fontSize: 14,
-            fontWeight: 600,
-          }}
+      <div className="quoteRequestOptionGroup">
+        <Text
+          as="h3"
+          textStyle="t5Bold"
+          className="quoteRequestSubsectionTitle"
         >
           제작 옵션
-        </h4>
-        <dl
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "8px 32px",
-            margin: "16px 0 0",
-          }}
-        >
-          <OptionRow label="원단" value={getFabricLabel(options)} />
-          <OptionRow label="봉제" value={getSewingLabel(options)} />
-          <OptionRow
-            label="심지"
-            value={getInterliningLabel(options.interlining)}
-          />
-          <OptionRow label="라벨" value={getLabelOptionsLabel(options)} />
-        </dl>
+        </Text>
+        <AdminDetailList>
+          <AdminDetailItem label="원단">
+            {getFabricLabel(options)}
+          </AdminDetailItem>
+          <AdminDetailItem label="봉제">
+            {getSewingLabel(options)}
+          </AdminDetailItem>
+          <AdminDetailItem label="심지">
+            {getInterliningLabel(options.interlining)}
+          </AdminDetailItem>
+          <AdminDetailItem label="라벨">
+            {getLabelOptionsLabel(options)}
+          </AdminDetailItem>
+        </AdminDetailList>
       </div>
     </section>
   );

@@ -1,0 +1,188 @@
+.adminLayout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.adminMainArea {
+  flex: 1;
+  min-width: 0;
+}
+
+.adminSider {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  height: 100vh;
+  border-right: 1px solid var(--seed-color-stroke-neutral-muted);
+  background: var(--seed-color-bg-layer-default);
+  transition:
+    width 160ms ease,
+    transform 160ms ease;
+}
+
+.adminSiderCollapsed {
+  width: 88px;
+}
+
+.adminSiderLocal {
+  border-right-color: rgb(255 255 255 / 24%);
+  background: #001f4d;
+  color: #fff;
+}
+
+.adminSiderTitle {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.adminSiderLocal .adminSiderTitle {
+  border-bottom-color: rgb(255 255 255 / 24%);
+  background: #001529;
+}
+
+.adminSiderNav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  padding: 12px 8px;
+}
+
+.adminSiderLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  border-radius: 10px;
+  color: var(--seed-color-fg-neutral);
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.adminSiderLink:hover,
+.adminSiderLink:focus-visible {
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.adminSiderLink[aria-current="page"] {
+  background: var(--seed-color-bg-brand-weak);
+  color: var(--seed-color-fg-brand);
+}
+
+.adminSiderLocal .adminSiderLink {
+  color: rgb(255 255 255 / 82%);
+}
+
+.adminSiderLocal .adminSiderLink:hover,
+.adminSiderLocal .adminSiderLink:focus-visible {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+}
+
+.adminSiderLocal .adminSiderLink[aria-current="page"] {
+  background: rgb(255 255 255 / 20%);
+  color: #fff;
+}
+
+.adminSiderLinkMark {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.48;
+}
+
+.adminSiderCollapsedLabel {
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.adminSiderFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+}
+
+.adminSiderLocal .adminSiderFooter {
+  border-top-color: rgb(255 255 255 / 24%);
+}
+
+.adminSiderCollapseButton,
+.adminSiderLogoutButton,
+.adminHeaderMenuButton {
+  min-height: 40px;
+  font-weight: 700;
+}
+
+.adminSiderLocal .adminSiderCollapseButton,
+.adminSiderLocal .adminSiderLogoutButton {
+  border-color: rgb(255 255 255 / 24%);
+  background: #001529;
+  color: #fff;
+}
+
+.adminHeader {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  background: var(--seed-color-bg-layer-default);
+}
+
+.adminHeaderMenuButton {
+  min-width: 40px;
+}
+
+.adminHeaderTitle {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.adminAuthLoading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: var(--seed-color-fg-neutral-muted);
+}
+
+@media (max-width: 1023px) {
+  .adminSider {
+    position: fixed;
+    left: 0;
+    transform: translateX(-100%);
+  }
+
+  .adminSiderMobileOpen {
+    transform: translateX(0);
+  }
+
+  .adminSiderBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    border: 0;
+    background: rgb(0 0 0 / 42%);
+    cursor: pointer;
+  }
+}

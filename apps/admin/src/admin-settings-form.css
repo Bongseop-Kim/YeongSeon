@@ -1,0 +1,80 @@
+.adminSettingsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.adminSettingsCard {
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.adminSettingsForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adminSettingsSectionForm {
+  display: grid;
+  gap: 16px;
+}
+
+.adminSettingsField {
+  min-width: 0;
+  width: 100%;
+}
+
+.adminSettingsFieldFull {
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+}
+
+.adminSettingsActionRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--seed-color-stroke-neutral-muted);
+  margin-top: 4px;
+  padding-top: 16px;
+}
+
+.adminSettingsActionSummary {
+  margin: 0 auto 0 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.adminSettingsActionRow > button {
+  min-width: 132px;
+}
+
+@media (max-width: 720px) {
+  .adminSettingsPage {
+    padding: 16px;
+  }
+
+  .adminSettingsForm {
+    grid-template-columns: 1fr;
+  }
+
+  .adminSettingsActionRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .adminSettingsActionSummary {
+    margin: 0;
+  }
+
+  .adminSettingsActionRow > button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,20 @@
+.adminSegmentedControlButtonGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminSegmentedControlTabs {
+  width: fit-content;
+}
+
+.adminSegmentedControlLabel {
+  min-width: 0;
+}
+
+.adminSegmentedControlDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--seed-radius-r3);
+  background: var(--seed-color-fg-critical);
+}

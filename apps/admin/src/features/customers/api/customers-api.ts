@@ -1,9 +1,29 @@
 import {
   DESIGN_TOKEN_SELECT_FIELDS,
+  type AdminOrderListRowDTO,
   type DesignTokenRow,
 } from "@yeongseon/shared";
 import { supabase } from "@/lib/supabase";
-import type { AdminCustomerTokenBalanceRow } from "@/features/customers/types/admin-customer";
+import {
+  toAdminCustomerCouponRow,
+  toAdminCustomerDetail,
+  toAdminCustomerListItem,
+  toAdminCustomerOrderRow,
+  type ProfileRow,
+  type UserCouponRow,
+} from "@/features/customers/api/customers-mapper";
+import type {
+  AdminCustomerCouponRow,
+  AdminCustomerDetail,
+  AdminCustomerListItem,
+  AdminCustomerOrderRow,
+  AdminCustomerTokenBalanceRow,
+} from "@/features/customers/types/admin-customer";
+
+interface AdminCustomerListResult {
+  rows: AdminCustomerListItem[];
+  total: number;
+}
 
 export interface ManageCustomerTokensParams {
   userId: string;
@@ -16,6 +36,70 @@ interface TokenBalanceRpcRow {
   balance: number | null;
 }
 
+export async function getAdminCustomers(params: {
+  page: number;
+  pageSize: number;
+  name?: string | null;
+}): Promise<AdminCustomerListResult> {
+  const normalizedPage = Math.max(1, Math.floor(params.page || 1));
+  const from = (normalizedPage - 1) * params.pageSize;
+  const to = from + params.pageSize - 1;
+  let query = supabase
+    .from("profiles")
+    .select("id,name,phone,role,is_active,created_at,birth", { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const name = params.name?.trim();
+  if (name) query = query.ilike("name", `%${name}%`);
+
+  const { data, error, count } = await query;
+  if (error) throw new Error(error.message);
+
+  return {
+    rows: ((data ?? []) as ProfileRow[]).map(toAdminCustomerListItem),
+    total: count ?? 0,
+  };
+}
+
+export async function getAdminCustomerDetail(
+  customerId: string,
+): Promise<AdminCustomerDetail> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,name,phone,role,is_active,created_at,birth")
+    .eq("id", customerId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return toAdminCustomerDetail(data as ProfileRow);
+}
+
+export async function getAdminCustomerOrders(
+  customerId: string,
+): Promise<AdminCustomerOrderRow[]> {
+  const { data, error } = await supabase
+    .from("admin_order_list_view")
+    .select("*")
+    .eq("userId", customerId)
+    .order("createdAt", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as AdminOrderListRowDTO[]).map(toAdminCustomerOrderRow);
+}
+
+export async function getAdminCustomerCoupons(
+  customerId: string,
+): Promise<AdminCustomerCouponRow[]> {
+  const { data, error } = await supabase
+    .from("user_coupons")
+    .select("id,coupon_id,status,issued_at,expires_at")
+    .eq("user_id", customerId);
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as UserCouponRow[]).map(toAdminCustomerCouponRow);
+}
+
 export async function getCustomerTokenBalances(
   userIds: string[],
 ): Promise<AdminCustomerTokenBalanceRow[]> {
@@ -25,23 +109,11 @@ export async function getCustomerTokenBalances(
       p_user_ids: userIds,
     },
   );
+  if (error) throw new Error(error.message);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data ?? []).flatMap((row: TokenBalanceRpcRow) => {
-    if (!row.user_id) {
-      return [];
-    }
-
-    return [
-      {
-        userId: row.user_id,
-        balance: row.balance ?? 0,
-      },
-    ];
-  });
+  return (data ?? []).flatMap((row: TokenBalanceRpcRow) =>
+    row.user_id ? [{ userId: row.user_id, balance: row.balance ?? 0 }] : [],
+  );
 }
 
 export async function getCustomerTokenHistory(
@@ -53,10 +125,7 @@ export async function getCustomerTokenHistory(
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw new Error(error.message);
   return data ?? [];
 }
 
@@ -71,7 +140,5 @@ export async function manageCustomerTokens({
     p_description: description,
   });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 }

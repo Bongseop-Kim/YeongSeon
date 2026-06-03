@@ -1,0 +1,103 @@
+.pricingPage {
+}
+
+.pricingHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pricingTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.pricingDescription,
+.pricingMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.pricingPanel {
+}
+
+.pricingTabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pricingPanelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.pricingPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.pricingStack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pricingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pricingGroupTitle {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.pricingTierCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 14px;
+  background: var(--seed-color-bg-neutral-weak);
+  padding: 16px;
+}
+
+.pricingTierTitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.pricingPanelActions {
+  margin-top: 20px;
+}
+
+.pricingSaveSummary {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+}

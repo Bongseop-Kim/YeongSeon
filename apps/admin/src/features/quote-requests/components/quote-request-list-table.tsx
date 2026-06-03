@@ -1,86 +1,278 @@
-import { Table, Tag, Select, Space, Input } from "antd";
-import { useNavigation } from "@refinedev/core";
+import { Text } from "seed-design/ui/text";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import type { ColumnDef } from "@tanstack/react-table";
+import { IconMagnifyingglassLine } from "@karrotmarket/react-monochrome-icon";
 import {
-  QUOTE_REQUEST_STATUS_COLORS,
-  QUOTE_REQUEST_STATUS_OPTIONS,
   CONTACT_METHOD_LABELS,
+  QUOTE_REQUEST_STATUS_OPTIONS,
 } from "@yeongseon/shared";
-import { useAdminQuoteRequestTable } from "@/features/quote-requests/api/quote-requests-query";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Callout } from "seed-design/ui/callout";
+import { AdminDataTable } from "@/components/AdminDataTable";
+import {
+  AdminFilterField,
+  AdminFilterSelect,
+  AdminFilterTextField,
+} from "@/components/AdminFilterControls";
+import { AdminPanelHeader } from "@/components/AdminPanelHeader";
+import { StatusBadge } from "@/components/StatusBadge";
+import {
+  QUOTE_REQUEST_PAGE_SIZE,
+  useAdminQuoteRequestTable,
+} from "@/features/quote-requests/api/quote-requests-query";
 import type { AdminQuoteRequestListItem } from "@/features/quote-requests/types/admin-quote-request";
+import { formatMoney } from "@/utils/format-number";
+import "./quote-requests.css";
 
-export function QuoteRequestListTable() {
-  const { show } = useNavigation();
-  const { tableProps, setFilters } = useAdminQuoteRequestTable();
+const KR_NUMBER_FORMAT = new Intl.NumberFormat("ko-KR");
+const QUOTE_REQUEST_SEARCH_DEBOUNCE_MS = 300;
+
+function parsePageParam(value: string | null): number {
+  const page = Number(value ?? "1");
+  if (!Number.isFinite(page)) return 1;
+  return Math.max(1, Math.floor(page));
+}
+
+function normalizeStatusParam(value: string | null): string {
+  if (!value || value === "all") return "";
+  return QUOTE_REQUEST_STATUS_OPTIONS.some((option) => option.value === value)
+    ? value
+    : "";
+}
+
+function quoteRequestStatusTone(status: string) {
+  if (status === "확정") return "positive";
+  if (status === "종료") return "critical";
+  if (status === "협의중") return "warning";
+  if (status === "견적발송") return "brand";
+  return "neutral";
+}
+
+interface QuoteRequestListTableProps {
+  rows: AdminQuoteRequestListItem[];
+  onRowClick: (row: AdminQuoteRequestListItem) => void;
+  emptyText?: string;
+  isLoading?: boolean;
+}
+
+function QuoteRequestListTable({
+  rows,
+  onRowClick,
+  emptyText = "견적 요청이 없습니다.",
+  isLoading = false,
+}: QuoteRequestListTableProps) {
+  const columns = useMemo<ColumnDef<AdminQuoteRequestListItem>[]>(
+    () => [
+      { accessorKey: "quoteNumber", header: "견적번호" },
+      { accessorKey: "date", header: "요청일" },
+      { accessorKey: "customerName", header: "고객명" },
+      { accessorKey: "contactName", header: "담당자" },
+      {
+        accessorKey: "contactMethod",
+        header: "연락방법",
+        cell: ({ row }) => CONTACT_METHOD_LABELS[row.original.contactMethod],
+      },
+      {
+        accessorKey: "quantity",
+        header: "수량",
+        cell: ({ row }) => `${row.original.quantity.toLocaleString("ko-KR")}개`,
+      },
+      {
+        accessorKey: "quotedAmount",
+        header: "견적금액",
+        cell: ({ row }) => formatMoney(row.original.quotedAmount),
+      },
+      {
+        accessorKey: "status",
+        header: "상태",
+        cell: ({ row }) => (
+          <StatusBadge tone={quoteRequestStatusTone(row.original.status)}>
+            {row.original.status}
+          </StatusBadge>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <AdminDataTable
+      data={rows}
+      columns={columns}
+      getRowId={(row) => row.id}
+      emptyText={emptyText}
+      onRowClick={onRowClick}
+      getRowActionLabel={(row) => `${row.quoteNumber} 견적 상세 보기`}
+      isLoading={isLoading}
+    />
+  );
+}
+
+export function QuoteRequestListPanel() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parsePageParam(searchParams.get("page"));
+  const quoteNumber = searchParams.get("quoteNumber") ?? "";
+  const status = normalizeStatusParam(searchParams.get("status"));
+  const [draftQuoteNumberState, setDraftQuoteNumberState] = useState({
+    source: quoteNumber,
+    value: quoteNumber,
+  });
+  const query = useAdminQuoteRequestTable({
+    page,
+    quoteNumber,
+    status: status || null,
+  });
+  const rows = query.data?.rows ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / QUOTE_REQUEST_PAGE_SIZE));
+
+  if (draftQuoteNumberState.source !== quoteNumber) {
+    setDraftQuoteNumberState({ source: quoteNumber, value: quoteNumber });
+  }
+
+  const draftQuoteNumber =
+    draftQuoteNumberState.source === quoteNumber
+      ? draftQuoteNumberState.value
+      : quoteNumber;
+
+  const setDraftQuoteNumber = (value: string): void => {
+    setDraftQuoteNumberState({ source: quoteNumber, value });
+  };
+
+  useEffect(() => {
+    const nextQuoteNumber = draftQuoteNumber.trim();
+    if (nextQuoteNumber === quoteNumber) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("page", "1");
+        if (nextQuoteNumber) next.set("quoteNumber", nextQuoteNumber);
+        else next.delete("quoteNumber");
+        return next;
+      });
+    }, QUOTE_REQUEST_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [draftQuoteNumber, quoteNumber, setSearchParams]);
+
+  const setStatus = (nextStatus: string): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", "1");
+      if (nextStatus) next.set("status", nextStatus);
+      else next.delete("status");
+      return next;
+    });
+  };
+
+  const updatePage = (nextPage: number): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("page", String(nextPage));
+      return next;
+    });
+  };
+
+  return (
+    <section className="quoteRequestPanel" aria-labelledby="quote-list-title">
+      <AdminPanelHeader
+        title="견적 요청 목록"
+        id="quote-list-title"
+        className="quoteRequestPanelHeader"
+        titleClassName="quoteRequestPanelTitle"
+        count={`${KR_NUMBER_FORMAT.format(total)}건`}
+      />
+
+      <form
+        className="quoteRequestToolbar"
+        aria-label="견적 요청 필터"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <AdminFilterField className="adminFilterFieldWide">
+          <AdminFilterTextField
+            label="견적번호"
+            prefixIcon={<IconMagnifyingglassLine />}
+            value={draftQuoteNumber}
+            onValueChange={({ value }) => setDraftQuoteNumber(value)}
+            inputProps={{
+              name: "quote-number",
+              autoComplete: "off",
+              placeholder: "견적번호를 입력하세요",
+            }}
+          />
+        </AdminFilterField>
+        <AdminFilterField>
+          <AdminFilterSelect
+            label="상태"
+            name="quote-request-status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            <option value="">전체</option>
+            {QUOTE_REQUEST_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </AdminFilterSelect>
+        </AdminFilterField>
+      </form>
+
+      {query.error ? (
+        <Callout tone="critical" description={query.error.message} />
+      ) : null}
+
+      <QuoteRequestListTable
+        rows={rows}
+        onRowClick={(row) => navigate(`/quote-requests/show/${row.id}`)}
+        isLoading={query.isFetching}
+      />
+
+      <nav
+        className="quoteRequestPagination"
+        aria-label="견적 요청 페이지네이션"
+      >
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page <= 1}
+          onClick={() => updatePage(page - 1)}
+        >
+          이전
+        </ActionButton>
+        <Text as="span" textStyle="t4Regular">
+          {page} / {totalPages}
+        </Text>
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          disabled={page >= totalPages}
+          onClick={() => updatePage(page + 1)}
+        >
+          다음
+        </ActionButton>
+      </nav>
+    </section>
+  );
+}
+
+export function QuoteRequestDashboardTable() {
+  const navigate = useNavigate();
+  const query = useAdminQuoteRequestTable({ page: 1 });
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Input.Search
-          placeholder="견적번호 검색"
-          allowClear
-          onSearch={(value) => {
-            setFilters([
-              {
-                field: "quoteNumber",
-                operator: "contains",
-                value: value || undefined,
-              },
-            ]);
-          }}
-          style={{ width: 200 }}
-        />
-        <Select
-          placeholder="상태"
-          allowClear
-          options={QUOTE_REQUEST_STATUS_OPTIONS}
-          onChange={(value) => {
-            setFilters([
-              {
-                field: "status",
-                operator: "eq",
-                value: value || undefined,
-              },
-            ]);
-          }}
-          style={{ width: 120 }}
-        />
-      </Space>
-
-      <Table
-        {...tableProps}
-        rowKey="id"
-        onRow={(record: AdminQuoteRequestListItem) => ({
-          onClick: () => show("admin_quote_request_list_view", record.id),
-          style: { cursor: "pointer" },
-        })}
-      >
-        <Table.Column dataIndex="quoteNumber" title="견적번호" />
-        <Table.Column dataIndex="date" title="요청일" />
-        <Table.Column dataIndex="customerName" title="고객명" />
-        <Table.Column dataIndex="contactName" title="담당자" />
-        <Table.Column
-          dataIndex="contactMethod"
-          title="연락방법"
-          render={(v: string) =>
-            CONTACT_METHOD_LABELS[v as keyof typeof CONTACT_METHOD_LABELS] ?? v
-          }
-        />
-        <Table.Column dataIndex="quantity" title="수량" />
-        <Table.Column
-          dataIndex="quotedAmount"
-          title="견적금액"
-          render={(v: number | null) =>
-            v != null ? `${v.toLocaleString()}원` : "-"
-          }
-        />
-        <Table.Column
-          dataIndex="status"
-          title="상태"
-          render={(v: string) => (
-            <Tag color={QUOTE_REQUEST_STATUS_COLORS[v]}>{v}</Tag>
-          )}
-        />
-      </Table>
+      {query.error ? (
+        <Callout tone="critical" description={query.error.message} />
+      ) : null}
+      <QuoteRequestListTable
+        rows={query.data?.rows ?? []}
+        onRowClick={(row) => navigate(`/quote-requests/show/${row.id}`)}
+        isLoading={query.isFetching}
+      />
     </>
   );
 }

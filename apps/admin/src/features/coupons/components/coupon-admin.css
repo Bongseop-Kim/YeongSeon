@@ -1,0 +1,173 @@
+.couponPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.couponPageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.couponPageTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.couponPageTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.couponPageDescription {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.couponPanel {
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.couponListPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.couponPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.couponPanelTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.couponPanel > .couponPanelTitle + form {
+  margin-top: 16px;
+}
+
+.couponToolbar,
+.couponPagination,
+.couponInlineActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.couponFormActions {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.couponActionMeta,
+.couponActionButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.couponActionMeta {
+  margin-right: auto;
+}
+
+.couponActionButtons {
+  margin-left: auto;
+}
+
+.couponActionButtons > button {
+  min-width: 132px;
+}
+
+.couponSaveSummary {
+  margin: 0;
+}
+
+.couponPagination {
+  margin-top: 16px;
+}
+
+.couponListPanel > .couponPanelHeader,
+.couponListPanel > .couponPagination {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.couponNumberCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.couponModal {
+  width: min(920px, 100%);
+  max-height: min(760px, 100%);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 20px;
+  background: var(--seed-color-bg-layer-default);
+  color: inherit;
+  margin: auto;
+  padding: 20px;
+  box-shadow: 0 20px 80px rgb(0 0 0 / 24%);
+}
+
+.couponModal::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.couponPresetGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.couponSearchRow {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 720px) {
+  .couponPageHeader,
+  .couponPanelHeader,
+  .couponSearchRow {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .couponActionMeta,
+  .couponActionButtons {
+    align-items: stretch;
+    flex-direction: column;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .couponActionButtons > button {
+    width: 100%;
+  }
+}

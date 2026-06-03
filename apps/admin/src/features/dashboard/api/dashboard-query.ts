@@ -1,85 +1,64 @@
 import { useQuery } from "@tanstack/react-query";
-import { useList } from "@refinedev/core";
 import type { Dayjs } from "dayjs";
-import type { AdminOrderListRowDTO } from "@yeongseon/shared";
-import { getPeriodStats } from "@/features/dashboard/api/dashboard-api";
 import {
-  toDashboardRecentOrder,
-  toDashboardStats,
-} from "@/features/dashboard/api/dashboard-mapper";
+  getDashboardRecentOrders,
+  getPendingClaimCount,
+  getPendingInquiryCount,
+  getPeriodStats,
+} from "@/features/dashboard/api/dashboard-api";
+import { toDashboardStats } from "@/features/dashboard/api/dashboard-mapper";
 import type {
   AdminDashboardRecentOrder,
   AdminDashboardStats,
   SegmentValue,
 } from "@/features/dashboard/types/admin-dashboard";
 
+type DashboardDateRange = [string | Dayjs, string | Dayjs];
+
+function toDateString(value: string | Dayjs): string {
+  return typeof value === "string" ? value : value.format("YYYY-MM-DD");
+}
+
 export function useDashboardStats(
   segment: SegmentValue,
-  dateRange: [Dayjs, Dayjs],
+  dateRange: DashboardDateRange,
 ): AdminDashboardStats {
-  const startDate = dateRange[0].format("YYYY-MM-DD");
-  const endDate = dateRange[1].format("YYYY-MM-DD");
+  const startDate = toDateString(dateRange[0]);
+  const endDate = toDateString(dateRange[1]);
 
   const { data: periodStats } = useQuery({
     queryKey: ["dashboard", "period-stats", segment, startDate, endDate],
     queryFn: () => getPeriodStats(segment, startDate, endDate),
   });
 
-  const { result: pendingClaimsResult } = useList({
-    resource: "admin_claim_list_view",
-    filters: [
-      {
-        operator: "or",
-        value: [
-          { field: "status", operator: "eq", value: "접수" },
-          { field: "status", operator: "eq", value: "처리중" },
-        ],
-      },
-    ],
-    pagination: { pageSize: 1 },
+  const { data: pendingClaimTotal } = useQuery({
+    queryKey: ["dashboard", "pending-claims"],
+    queryFn: getPendingClaimCount,
   });
 
-  const { result: pendingInquiriesResult } = useList({
-    resource: "inquiries",
-    filters: [{ field: "status", operator: "eq", value: "답변대기" }],
-    pagination: { pageSize: 1 },
+  const { data: pendingInquiryTotal } = useQuery({
+    queryKey: ["dashboard", "pending-inquiries"],
+    queryFn: getPendingInquiryCount,
   });
 
   return toDashboardStats(
     periodStats ?? { orderCount: 0, revenue: 0 },
-    pendingClaimsResult.total ?? 0,
-    pendingInquiriesResult.total ?? 0,
+    pendingClaimTotal ?? 0,
+    pendingInquiryTotal ?? 0,
   );
 }
 
 export function useDashboardRecentOrders(
   segment: SegmentValue,
-  dateRange: [Dayjs, Dayjs],
+  dateRange: DashboardDateRange,
 ): AdminDashboardRecentOrder[] {
-  const startDate = dateRange[0].format("YYYY-MM-DD");
-  const endDate = dateRange[1].format("YYYY-MM-DD");
+  const startDate = toDateString(dateRange[0]);
+  const endDate = toDateString(dateRange[1]);
 
-  const orderTypeFilter =
-    segment !== "all"
-      ? [
-          {
-            field: "orderType" as const,
-            operator: "eq" as const,
-            value: segment,
-          },
-        ]
-      : [];
-
-  const { result: recentOrdersResult } = useList<AdminOrderListRowDTO>({
-    resource: "admin_order_list_view",
-    sorters: [{ field: "createdAt", order: "desc" }],
-    filters: [
-      ...orderTypeFilter,
-      { field: "date", operator: "gte", value: startDate },
-      { field: "date", operator: "lte", value: endDate },
-    ],
-    pagination: { pageSize: 5 },
+  const { data: recentOrders } = useQuery({
+    queryKey: ["dashboard", "recent-orders", segment, startDate, endDate],
+    queryFn: () => getDashboardRecentOrders({ segment, startDate, endDate }),
   });
 
-  return (recentOrdersResult.data ?? []).map(toDashboardRecentOrder);
+  return recentOrders ?? [];
 }

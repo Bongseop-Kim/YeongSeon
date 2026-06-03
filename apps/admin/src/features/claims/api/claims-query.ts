@@ -1,231 +1,207 @@
-import { useState, useEffect, useRef } from "react";
-import { useTable } from "@refinedev/antd";
-import { useShow, useList, useUpdate, useInvalidate } from "@refinedev/core";
-import { message } from "antd";
-import type { TableProps } from "antd";
-import type {
-  AdminClaimListRowDTO,
-  ClaimStatusLogDTO,
-} from "@yeongseon/shared";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  toAdminClaimListItem,
-  toAdminClaimDetail,
-  toAdminClaimStatusLogEntry,
-} from "./claims-mapper";
-import { updateClaimStatus } from "./claims-api";
-import { supabase } from "@/lib/supabase";
-import type {
-  AdminClaimListItem,
-  AdminClaimDetail,
-  AdminClaimStatusLogEntry,
-  AdminClaimTrackingInfo,
-} from "@/features/claims/types/admin-claim";
+  getAdminClaimDetail,
+  getAdminClaims,
+  getAdminClaimStatusLogs,
+  notifyClaim,
+  updateClaimStatus,
+  updateClaimTracking,
+} from "@/features/claims/api/claims-api";
+import type { AdminClaimTrackingInfo } from "@/features/claims/types/admin-claim";
 
-// ── List ───────────────────────────────────────────────────────
+export const CLAIM_PAGE_SIZE = 20;
 
-export function useAdminClaimTable() {
-  const { tableProps: rawTableProps, setFilters } =
-    useTable<AdminClaimListRowDTO>({
-      resource: "admin_claim_list_view",
-      sorters: { initial: [{ field: "created_at", order: "desc" }] },
-      syncWithLocation: true,
-    });
+const CLAIM_LIST_KEY = ["claims", "list"] as const;
+const CLAIM_DETAIL_KEY = ["claims", "detail"] as const;
+const CLAIM_STATUS_LOGS_KEY = ["claims", "status-logs"] as const;
 
-  const tableProps: TableProps<AdminClaimListItem> = {
-    loading: rawTableProps.loading,
-    pagination: rawTableProps.pagination,
-    onChange:
-      rawTableProps.onChange as TableProps<AdminClaimListItem>["onChange"],
-    dataSource: (rawTableProps.dataSource ?? []).map(toAdminClaimListItem),
-  };
-
-  return { tableProps, setFilters };
+export function useAdminClaimTable(params: {
+  page: number;
+  status?: string | null;
+  type?: string | null;
+}) {
+  return useQuery({
+    queryKey: [
+      ...CLAIM_LIST_KEY,
+      params.page,
+      params.status ?? null,
+      params.type ?? null,
+    ],
+    queryFn: () =>
+      getAdminClaims({
+        page: params.page,
+        pageSize: CLAIM_PAGE_SIZE,
+        status: params.status ?? null,
+        type: params.type ?? null,
+      }),
+  });
 }
-
-// ── Detail ────────────────────────────────────────────────────
 
 export function useAdminClaimDetail(claimId: string | undefined) {
-  const { query, result: rawClaim } = useShow<AdminClaimListRowDTO>({
-    resource: "admin_claim_list_view",
-    id: claimId,
-    queryOptions: { enabled: !!claimId },
+  const query = useQuery({
+    queryKey: [...CLAIM_DETAIL_KEY, claimId],
+    queryFn: () => getAdminClaimDetail(claimId ?? ""),
+    enabled: Boolean(claimId),
   });
 
-  const claim: AdminClaimDetail | undefined = rawClaim
-    ? toAdminClaimDetail(rawClaim)
-    : undefined;
-
-  return { claim, refetch: query.refetch };
+  return { claim: query.data, ...query };
 }
-
-// ── Status logs ───────────────────────────────────────────────
 
 export function useAdminClaimStatusLogs(claimId: string | undefined) {
-  const { result } = useList<ClaimStatusLogDTO>({
-    resource: "admin_claim_status_log_view",
-    filters: [{ field: "claimId", operator: "eq", value: claimId }],
-    sorters: [{ field: "createdAt", order: "desc" }],
-    queryOptions: { enabled: !!claimId },
+  return useQuery({
+    queryKey: [...CLAIM_STATUS_LOGS_KEY, claimId],
+    queryFn: () => getAdminClaimStatusLogs(claimId ?? ""),
+    enabled: Boolean(claimId),
   });
-
-  const logs: AdminClaimStatusLogEntry[] = result.data.map(
-    toAdminClaimStatusLogEntry,
-  );
-
-  return { logs };
 }
 
-// ── Status update ─────────────────────────────────────────────
+export function useClaimStatusUpdate(claimId: string | undefined) {
+  const queryClient = useQueryClient();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [notificationWarning, setNotificationWarning] = useState<string | null>(
+    null,
+  );
+  const mutation = useMutation({
+    mutationFn: (params: {
+      newStatus: string;
+      memo: string;
+      isRollback?: boolean;
+    }) => {
+      if (!claimId) throw new Error("클레임 정보를 찾을 수 없습니다.");
+      return updateClaimStatus({
+        claimId,
+        newStatus: params.newStatus,
+        memo: params.memo || null,
+        isRollback: params.isRollback,
+      });
+    },
+    onMutate: () => {
+      setSuccessMessage(null);
+      setNotificationWarning(null);
+    },
+    onSuccess: async (_, variables) => {
+      setSuccessMessage(
+        variables.isRollback
+          ? `"${variables.newStatus}"(으)로 롤백되었습니다.`
+          : `상태가 "${variables.newStatus}"(으)로 변경되었습니다.`,
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: CLAIM_LIST_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: [...CLAIM_DETAIL_KEY, claimId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...CLAIM_STATUS_LOGS_KEY, claimId],
+        }),
+      ]);
 
-export function useClaimStatusUpdate(
-  claimId: string | undefined,
-  refetch: () => void,
-) {
-  const invalidate = useInvalidate();
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const invalidateLogs = () =>
-    invalidate({
-      resource: "admin_claim_status_log_view",
-      invalidates: ["list"],
-    });
+      if (!variables.isRollback && claimId) {
+        void notifyClaim(claimId).catch((err) => {
+          console.warn(
+            "[notify-claim] 발송 실패 (클레임 처리에 영향 없음)",
+            err,
+          );
+          setNotificationWarning(
+            "상태는 변경됐지만 고객 알림 발송 확인에 실패했습니다.",
+          );
+        });
+      }
+    },
+  });
 
   const changeStatus = async (
     newStatus: string,
     memo: string,
   ): Promise<boolean> => {
-    if (!claimId) return false;
-    setIsUpdating(true);
     try {
-      await updateClaimStatus({ claimId, newStatus, memo: memo || null });
-      message.success(`상태가 "${newStatus}"(으)로 변경되었습니다.`);
-      supabase.auth
-        .getSession()
-        .then(async ({ data: { session } }) => {
-          if (session?.access_token) {
-            fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-claim`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${session.access_token}`,
-                },
-                body: JSON.stringify({ claimId }),
-              },
-            )
-              .then(async (response) => {
-                if (!response.ok) {
-                  const responseText = await response.text().catch(() => "");
-                  console.warn(
-                    "[notify-claim] 응답 실패 (클레임 처리에 영향 없음)",
-                    {
-                      status: response.status,
-                      statusText: response.statusText,
-                      body: responseText,
-                    },
-                  );
-                }
-              })
-              .catch((err) =>
-                console.warn(
-                  "[notify-claim] 발송 실패 (클레임 처리에 영향 없음)",
-                  err,
-                ),
-              );
-          }
-        })
-        .catch((err) =>
-          console.warn(
-            "[notify-claim] 세션 조회 실패 (클레임 처리에 영향 없음)",
-            err,
-          ),
-        );
-      refetch();
-      invalidateLogs();
+      await mutation.mutateAsync({ newStatus, memo });
       return true;
-    } catch (err) {
-      message.error(
-        `상태 변경 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
-      );
+    } catch {
       return false;
-    } finally {
-      setIsUpdating(false);
     }
   };
 
-  const rollback = async (targetStatus: string, memo: string) => {
-    if (!claimId) return;
-    setIsUpdating(true);
+  const rollback = async (
+    targetStatus: string,
+    memo: string,
+  ): Promise<boolean> => {
     try {
-      await updateClaimStatus({
-        claimId,
+      await mutation.mutateAsync({
         newStatus: targetStatus,
         memo,
         isRollback: true,
       });
-      message.success(`"${targetStatus}"(으)로 롤백되었습니다.`);
-      refetch();
-      invalidateLogs();
-    } catch (err) {
-      message.error(
-        `롤백 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
-      );
-    } finally {
-      setIsUpdating(false);
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  return { isUpdating, changeStatus, rollback };
+  return {
+    isUpdating: mutation.isPending,
+    error: mutation.error,
+    successMessage,
+    notificationWarning,
+    changeStatus,
+    rollback,
+  };
 }
 
-// ── Tracking save ─────────────────────────────────────────────
+export function useClaimTrackingSave(claimId: string | undefined) {
+  const queryClient = useQueryClient();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const mutation = useMutation({
+    mutationFn: (params: {
+      trackingType: "return" | "resend";
+      courierCompany: string;
+      trackingNumber: string;
+    }) => {
+      if (!claimId) throw new Error("클레임 정보를 찾을 수 없습니다.");
+      return updateClaimTracking({ claimId, ...params });
+    },
+    onMutate: () => {
+      setSuccessMessage(null);
+    },
+    onSuccess: async (_, variables) => {
+      setSuccessMessage(
+        variables.trackingType === "return"
+          ? "수거 배송 정보가 저장되었습니다."
+          : "재발송 배송 정보가 저장되었습니다.",
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: CLAIM_LIST_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: [...CLAIM_DETAIL_KEY, claimId],
+        }),
+      ]);
+    },
+  });
 
-export function useClaimTrackingSave() {
-  const { mutate: updateClaim, mutation } = useUpdate();
-
-  const saveTracking = (
-    claimId: string,
+  const saveTracking = async (
     trackingType: "return" | "resend",
     courierCompany: string,
     trackingNumber: string,
-  ) => {
-    const hasBoth =
-      courierCompany.trim() !== "" && trackingNumber.trim() !== "";
-    const values =
-      trackingType === "return"
-        ? {
-            return_courier_company: hasBoth ? courierCompany : null,
-            return_tracking_number: hasBoth ? trackingNumber : null,
-          }
-        : {
-            resend_courier_company: hasBoth ? courierCompany : null,
-            resend_tracking_number: hasBoth ? trackingNumber : null,
-          };
-
-    const successMsg =
-      trackingType === "return"
-        ? "수거 배송 정보가 저장되었습니다."
-        : "재발송 배송 정보가 저장되었습니다.";
-
-    updateClaim(
-      { resource: "claims", id: claimId, values },
-      {
-        onSuccess: () => message.success(successMsg),
-        onError: () =>
-          message.error(
-            trackingType === "return"
-              ? "수거 배송 정보 저장에 실패했습니다."
-              : "재발송 배송 정보 저장에 실패했습니다.",
-          ),
-      },
-    );
+  ): Promise<boolean> => {
+    try {
+      await mutation.mutateAsync({
+        trackingType,
+        courierCompany,
+        trackingNumber,
+      });
+      return true;
+    } catch {
+      return false;
+    }
   };
 
-  return { saveTracking, isPending: mutation.isPending };
+  return {
+    saveTracking,
+    isPending: mutation.isPending,
+    error: mutation.error,
+    successMessage,
+  };
 }
-
-// ── Tracking local state ──────────────────────────────────────
 
 export function useClaimTrackingState(
   tracking: AdminClaimTrackingInfo | null | undefined,
@@ -235,7 +211,6 @@ export function useClaimTrackingState(
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const prevClaimIdRef = useRef<string | undefined>(undefined);
 
-  // Reset local state when navigating to a different claim
   useEffect(() => {
     if (!claimId) return;
     if (claimId === prevClaimIdRef.current) return;
@@ -244,7 +219,6 @@ export function useClaimTrackingState(
     setTrackingNumber("");
   }, [claimId]);
 
-  // Hydrate local state when tracking data arrives for the current claim
   useEffect(() => {
     if (!tracking) return;
     setCourierCompany(tracking.courierCompany);

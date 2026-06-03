@@ -1,0 +1,53 @@
+.adminSkeleton {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--seed-color-bg-neutral-weak) 0%,
+    var(--seed-color-stroke-neutral-muted) 45%,
+    var(--seed-color-bg-neutral-weak) 90%
+  );
+  background-size: 220% 100%;
+  animation: adminSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+.adminSkeletonStatus {
+  width: 120px;
+  height: 18px;
+}
+
+.adminSkeletonText {
+  height: 16px;
+}
+
+.adminSkeletonPanel {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+}
+
+.adminSkeletonPanelHeader {
+  width: 180px;
+  height: 24px;
+}
+
+.adminSkeletonPanelLine {
+  max-width: 100%;
+  height: 16px;
+}
+
+.adminSkeletonTableCell {
+  height: 16px;
+}
+
+@keyframes adminSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}

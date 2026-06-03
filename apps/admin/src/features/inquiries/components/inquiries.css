@@ -1,0 +1,119 @@
+.inquiryPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.inquiryHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inquiryTitle {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.inquiryDescription,
+.inquiryMutedText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.inquiryPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.inquiryPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inquiryPanelTitle {
+  margin: 0;
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.inquiryPagination,
+.inquiryToolbar,
+.inquiryAnswerActions,
+.inquiryProductRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inquiryToolbar {
+  align-items: flex-end;
+}
+
+.inquiryFilterField {
+  display: grid;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.inquiryFilterLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+.inquirySelect {
+  width: 100%;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 10px 12px;
+  color: var(--seed-color-fg-neutral);
+  font: inherit;
+}
+
+.inquirySelect:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
+}
+
+.inquiryProductImage {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.inquiryAnswerBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .inquiryToolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inquiryFilterField {
+    width: 100%;
+    max-width: none;
+  }
+}

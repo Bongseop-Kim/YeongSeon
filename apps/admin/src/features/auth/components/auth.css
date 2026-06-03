@@ -1,0 +1,65 @@
+.authPage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.authCard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: min(100%, 420px);
+  padding: 28px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 20px;
+  background: var(--seed-color-bg-layer-default);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 8%);
+}
+
+.authTitleGroup,
+.authForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.authTitleGroup {
+  gap: 6px;
+  text-align: center;
+}
+
+.authTitle {
+  margin: 0;
+  color: var(--seed-color-fg-neutral);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.authDescription {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.authForm {
+  gap: 16px;
+}
+
+.authActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 520px) {
+  .authPage {
+    padding: 16px;
+  }
+
+  .authCard {
+    padding: 20px;
+  }
+}

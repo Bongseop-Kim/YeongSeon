@@ -1,274 +1,297 @@
-import { useEffect, useRef } from "react";
-import { useForm, useTable } from "@refinedev/antd";
-import { useList, useNavigation } from "@refinedev/core";
-import type { HttpError } from "@refinedev/core";
-import { message } from "antd";
-import type { TableProps } from "antd";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useImageKitUpload } from "@/hooks/useImageKitUpload";
-import { insertProductOptions, saveProductOptions } from "./products-api";
 import {
-  toAdminProductListItem,
-  toAdminProductOption,
-  type ProductsTableRow,
-} from "@/features/products/api/products-mapper";
+  createProduct,
+  getAdminProductDetail,
+  getAdminProducts,
+  updateProduct,
+} from "./products-api";
+import { toAdminProductFormValues } from "@/features/products/api/products-mapper";
 import type {
-  AdminProductListItem,
+  AdminProductFormOption,
+  AdminProductFormValues,
   AdminProductOption,
 } from "@/features/products/types/admin-product";
 
-interface AdminProductRecord {
-  id: number;
-  code: string | null;
-  name: string;
-  category: string;
-  color: string;
-  pattern: string;
-  material: string;
-  info: string;
-  price: number;
-  stock: number | null;
-  image: string | null;
-  detail_images: string[] | null;
-  option_label: string | null;
-}
+export const PRODUCT_PAGE_SIZE = 20;
 
-interface AdminProductFormValues {
-  code?: string | null;
-  name?: string;
-  category?: string;
-  color?: string;
-  pattern?: string;
-  material?: string;
-  info?: string;
-  price?: number;
-  stock?: number | null;
-  image?: string | null;
-  detail_images?: string[] | null;
-  options?: AdminProductOption[];
-  option_label?: string | null;
-}
+const PRODUCT_LIST_KEY = ["products", "list"] as const;
+const PRODUCT_DETAIL_KEY = ["products", "detail"] as const;
 
-interface ProductOptionRecord {
-  name: string | null;
-  additional_price: number | null;
-  stock: number | null;
-  product_id: number;
-}
+const EMPTY_PRODUCT_FORM_VALUES: AdminProductFormValues = {
+  code: null,
+  name: "",
+  category: "",
+  color: "",
+  pattern: "",
+  material: "",
+  info: "",
+  price: null,
+  stock: null,
+  optionLabel: "",
+  options: [],
+};
 
-function toProductId(value: unknown): number | null {
-  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (Number.isInteger(parsed) && parsed > 0) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
-
-function toOptionalNumber(value: unknown): number | null {
-  if (value == null) return null;
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  return null;
-}
-
-function toNumber(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  return 0;
-}
-
-function toAdminProductOptions(value: unknown): AdminProductOption[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .map((option) => {
-      if (typeof option !== "object" || option == null) {
-        return null;
-      }
-
-      const name =
-        "name" in option && typeof option.name === "string" ? option.name : "";
-      const additionalPrice =
-        "additionalPrice" in option ? toNumber(option.additionalPrice) : 0;
-      const stock = "stock" in option ? toOptionalNumber(option.stock) : null;
-
-      return {
-        name,
-        additionalPrice,
-        stock,
-      };
-    })
-    .filter((option): option is AdminProductOption => option !== null);
-}
-
-export function useAdminProductTable() {
-  const { tableProps: rawTableProps, setFilters } = useTable<ProductsTableRow>({
-    resource: "admin_product_list_view",
-    sorters: { initial: [{ field: "created_at", order: "desc" }] },
-    syncWithLocation: true,
+export function useAdminProductTable(params: {
+  page: number;
+  category?: string | null;
+}) {
+  return useQuery({
+    queryKey: [...PRODUCT_LIST_KEY, params.page, params.category ?? null],
+    queryFn: () =>
+      getAdminProducts({
+        page: params.page,
+        pageSize: PRODUCT_PAGE_SIZE,
+        category: params.category ?? null,
+      }),
   });
-  const tableProps: TableProps<AdminProductListItem> = {
-    loading: rawTableProps.loading,
-    pagination: rawTableProps.pagination,
-    onChange:
-      rawTableProps.onChange as TableProps<AdminProductListItem>["onChange"],
-    dataSource: (rawTableProps.dataSource ?? []).map(toAdminProductListItem),
-  };
-
-  return { tableProps, setFilters };
 }
 
-function normalizeProductSubmit(
-  values: AdminProductFormValues,
-  imageUpload: ReturnType<typeof useImageKitUpload>,
-): AdminProductFormValues | null {
-  if (imageUpload.uploading) {
-    message.warning("이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.");
-    return null;
+function useAdminProductDetail(productId: number | null) {
+  return useQuery({
+    queryKey: [...PRODUCT_DETAIL_KEY, productId],
+    queryFn: () => getAdminProductDetail(productId ?? 0),
+    enabled: productId !== null,
+  });
+}
+
+function normalizeOptions(
+  options: AdminProductFormOption[],
+): AdminProductFormOption[] {
+  return options
+    .map((option) => ({
+      formKey: option.formKey,
+      name: option.name.trim(),
+      additionalPrice: option.additionalPrice || 0,
+      stock: option.stock,
+    }))
+    .filter((option) => option.name !== "");
+}
+
+function getProductImageUrls(product: {
+  detailImages: string[];
+  image: string | null;
+}): string[] {
+  if (product.detailImages.length > 0) return product.detailImages;
+  if (product.image) return [product.image];
+  return [];
+}
+
+function validateProductForm(values: AdminProductFormValues): string | null {
+  if (!values.name.trim()) return "상품명을 입력해주세요.";
+  if (values.price === null || values.price < 0) return "가격을 입력해주세요.";
+  if (!values.category) return "카테고리를 선택해주세요.";
+  if (!values.color) return "색상을 선택해주세요.";
+  if (!values.pattern) return "패턴을 선택해주세요.";
+  if (!values.material) return "소재를 선택해주세요.";
+  if (!values.info.trim()) return "상품 정보를 입력해주세요.";
+  if (values.stock !== null && values.stock < 0) {
+    return "재고는 0 이상이어야 합니다.";
   }
-
-  const urls = imageUpload.getUrls();
-  if (urls.length === 0) {
-    message.error("최소 1개의 상품 이미지를 업로드해주세요.");
-    return null;
+  if (
+    values.options.some(
+      (option) =>
+        option.additionalPrice < 0 ||
+        (option.stock !== null && option.stock < 0),
+    )
+  ) {
+    return "옵션 금액과 재고는 0 이상이어야 합니다.";
   }
+  return null;
+}
 
-  const payload = { ...values };
-  const hasOptions = Array.isArray(values.options) && values.options.length > 0;
-  delete payload.options;
-  delete payload.image;
-  delete payload.detail_images;
+function useProductFormState(initialValues = EMPTY_PRODUCT_FORM_VALUES) {
+  const optionKeyRef = useRef(0);
+  const [values, setValues] = useState<AdminProductFormValues>(initialValues);
 
-  return {
-    ...payload,
-    image: urls[0],
-    detail_images: urls,
-    ...(hasOptions ? { stock: null } : {}),
-  };
+  const setField = useCallback(
+    <K extends keyof AdminProductFormValues>(
+      key: K,
+      value: AdminProductFormValues[K],
+    ) => {
+      setValues((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+
+  const setOption = useCallback(
+    (index: number, patch: Partial<AdminProductOption>): void => {
+      setValues((prev) => ({
+        ...prev,
+        options: prev.options.map((option, optionIndex) =>
+          optionIndex === index ? { ...option, ...patch } : option,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const addOption = useCallback((): void => {
+    const formKey = `new-${++optionKeyRef.current}`;
+
+    setValues((prev) => ({
+      ...prev,
+      stock: null,
+      options: [
+        ...prev.options,
+        { formKey, name: "", additionalPrice: 0, stock: null },
+      ],
+    }));
+  }, []);
+
+  const removeOption = useCallback((index: number): void => {
+    setValues((prev) => ({
+      ...prev,
+      options: prev.options.filter((_, optionIndex) => optionIndex !== index),
+    }));
+  }, []);
+
+  return { values, setValues, setField, setOption, addOption, removeOption };
 }
 
 export function useAdminProductCreateForm() {
-  const { list } = useNavigation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const imageUpload = useImageKitUpload();
-
-  const { formProps, saveButtonProps, form } = useForm<
-    AdminProductRecord,
-    HttpError,
-    AdminProductFormValues
-  >({
-    resource: "products",
-    redirect: false,
-    onMutationSuccess: async (data) => {
-      const productId = toProductId(data?.data?.id);
-      const options = toAdminProductOptions(form.getFieldValue("options"));
-
-      try {
-        if (productId !== null && options.length > 0) {
-          await insertProductOptions({ productId, options });
-        }
-      } catch (err) {
-        message.error(
-          err instanceof Error ? err.message : "옵션 저장에 실패했습니다.",
-        );
-      } finally {
-        list("products");
-      }
+  const formState = useProductFormState();
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const mutation = useMutation({
+    mutationFn: (values: AdminProductFormValues) =>
+      createProduct({ values, imageUrls: imageUpload.getUrls() }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: PRODUCT_LIST_KEY });
+      navigate({ pathname: "/products", search: location.search });
     },
   });
 
-  const handleFinish = async (values: AdminProductFormValues) => {
-    const payload = normalizeProductSubmit(values, imageUpload);
-    if (payload === null) return;
-    await formProps.onFinish?.({ ...payload, code: null });
+  const handleSubmit = async (): Promise<void> => {
+    setValidationError(null);
+    if (imageUpload.uploading) {
+      setValidationError(
+        "이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.",
+      );
+      return;
+    }
+    if (imageUpload.getUrls().length === 0) {
+      setValidationError("최소 1개의 상품 이미지를 업로드해주세요.");
+      return;
+    }
+
+    const nextValues = {
+      ...formState.values,
+      options: normalizeOptions(formState.values.options),
+    };
+    const error = validateProductForm(nextValues);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+
+    try {
+      await mutation.mutateAsync(nextValues);
+    } catch {
+      // mutation.error로 렌더링한다.
+    }
   };
 
-  return { formProps, saveButtonProps, form, imageUpload, handleFinish };
+  return {
+    ...formState,
+    imageUpload,
+    handleSubmit,
+    validationError,
+    submitError: mutation.error,
+    isSubmitting: mutation.isPending,
+  };
 }
 
-export function useAdminProductEditForm() {
-  const { list } = useNavigation();
+export function useAdminProductEditForm(productId: number | null) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const imageUpload = useImageKitUpload();
-  const imagesInitialized = useRef(false);
-
-  const {
-    formProps,
-    saveButtonProps,
-    form,
-    id,
-    query: queryResult,
-  } = useForm<AdminProductRecord, HttpError, AdminProductFormValues>({
-    resource: "products",
-    redirect: false,
-    onMutationSuccess: async () => {
-      const productId = toProductId(id);
-      const options = toAdminProductOptions(form.getFieldValue("options"));
-
-      if (productId !== null) {
-        try {
-          await saveProductOptions({ productId, options });
-        } catch (err) {
-          message.error(
-            err instanceof Error ? err.message : "옵션 저장에 실패했습니다.",
-          );
-          return;
-        }
-      }
-
-      list("products");
+  const detailQuery = useAdminProductDetail(productId);
+  const initialValues = useMemo(
+    () =>
+      detailQuery.data
+        ? toAdminProductFormValues(detailQuery.data)
+        : EMPTY_PRODUCT_FORM_VALUES,
+    [detailQuery.data],
+  );
+  const formState = useProductFormState(initialValues);
+  const { setValues } = formState;
+  const { initFromUrls } = imageUpload;
+  const [hydratedProductId, setHydratedProductId] = useState<number | null>(
+    null,
+  );
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const mutation = useMutation({
+    mutationFn: (values: AdminProductFormValues) => {
+      if (productId === null) throw new Error("상품 정보를 찾을 수 없습니다.");
+      return updateProduct({
+        productId,
+        values,
+        imageUrls: imageUpload.getUrls(),
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: PRODUCT_LIST_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: [...PRODUCT_DETAIL_KEY, productId],
+        }),
+      ]);
+      navigate({ pathname: "/products", search: location.search });
     },
   });
 
-  const { result: optionsData } = useList<ProductOptionRecord>({
-    resource: "product_options",
-    filters: [{ field: "product_id", operator: "eq", value: id }],
-    queryOptions: { enabled: !!id },
-  });
-
   useEffect(() => {
-    form.setFieldValue("options", []);
-    if (optionsData?.data !== undefined) {
-      form.setFieldValue("options", optionsData.data.map(toAdminProductOption));
-    }
-  }, [id, optionsData?.data, form]);
+    if (!detailQuery.data || hydratedProductId === detailQuery.data.id) return;
 
-  useEffect(() => {
-    imagesInitialized.current = false;
-  }, [id]);
+    setHydratedProductId(detailQuery.data.id);
+    setValues(toAdminProductFormValues(detailQuery.data));
+    initFromUrls(getProductImageUrls(detailQuery.data));
+  }, [detailQuery.data, hydratedProductId, initFromUrls, setValues]);
 
-  useEffect(() => {
-    const product = queryResult?.data?.data;
-    if (
-      product &&
-      !imagesInitialized.current &&
-      product.id === toProductId(id)
-    ) {
-      imagesInitialized.current = true;
-      const urls =
-        product.detail_images && product.detail_images.length > 0
-          ? product.detail_images
-          : product.image
-            ? [product.image]
-            : [];
-      imageUpload.initFromUrls(urls);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- imagesInitialized ref는 deps 불필요, imageUpload.initFromUrls는 비안정 참조
-  }, [queryResult?.data?.data, imageUpload.initFromUrls, id]);
-
-  const handleFinish = async (values: AdminProductFormValues) => {
-    const payload = normalizeProductSubmit(values, imageUpload);
-    if (payload === null) return;
-    try {
-      await formProps.onFinish?.(payload);
-    } catch (err) {
-      message.error(
-        err instanceof Error ? err.message : "상품 수정에 실패했습니다.",
+  const handleSubmit = async (): Promise<void> => {
+    setValidationError(null);
+    if (imageUpload.uploading) {
+      setValidationError(
+        "이미지 업로드가 진행 중입니다. 잠시 후 다시 시도하세요.",
       );
+      return;
+    }
+    if (imageUpload.getUrls().length === 0) {
+      setValidationError("최소 1개의 상품 이미지를 업로드해주세요.");
+      return;
+    }
+
+    const nextValues = {
+      ...formState.values,
+      options: normalizeOptions(formState.values.options),
+    };
+    const error = validateProductForm(nextValues);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+
+    try {
+      await mutation.mutateAsync(nextValues);
+    } catch {
+      // mutation.error로 렌더링한다.
     }
   };
 
-  return { formProps, saveButtonProps, form, id, imageUpload, handleFinish };
+  return {
+    ...formState,
+    detailQuery,
+    imageUpload,
+    handleSubmit,
+    validationError,
+    submitError: mutation.error,
+    isSubmitting: mutation.isPending,
+  };
 }

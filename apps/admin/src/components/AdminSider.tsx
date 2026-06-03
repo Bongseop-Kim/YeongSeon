@@ -1,341 +1,119 @@
-import React, { useContext } from "react";
-import {
-  Layout,
-  Menu,
-  Drawer,
-  Button,
-  theme,
-  ConfigProvider,
-  Tooltip,
-  type MenuProps,
-} from "antd";
-import {
-  LogoutOutlined,
-  UnorderedListOutlined,
-  LeftOutlined,
-  RightOutlined,
-} from "@ant-design/icons";
-import {
-  type TreeMenuItem,
-  useTranslate,
-  useLogout,
-  CanAccess,
-  useIsExistAuthentication,
-  useMenu,
-  useLink,
-  useWarnAboutChange,
-} from "@refinedev/core";
-import { ThemedTitle, useThemedLayoutContext } from "@refinedev/antd";
+import { ActionButton } from "seed-design/ui/action-button";
+import { Text } from "seed-design/ui/text";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ADMIN_NAV_ITEMS } from "@/components/admin-navigation";
 import { useIsMobile } from "@/hooks/useIsMobile";
-
-import type { CSSProperties } from "react";
+import { logoutAdmin } from "@/providers/auth-provider";
+import "./admin-layout.css";
 
 interface AdminSiderProps {
-  Title?: React.FC<{ collapsed: boolean }>;
+  collapsed: boolean;
+  mobileOpen: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
+  onMobileOpenChange: (open: boolean) => void;
 }
 
-const localSiderColor = "#001f4d";
-const localSiderElevatedColor = "#001529";
-const localSiderBorderColor = "rgba(255, 255, 255, 0.24)";
-const localSiderMenuTheme = {
-  components: {
-    Menu: {
-      itemBg: localSiderColor,
-      itemColor: "rgba(255, 255, 255, 0.82)",
-      itemHoverBg: "rgba(255, 255, 255, 0.12)",
-      itemHoverColor: "#ffffff",
-      itemSelectedBg: "rgba(255, 255, 255, 0.2)",
-      itemSelectedColor: "#ffffff",
-      subMenuItemBg: localSiderColor,
-    },
-  },
-};
-
-export const AdminSider: React.FC<AdminSiderProps> = ({
-  Title: TitleFromProps,
-}) => {
-  const { token } = theme.useToken();
-  const {
-    siderCollapsed,
-    setSiderCollapsed,
-    mobileSiderOpen,
-    setMobileSiderOpen,
-  } = useThemedLayoutContext();
-
-  const isExistAuthentication = useIsExistAuthentication();
-  const direction = useContext(ConfigProvider.ConfigContext)?.direction;
-  const Link = useLink();
-  const { warnWhen, setWarnWhen } = useWarnAboutChange();
-  const translate = useTranslate();
-  const { menuItems, selectedKey, defaultOpenKeys } = useMenu();
-  const { mutate: mutateLogout } = useLogout();
+export function AdminSider({
+  collapsed,
+  mobileOpen,
+  onCollapsedChange,
+  onMobileOpenChange,
+}: AdminSiderProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isLocalAppEnv = import.meta.env.VITE_APP_ENV === "local";
 
-  const RenderToTitle = TitleFromProps ?? ThemedTitle;
-
-  const buildMenuItems = (
-    tree: TreeMenuItem[],
-  ): Required<MenuProps>["items"] => {
-    return tree.map((item: TreeMenuItem) => {
-      const { key, name, children, meta, list } = item;
-      const parentName = meta?.parent;
-      const label = item?.label ?? meta?.label ?? name;
-      const icon = meta?.icon;
-      const route = list;
-
-      if (children.length > 0) {
-        return {
-          key: item.key,
-          icon: icon ?? <UnorderedListOutlined />,
-          label: (
-            <CanAccess
-              resource={name}
-              action="list"
-              params={{ resource: item }}
-            >
-              {label}
-            </CanAccess>
-          ),
-          children: buildMenuItems(children),
-        };
-      }
-
-      const isSelected = key === selectedKey;
-      const isRoute = !(parentName !== undefined && children.length === 0);
-
-      return {
-        key: item.key,
-        icon: icon ?? (isRoute ? <UnorderedListOutlined /> : undefined),
-        label: (
-          <CanAccess resource={name} action="list" params={{ resource: item }}>
-            {route ? <Link to={route}>{label}</Link> : <span>{label}</span>}
-            {!siderCollapsed && isSelected && (
-              <div className="ant-menu-tree-arrow" />
-            )}
-          </CanAccess>
-        ),
-      };
-    });
+  const handleNavigate = () => {
+    if (isMobile) onMobileOpenChange(false);
   };
 
-  const handleLogout = () => {
-    if (warnWhen) {
-      const confirm = window.confirm(
-        translate(
-          "warnWhenUnsavedChanges",
-          "Are you sure you want to leave? You have unsaved changes.",
-        ),
-      );
-      if (confirm) {
-        setWarnWhen(false);
-        mutateLogout();
-      }
-    } else {
-      mutateLogout();
-    }
-  };
-
-  const renderLogoutButton = (collapsed: boolean) => {
-    if (!isExistAuthentication) return null;
-
-    const button = (
-      <Button
-        type="text"
-        danger
-        block
-        icon={<LogoutOutlined />}
-        onClick={handleLogout}
-        aria-label="로그아웃"
-        style={{
-          minHeight: 44,
-          minWidth: 44,
-          justifyContent: collapsed ? "center" : "flex-start",
-        }}
-      >
-        {collapsed ? null : "로그아웃"}
-      </Button>
-    );
-
-    if (collapsed) {
-      return (
-        <Tooltip title="로그아웃" placement="right">
-          {button}
-        </Tooltip>
-      );
-    }
-
-    return button;
-  };
-
-  const renderSiderContent = (collapsed: boolean) => (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-      }}
-    >
-      {/* Title area */}
-      <div
-        style={{
-          width: collapsed ? 80 : 200,
-          padding: collapsed ? "0" : "0 16px",
-          display: "flex",
-          justifyContent: collapsed ? "center" : "flex-start",
-          alignItems: "center",
-          height: 64,
-          backgroundColor: isLocalAppEnv
-            ? localSiderElevatedColor
-            : token.colorBgElevated,
-          color: isLocalAppEnv ? "#ffffff" : undefined,
-          fontSize: 14,
-          flexShrink: 0,
-        }}
-      >
-        <RenderToTitle collapsed={collapsed} />
-      </div>
-
-      {/* Nav menu — scrollable */}
-      <ConfigProvider theme={isLocalAppEnv ? localSiderMenuTheme : undefined}>
-        <Menu
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          defaultOpenKeys={defaultOpenKeys}
-          mode="inline"
-          style={{
-            paddingTop: 8,
-            border: "none",
-            flex: 1,
-            overflowY: "auto",
-            backgroundColor: isLocalAppEnv ? localSiderColor : undefined,
-          }}
-          onClick={() => {
-            if (isMobile) setMobileSiderOpen(false);
-          }}
-          items={buildMenuItems(menuItems)}
-        />
-      </ConfigProvider>
-
-      {/* Logout area */}
-      <div
-        style={{
-          borderTop: `1px solid ${
-            isLocalAppEnv ? localSiderBorderColor : token.colorBorderSecondary
-          }`,
-          padding: collapsed ? "8px 4px" : "8px 12px",
-          flexShrink: 0,
-          backgroundColor: isLocalAppEnv ? localSiderColor : undefined,
-        }}
-      >
-        {renderLogoutButton(collapsed)}
-      </div>
-    </div>
-  );
-
-  const renderDrawerSider = () => (
-    <Drawer
-      open={mobileSiderOpen}
-      onClose={() => setMobileSiderOpen(false)}
-      placement={direction === "rtl" ? "right" : "left"}
-      closable={false}
-      width={200}
-      styles={{ body: { padding: 0 } }}
-      maskClosable
-    >
-      <Layout>
-        <Layout.Sider
-          theme={isLocalAppEnv ? "light" : undefined}
-          style={{
-            height: "100vh",
-            backgroundColor: isLocalAppEnv
-              ? localSiderColor
-              : token.colorBgContainer,
-            background: isLocalAppEnv ? localSiderColor : undefined,
-            ...(direction === "rtl"
-              ? {
-                  borderLeft: `1px solid ${
-                    isLocalAppEnv
-                      ? localSiderBorderColor
-                      : token.colorBgElevated
-                  }`,
-                }
-              : {
-                  borderRight: `1px solid ${
-                    isLocalAppEnv
-                      ? localSiderBorderColor
-                      : token.colorBgElevated
-                  }`,
-                }),
-          }}
-        >
-          {renderSiderContent(false)}
-        </Layout.Sider>
-      </Layout>
-    </Drawer>
-  );
-
-  if (isMobile) {
-    return renderDrawerSider();
-  }
-
-  const siderStyles: CSSProperties = {
-    backgroundColor: isLocalAppEnv ? localSiderColor : token.colorBgContainer,
-    background: isLocalAppEnv ? localSiderColor : undefined,
-    ...(direction === "rtl"
-      ? {
-          borderLeft: `1px solid ${
-            isLocalAppEnv ? localSiderBorderColor : token.colorBgElevated
-          }`,
-        }
-      : {
-          borderRight: `1px solid ${
-            isLocalAppEnv ? localSiderBorderColor : token.colorBgElevated
-          }`,
-        }),
-  };
-
-  const renderClosingIcons = () => {
-    const iconProps = {
-      style: { color: isLocalAppEnv ? "#ffffff" : token.colorPrimary },
-    };
-    const OpenIcon = direction === "rtl" ? RightOutlined : LeftOutlined;
-    const CollapsedIcon = direction === "rtl" ? LeftOutlined : RightOutlined;
-    const IconComponent = siderCollapsed ? CollapsedIcon : OpenIcon;
-    return <IconComponent {...iconProps} />;
+  const handleLogout = async () => {
+    await logoutAdmin();
+    navigate("/login", { replace: true });
   };
 
   return (
-    <Layout.Sider
-      theme={isLocalAppEnv ? "light" : undefined}
-      style={siderStyles}
-      collapsible
-      collapsed={siderCollapsed}
-      onCollapse={(collapsed, type) => {
-        if (type === "clickTrigger") {
-          setSiderCollapsed(collapsed);
-        }
-      }}
-      collapsedWidth={80}
-      breakpoint="lg"
-      trigger={
-        <Button
-          type="text"
-          aria-label={siderCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
-          aria-expanded={!siderCollapsed}
-          style={{
-            borderRadius: 0,
-            height: "100%",
-            width: "100%",
-            backgroundColor: isLocalAppEnv
-              ? localSiderElevatedColor
-              : token.colorBgElevated,
-          }}
-        >
-          {renderClosingIcons()}
-        </Button>
-      }
-    >
-      {renderSiderContent(siderCollapsed)}
-    </Layout.Sider>
+    <>
+      {isMobile && mobileOpen ? (
+        <button
+          type="button"
+          className="adminSiderBackdrop"
+          aria-label="메뉴 닫기"
+          onClick={() => onMobileOpenChange(false)}
+        />
+      ) : null}
+      <aside
+        className={[
+          "adminSider",
+          collapsed ? "adminSiderCollapsed" : "",
+          isMobile ? "adminSiderMobile" : "",
+          mobileOpen ? "adminSiderMobileOpen" : "",
+          isLocalAppEnv ? "adminSiderLocal" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        aria-label="관리자 메뉴"
+      >
+        <div className="adminSiderTitle">
+          {collapsed && !isMobile ? "YS" : "ESSE SION"}
+        </div>
+        <nav className="adminSiderNav" aria-label="관리자 메뉴">
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const active =
+              item.path === "/"
+                ? location.pathname === "/"
+                : location.pathname.startsWith(item.path);
+
+            return (
+              <Link
+                key={item.key}
+                to={item.path}
+                className="adminSiderLink"
+                aria-current={active ? "page" : undefined}
+                onClick={handleNavigate}
+              >
+                <span className="adminSiderLinkMark" aria-hidden="true" />
+                {collapsed && !isMobile ? (
+                  <Text
+                    as="span"
+                    textStyle="t3Bold"
+                    className="adminSiderCollapsedLabel"
+                  >
+                    {item.label.slice(0, 2)}
+                  </Text>
+                ) : (
+                  <Text as="span" textStyle="t4Regular">
+                    {item.label}
+                  </Text>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="adminSiderFooter">
+          {!isMobile ? (
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              className="adminSiderCollapseButton"
+              aria-label={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+              aria-expanded={!collapsed}
+              onClick={() => onCollapsedChange(!collapsed)}
+            >
+              {collapsed ? "›" : "‹"}
+            </ActionButton>
+          ) : null}
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            className="adminSiderLogoutButton"
+            onClick={handleLogout}
+          >
+            {collapsed && !isMobile ? "나감" : "로그아웃"}
+          </ActionButton>
+        </div>
+      </aside>
+    </>
   );
-};
+}

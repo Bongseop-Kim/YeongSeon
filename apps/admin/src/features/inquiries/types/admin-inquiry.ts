@@ -40,11 +40,6 @@ export type AdminInquiryDetail = AdminInquiryPending | AdminInquiryAnswered;
 
 // ── Constants ──────────────────────────────────────────────────
 
-export const INQUIRY_STATUS_COLORS: Record<InquiryStatus, string> = {
-  답변대기: "warning",
-  답변완료: "success",
-};
-
 export const INQUIRY_STATUS_OPTIONS: { label: string; value: string }[] = [
   { label: "답변대기", value: "답변대기" },
   { label: "답변완료", value: "답변완료" },

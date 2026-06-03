@@ -1,149 +1,14 @@
-import { Table, Tabs } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { Text } from "seed-design/ui/text";
+import { useMemo, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { AdminDataTable } from "@/components/AdminDataTable";
 import type {
-  ModelStats,
-  InputTypeStats,
-  PatternStats,
   ErrorDistribution,
+  InputTypeStats,
+  ModelStats,
+  PatternStats,
 } from "@/features/generation-logs/types/admin-generation-log";
 import { formatNullableLocaleNumber } from "@/utils/format-number";
-
-function formatNullableFixed(
-  v: number | null | undefined,
-  digits: number,
-): string {
-  return v == null ? "-" : v.toFixed(digits);
-}
-
-function formatNullablePercent(
-  v: number | null | undefined,
-  digits: number,
-): string {
-  return v == null ? "-" : `${v.toFixed(digits)}%`;
-}
-
-const renderNumber = formatNullableLocaleNumber;
-const renderFixed = (digits: number) => (v: number | null | undefined) =>
-  formatNullableFixed(v, digits);
-const renderPercent = (digits: number) => (v: number | null | undefined) =>
-  formatNullablePercent(v, digits);
-
-// ── 모델별 통계 ───────────────────────────────────────────────
-
-const modelColumns: ColumnsType<ModelStats> = [
-  { title: "AI 모델", dataIndex: "aiModel", key: "aiModel" },
-  {
-    title: "요청 수",
-    dataIndex: "requestCount",
-    key: "requestCount",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "텍스트 API 평균(ms)",
-    dataIndex: "avgTextLatencyMs",
-    key: "avgTextLatencyMs",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "이미지 API 평균(ms)",
-    dataIndex: "avgImageLatencyMs",
-    key: "avgImageLatencyMs",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "평균 토큰 비용",
-    dataIndex: "avgTokenCost",
-    key: "avgTokenCost",
-    align: "right",
-    render: renderFixed(1),
-  },
-  {
-    title: "이미지 성공률",
-    dataIndex: "imageSuccessRate",
-    key: "imageSuccessRate",
-    align: "right",
-    render: renderPercent(1),
-  },
-];
-
-// ── 입력 유형별 통계 ──────────────────────────────────────────
-
-const inputTypeColumns: ColumnsType<InputTypeStats> = [
-  { title: "입력 유형", dataIndex: "inputType", key: "inputType" },
-  {
-    title: "요청 수",
-    dataIndex: "requestCount",
-    key: "requestCount",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "이미지 성공률",
-    dataIndex: "imageSuccessRate",
-    key: "imageSuccessRate",
-    align: "right",
-    render: renderPercent(1),
-  },
-  {
-    title: "평균 레이턴시(ms)",
-    dataIndex: "avgLatencyMs",
-    key: "avgLatencyMs",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "평균 토큰 비용",
-    dataIndex: "avgTokenCost",
-    key: "avgTokenCost",
-    align: "right",
-    render: renderFixed(1),
-  },
-];
-
-// ── 패턴별 통계 ───────────────────────────────────────────────
-
-const patternColumns: ColumnsType<PatternStats> = [
-  { title: "패턴", dataIndex: "pattern", key: "pattern" },
-  {
-    title: "요청 수",
-    dataIndex: "requestCount",
-    key: "requestCount",
-    align: "right",
-    render: renderNumber,
-  },
-  {
-    title: "이미지 성공률",
-    dataIndex: "imageSuccessRate",
-    key: "imageSuccessRate",
-    align: "right",
-    render: renderPercent(1),
-  },
-  {
-    title: "평균 토큰 비용",
-    dataIndex: "avgTokenCost",
-    key: "avgTokenCost",
-    align: "right",
-    render: renderFixed(1),
-  },
-];
-
-// ── 에러 분포 ─────────────────────────────────────────────────
-
-const errorColumns: ColumnsType<ErrorDistribution> = [
-  { title: "유형", dataIndex: "errorType", key: "errorType" },
-  {
-    title: "건수",
-    dataIndex: "count",
-    key: "count",
-    align: "right",
-    render: renderNumber,
-  },
-];
-
-// ── 메인 컴포넌트 ─────────────────────────────────────────────
 
 interface DesignContextStatsProps {
   byModel: ModelStats[];
@@ -153,6 +18,37 @@ interface DesignContextStatsProps {
   loading: boolean;
 }
 
+type StatsTab = "by_model" | "by_input_type" | "by_pattern" | "by_error";
+
+const STATS_TABS: Array<{ key: StatsTab; label: string }> = [
+  { key: "by_model", label: "모델별" },
+  { key: "by_input_type", label: "입력 유형별" },
+  { key: "by_pattern", label: "패턴별" },
+  { key: "by_error", label: "에러 분포" },
+];
+
+function formatNullableFixed(
+  value: number | null | undefined,
+  digits: number,
+): string {
+  return value == null ? "-" : value.toFixed(digits);
+}
+
+function formatNullablePercent(
+  value: number | null | undefined,
+  digits: number,
+): string {
+  return value == null ? "-" : `${value.toFixed(digits)}%`;
+}
+
+function NumberCell({ children }: { children: string }) {
+  return (
+    <Text as="span" textStyle="t4Regular" className="generationLogNumberCell">
+      {children}
+    </Text>
+  );
+}
+
 export function DesignContextStats({
   byModel,
   byInputType,
@@ -160,66 +56,209 @@ export function DesignContextStats({
   byError,
   loading,
 }: DesignContextStatsProps) {
+  const [activeTab, setActiveTab] = useState<StatsTab>("by_model");
+  const modelColumns = useMemo<ColumnDef<ModelStats>[]>(
+    () => [
+      { accessorKey: "aiModel", header: "AI 모델" },
+      {
+        accessorKey: "requestCount",
+        header: "요청 수",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.requestCount)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgTextLatencyMs",
+        header: "텍스트 API 평균(ms)",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.avgTextLatencyMs)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgImageLatencyMs",
+        header: "이미지 API 평균(ms)",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.avgImageLatencyMs)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgTokenCost",
+        header: "평균 토큰 비용",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableFixed(row.original.avgTokenCost, 1)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "imageSuccessRate",
+        header: "이미지 성공률",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullablePercent(row.original.imageSuccessRate, 1)}
+          </NumberCell>
+        ),
+      },
+    ],
+    [],
+  );
+  const inputTypeColumns = useMemo<ColumnDef<InputTypeStats>[]>(
+    () => [
+      { accessorKey: "inputType", header: "입력 유형" },
+      {
+        accessorKey: "requestCount",
+        header: "요청 수",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.requestCount)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "imageSuccessRate",
+        header: "이미지 성공률",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullablePercent(row.original.imageSuccessRate, 1)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgLatencyMs",
+        header: "평균 레이턴시(ms)",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.avgLatencyMs)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgTokenCost",
+        header: "평균 토큰 비용",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableFixed(row.original.avgTokenCost, 1)}
+          </NumberCell>
+        ),
+      },
+    ],
+    [],
+  );
+  const patternColumns = useMemo<ColumnDef<PatternStats>[]>(
+    () => [
+      { accessorKey: "pattern", header: "패턴" },
+      {
+        accessorKey: "requestCount",
+        header: "요청 수",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.requestCount)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "imageSuccessRate",
+        header: "이미지 성공률",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullablePercent(row.original.imageSuccessRate, 1)}
+          </NumberCell>
+        ),
+      },
+      {
+        accessorKey: "avgTokenCost",
+        header: "평균 토큰 비용",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableFixed(row.original.avgTokenCost, 1)}
+          </NumberCell>
+        ),
+      },
+    ],
+    [],
+  );
+  const errorColumns = useMemo<ColumnDef<ErrorDistribution>[]>(
+    () => [
+      { accessorKey: "errorType", header: "유형" },
+      {
+        accessorKey: "count",
+        header: "건수",
+        cell: ({ row }) => (
+          <NumberCell>
+            {formatNullableLocaleNumber(row.original.count)}
+          </NumberCell>
+        ),
+      },
+    ],
+    [],
+  );
+
   return (
-    <Tabs
-      items={[
-        {
-          key: "by_model",
-          label: "모델별",
-          children: (
-            <Table<ModelStats>
-              columns={modelColumns}
-              dataSource={byModel}
-              rowKey="aiModel"
-              loading={loading}
-              pagination={false}
-              size="small"
-            />
-          ),
-        },
-        {
-          key: "by_input_type",
-          label: "입력 유형별",
-          children: (
-            <Table<InputTypeStats>
-              columns={inputTypeColumns}
-              dataSource={byInputType}
-              rowKey="inputType"
-              loading={loading}
-              pagination={false}
-              size="small"
-            />
-          ),
-        },
-        {
-          key: "by_pattern",
-          label: "패턴별",
-          children: (
-            <Table<PatternStats>
-              columns={patternColumns}
-              dataSource={byPattern}
-              rowKey="pattern"
-              loading={loading}
-              pagination={false}
-              size="small"
-            />
-          ),
-        },
-        {
-          key: "by_error",
-          label: "에러 분포",
-          children: (
-            <Table<ErrorDistribution>
-              columns={errorColumns}
-              dataSource={byError}
-              rowKey="errorType"
-              loading={loading}
-              pagination={false}
-              size="small"
-            />
-          ),
-        },
-      ]}
-    />
+    <>
+      <div
+        className="generationLogTabList"
+        role="tablist"
+        aria-label="통계 유형"
+      >
+        {STATS_TABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            className="generationLogTabButton"
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      {activeTab === "by_model" ? (
+        <AdminDataTable
+          data={byModel}
+          columns={modelColumns}
+          getRowId={(row) => row.aiModel}
+          emptyText="모델별 통계가 없습니다."
+          minWidth={860}
+          isLoading={loading}
+        />
+      ) : null}
+      {activeTab === "by_input_type" ? (
+        <AdminDataTable
+          data={byInputType}
+          columns={inputTypeColumns}
+          getRowId={(row) => row.inputType}
+          emptyText="입력 유형별 통계가 없습니다."
+          minWidth={760}
+          isLoading={loading}
+        />
+      ) : null}
+      {activeTab === "by_pattern" ? (
+        <AdminDataTable
+          data={byPattern}
+          columns={patternColumns}
+          getRowId={(row) => row.pattern}
+          emptyText="패턴별 통계가 없습니다."
+          minWidth={640}
+          isLoading={loading}
+        />
+      ) : null}
+      {activeTab === "by_error" ? (
+        <AdminDataTable
+          data={byError}
+          columns={errorColumns}
+          getRowId={(row) => row.errorType}
+          emptyText="에러 분포가 없습니다."
+          minWidth={420}
+          isLoading={loading}
+        />
+      ) : null}
+    </>
   );
 }
