@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card } from "@/shared/ui/card";
 import { Button } from "@/shared/ui-extended/button";
-import { Separator } from "@/shared/ui/separator";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
@@ -10,16 +9,19 @@ import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { Form } from "@/shared/ui/form";
 import { useForm, Controller } from "react-hook-form";
 import { RadioGroupItem } from "@/shared/ui/radio-group";
-import { RadioGroupField } from "@/shared/composite/radio-group-field";
-import { TextareaField } from "@/shared/composite/textarea-field";
+import { RadioGroup } from "@/shared/ui/radio-group";
+import { Textarea } from "@/shared/ui/textarea";
 import {
   Field,
   FieldContent,
+  FieldDescription,
   FieldError,
+  FieldHeader,
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
 import { QuantitySelector } from "@/shared/composite/quantity-selector";
+import { SummaryCard } from "@/shared/composite/summary-card";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { toast } from "@/shared/lib/toast";
@@ -27,7 +29,7 @@ import { Empty } from "@/shared/composite/empty";
 import { useOrderDetail } from "@/entities/order";
 import { useCreateClaim } from "@/entities/claim";
 import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 
 const getClaimReasons = (type: ClaimType) => {
   switch (type) {
@@ -62,6 +64,7 @@ const getClaimReasons = (type: ClaimType) => {
 };
 
 const VALID_CLAIM_TYPES = ["cancel", "return", "exchange"];
+const CLAIM_FORM_ID = "claim-request-form";
 const TECHNICAL_ERROR_PATTERNS = [
   /edge function returned a non-2xx status code/i,
   /failed to fetch/i,
@@ -87,6 +90,52 @@ interface ClaimFormData {
   reason: string;
   description: string;
   quantity: number;
+}
+
+const getClaimNoticeItems = (type: ClaimType) => {
+  switch (type) {
+    case "cancel":
+      return [
+        "주문 취소는 배송 전에만 가능합니다.",
+        "결제 취소는 영업일 기준 3-5일 소요됩니다.",
+        "이미 배송이 시작된 경우 취소가 불가능합니다.",
+      ];
+    case "return":
+      return [
+        "반품은 상품 수령 후 7일 이내에 신청 가능합니다.",
+        "상품이 사용되거나 훼손된 경우 반품이 불가능합니다.",
+        "단순 변심 반품 배송비는 고객 부담입니다.",
+        "상품 불량의 경우 배송비는 판매자 부담입니다.",
+      ];
+    case "exchange":
+      return [
+        "교환은 상품 수령 후 7일 이내에 신청 가능합니다.",
+        "교환 배송비는 고객 부담입니다.",
+        "교환 가능한 재고가 있는 경우에만 교환이 가능합니다.",
+        "상품이 사용되거나 훼손된 경우 교환이 불가능합니다.",
+      ];
+    default:
+      return [];
+  }
+};
+
+function ClaimFormSection({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Field className={className}>
+      <FieldHeader>
+        <FieldTitle as="h2">{title}</FieldTitle>
+      </FieldHeader>
+      <FieldContent>{children}</FieldContent>
+    </Field>
+  );
 }
 
 const ClaimFormPage = () => {
@@ -199,6 +248,10 @@ const ClaimFormPage = () => {
 
   const claimTypeLabel = getClaimTypeLabel(type);
   const reasons = getClaimReasons(type);
+  const quantity = form.watch("quantity");
+  const selectedReasonLabel =
+    reasons.find((reason) => reason.value === form.watch("reason"))?.label ??
+    "선택 전";
 
   const handleSubmit = (data: ClaimFormData) => {
     createClaimMutation.mutate(
@@ -233,214 +286,188 @@ const ClaimFormPage = () => {
 
   return (
     <MainLayout>
-      <MainContent>
-        <PageLayout
-          breadcrumbs={[
-            ...PAGE_BREADCRUMBS.CLAIM_LIST,
-            { label: `${claimTypeLabel} 신청` },
-          ]}
-          sidebar={
-            <Card>
-              <CardHeader>
-                <CardTitle>안내사항</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-zinc-600">
-                {type === "cancel" && (
-                  <div>
-                    <p className="font-semibold mb-1">취소 안내</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>주문 취소는 배송 전에만 가능합니다.</li>
-                      <li>결제 취소는 영업일 기준 3-5일 소요됩니다.</li>
-                      <li>이미 배송이 시작된 경우 취소가 불가능합니다.</li>
-                    </ul>
-                  </div>
-                )}
-                {type === "return" && (
-                  <div>
-                    <p className="font-semibold mb-1">반품 안내</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>반품은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
-                      <li>
-                        상품이 사용되거나 훼손된 경우 반품이 불가능합니다.
-                      </li>
-                      <li>반품 배송비는 고객 부담입니다. (단순 변심의 경우)</li>
-                      <li>상품 불량의 경우 배송비는 판매자 부담입니다.</li>
-                    </ul>
-                  </div>
-                )}
-                {type === "exchange" && (
-                  <div>
-                    <p className="font-semibold mb-1">교환 안내</p>
-                    <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>교환은 상품 수령 후 7일 이내에 신청 가능합니다.</li>
-                      <li>교환 배송비는 고객 부담입니다.</li>
-                      <li>
-                        교환 가능한 재고가 있는 경우에만 교환이 가능합니다.
-                      </li>
-                      <li>
-                        상품이 사용되거나 훼손된 경우 교환이 불가능합니다.
-                      </li>
-                    </ul>
-                  </div>
-                )}
-                <Separator />
-                <div>
-                  <p className="font-semibold mb-1">문의</p>
-                  <p className="text-xs">
-                    추가 문의사항이 있으시면 고객센터로 연락해주세요.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          }
-        >
-          <Card>
-            {/* 헤더 */}
-            <CardHeader>
-              <CardTitle>{claimTypeLabel} 신청</CardTitle>
-              <div className="text-sm text-zinc-500 mt-1">
-                주문번호: {order.orderNumber}
-              </div>
-              <div className="text-sm text-zinc-500">
-                주문일시: {formatDate(order.date)}
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <Separator />
-            </CardContent>
-
-            {/* 주문 상품 정보 */}
-            <CardHeader>
-              <CardTitle>주문 상품</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OrderItemCard
-                item={orderItem}
-                showQuantity={true}
-                showPrice={true}
-              />
-            </CardContent>
-
-            <CardContent>
-              <Separator />
-            </CardContent>
-
-            {/* 신청 폼 */}
-            <CardContent>
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(handleSubmit)}
-                  className="space-y-6"
-                >
-                  {/* 수량 선택 (수량이 1개보다 많은 경우에만 표시) */}
-                  {orderItem.quantity > 1 && (
-                    <Controller
-                      name="quantity"
-                      control={form.control}
-                      rules={{
-                        required: "수량을 선택해주세요.",
-                        min: {
-                          value: 1,
-                          message: "최소 1개 이상 선택해주세요.",
-                        },
-                        max: {
-                          value: orderItem.quantity,
-                          message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
-                        },
-                      }}
-                      render={({ field, fieldState }) => (
-                        <Field orientation="vertical">
-                          <FieldLabel>
-                            <FieldTitle>
-                              <span className="text-red-500">*</span>수량 선택
-                            </FieldTitle>
-                          </FieldLabel>
-                          <FieldContent>
-                            <div className="flex items-center justify-between bg-zinc-50 p-4 rounded-sm">
-                              <span className="text-sm text-zinc-600">
-                                전체 수량: {orderItem.quantity}개
-                              </span>
-                              <QuantitySelector
-                                value={field.value}
-                                onChange={field.onChange}
-                                min={1}
-                                max={orderItem.quantity}
-                              />
-                            </div>
-                            <FieldError errors={[fieldState.error]} />
-                          </FieldContent>
-                        </Field>
-                      )}
-                    />
-                  )}
-
-                  <RadioGroupField
-                    name="reason"
-                    control={form.control}
-                    label={
-                      <>
-                        <span className="text-red-500">*</span>사유 선택
-                      </>
-                    }
-                    rules={{ required: "사유를 선택해주세요." }}
-                    radioGroupClassName="space-y-2"
-                  >
-                    {reasons.map((reason) => (
-                      <Field key={reason.value} orientation="horizontal">
-                        <RadioGroupItem
-                          value={reason.value}
-                          id={reason.value}
-                        />
-                        <FieldLabel
-                          htmlFor={reason.value}
-                          className="font-normal cursor-pointer"
-                        >
-                          <FieldTitle className="font-normal">
-                            {reason.label}
-                          </FieldTitle>
-                        </FieldLabel>
-                      </Field>
-                    ))}
-                  </RadioGroupField>
-
-                  <TextareaField
-                    control={form.control}
-                    name="description"
-                    label="상세 설명"
-                    placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
-                    description="최대 500자까지 입력 가능합니다."
-                    textareaClassName="min-h-[150px] resize-none"
-                    maxLength={500}
+      <MainContent className="overflow-visible">
+        <Form {...form}>
+          <PageLayout
+            breadcrumbs={[
+              ...PAGE_BREADCRUMBS.CLAIM_LIST,
+              { label: `${claimTypeLabel} 신청` },
+            ]}
+            contentClassName="space-y-6"
+            sidebarClassName="space-y-4"
+            sidebar={
+              <SummaryCard>
+                <SummaryCard.Header
+                  title="신청 요약"
+                  description="주문 정보와 접수할 요청 내용을 확인합니다."
+                />
+                <SummaryCard.Section>
+                  <SummaryCard.Row label="신청 유형" value={claimTypeLabel} />
+                  <SummaryCard.Row label="주문번호" value={order.orderNumber} />
+                  <SummaryCard.Row
+                    label="주문일시"
+                    value={formatDate(order.date)}
                   />
+                  <SummaryCard.Row label="신청 수량" value={`${quantity}개`} />
+                  <SummaryCard.Row
+                    label="선택 사유"
+                    value={selectedReasonLabel}
+                  />
+                </SummaryCard.Section>
+                <SummaryCard.Section>
+                  <SummaryCard.NoticeList
+                    label="유의사항"
+                    items={getClaimNoticeItems(type)}
+                  />
+                </SummaryCard.Section>
+                <SummaryCard.Section>
+                  <SummaryCard.NoticeList
+                    label="문의"
+                    items={[
+                      "추가 문의사항이 있으시면 고객센터로 연락해주세요.",
+                    ]}
+                  />
+                </SummaryCard.Section>
+              </SummaryCard>
+            }
+            actionBar={
+              <div className="space-y-2">
+                <Button
+                  type="submit"
+                  form={CLAIM_FORM_ID}
+                  className="w-full"
+                  size="xl"
+                  disabled={createClaimMutation.isPending}
+                  data-testid="claim-submit-button"
+                >
+                  {createClaimMutation.isPending
+                    ? "신청 중..."
+                    : `${claimTypeLabel} 신청하기`}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  size="xl"
+                  onClick={() => navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)}
+                >
+                  주문 상세로 돌아가기
+                </Button>
+              </div>
+            }
+          >
+            <form
+              id={CLAIM_FORM_ID}
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
+              <ClaimFormSection
+                title="주문 상품"
+                className="border-t border-stone-200 pt-4"
+              >
+                <OrderItemCard
+                  item={orderItem}
+                  showQuantity={true}
+                  showPrice={true}
+                />
+              </ClaimFormSection>
 
-                  <div className="flex gap-2 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() =>
-                        navigate(`${ROUTES.ORDER_DETAIL}/${orderId}`)
-                      }
-                    >
-                      취소
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1"
-                      disabled={createClaimMutation.isPending}
-                      data-testid="claim-submit-button"
-                    >
-                      {createClaimMutation.isPending
-                        ? "신청 중..."
-                        : `${claimTypeLabel} 신청하기`}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </PageLayout>
+              {orderItem.quantity > 1 && (
+                <ClaimFormSection title="신청 수량">
+                  <Controller
+                    name="quantity"
+                    control={form.control}
+                    rules={{
+                      required: "수량을 선택해주세요.",
+                      min: {
+                        value: 1,
+                        message: "최소 1개 이상 선택해주세요.",
+                      },
+                      max: {
+                        value: orderItem.quantity,
+                        message: `최대 ${orderItem.quantity}개까지 선택 가능합니다.`,
+                      },
+                    }}
+                    render={({ field, fieldState }) => (
+                      <>
+                        <div className="flex items-center justify-between gap-4 bg-zinc-50 p-4 rounded-sm">
+                          <FieldDescription className="text-zinc-600">
+                            전체 수량: {orderItem.quantity}개
+                          </FieldDescription>
+                          <QuantitySelector
+                            value={field.value}
+                            onChange={field.onChange}
+                            min={1}
+                            max={orderItem.quantity}
+                          />
+                        </div>
+                        <FieldError errors={[fieldState.error]} />
+                      </>
+                    )}
+                  />
+                </ClaimFormSection>
+              )}
+
+              <ClaimFormSection title={`${claimTypeLabel} 사유`}>
+                <Controller
+                  name="reason"
+                  control={form.control}
+                  rules={{ required: "사유를 선택해주세요." }}
+                  render={({ field, fieldState }) => (
+                    <>
+                      <RadioGroup
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        onBlur={field.onBlur}
+                        className="space-y-2"
+                      >
+                        {reasons.map((reason) => (
+                          <Field key={reason.value} orientation="horizontal">
+                            <RadioGroupItem
+                              value={reason.value}
+                              id={reason.value}
+                            />
+                            <FieldLabel
+                              htmlFor={reason.value}
+                              className="font-normal cursor-pointer"
+                            >
+                              <FieldTitle className="font-normal">
+                                {reason.label}
+                              </FieldTitle>
+                            </FieldLabel>
+                          </Field>
+                        ))}
+                      </RadioGroup>
+                      <FieldError errors={[fieldState.error]} />
+                    </>
+                  )}
+                />
+              </ClaimFormSection>
+
+              <ClaimFormSection title="상세 설명">
+                <Controller
+                  name="description"
+                  control={form.control}
+                  render={({ field }) => (
+                    <>
+                      <Textarea
+                        id="description"
+                        placeholder={`${claimTypeLabel} 사유를 자세히 입력해주세요.`}
+                        maxLength={500}
+                        minHeight="large"
+                        className="resize-none"
+                        {...field}
+                      />
+                      <FieldDescription>
+                        최대 500자까지 입력 가능합니다.
+                      </FieldDescription>
+                    </>
+                  )}
+                />
+              </ClaimFormSection>
+            </form>
+          </PageLayout>
+        </Form>
       </MainContent>
     </MainLayout>
   );
