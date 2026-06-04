@@ -261,9 +261,8 @@ export function DesignGenerationFeed({
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="kakao"
               size="sm"
-              className="border-brand-kakao bg-brand-kakao text-brand-ink hover:bg-brand-kakao-hover"
               onClick={() => void openKakaoChannelChat()}
             >
               <MessageCircle className="size-4" aria-hidden="true" />

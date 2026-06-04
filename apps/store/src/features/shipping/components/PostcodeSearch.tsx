@@ -11,6 +11,8 @@ import {
 import { PageTitle } from "@/shared/layout/main-layout";
 import CloseButton from "@/shared/ui-extended/close";
 
+const MAX_POSTCODE_EMBED_RETRIES = 50;
+
 interface PostcodeSearchProps {
   onComplete: (data: DaumPostcodeData) => void;
   onClose?: () => void;
@@ -29,6 +31,7 @@ export const PostcodeSearch = ({
     if (!isLoaded || !isOpen) return;
 
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retries = 0;
 
     const embedPostcode = () => {
       if (containerRef.current && window.daum?.Postcode) {
@@ -46,6 +49,11 @@ export const PostcodeSearch = ({
         return;
       }
 
+      if (retries >= MAX_POSTCODE_EMBED_RETRIES) {
+        return;
+      }
+
+      retries += 1;
       retryTimer = setTimeout(embedPostcode, 100);
     };
 

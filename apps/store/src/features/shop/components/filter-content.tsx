@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/shared/ui-extended/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
 import FilterOptionList from "@/features/shop/components/filter-option-list";
@@ -68,6 +68,10 @@ export const FilterContent = ({
   initialTab = "category",
 }: FilterContentProps) => {
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const selectedFilters = useMemo(() => {
     const filters: Array<{ key: string; label: string; onRemove: () => void }> =

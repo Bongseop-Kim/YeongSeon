@@ -35,11 +35,11 @@ describe("KakaoChannelFloatingButton", () => {
     const chat = vi.fn();
     const init = vi.fn();
     vi.stubEnv("VITE_KAKAO_JAVASCRIPT_KEY", "test-javascript-key");
-    window.Kakao = {
+    vi.stubGlobal("Kakao", {
       Channel: { chat },
       init,
       isInitialized: () => false,
-    };
+    });
 
     render(<KakaoChannelFloatingButton />);
 

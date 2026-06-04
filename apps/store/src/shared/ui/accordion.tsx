@@ -4,10 +4,23 @@ import { ChevronDownIcon } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
 
+type AccordionSize = "default" | "compact";
+
 function Accordion({
+  className,
+  size = "default",
   ...props
-}: React.ComponentProps<typeof AccordionPrimitive.Root>) {
-  return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
+}: React.ComponentProps<typeof AccordionPrimitive.Root> & {
+  size?: AccordionSize;
+}) {
+  return (
+    <AccordionPrimitive.Root
+      data-slot="accordion"
+      data-size={size}
+      className={cn("group/accordion", className)}
+      {...props}
+    />
+  );
 }
 
 function AccordionItem({
@@ -34,6 +47,7 @@ function AccordionTrigger({
         data-slot="accordion-trigger"
         className={cn(
           "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-sm py-4 text-left text-sm font-medium transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
+          "group-data-[size=compact]/accordion:py-0 group-data-[size=compact]/accordion:font-semibold",
           className,
         )}
         {...props}
@@ -56,7 +70,14 @@ function AccordionContent({
       className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
       {...props}
     >
-      <div className={cn("pt-0 pb-4", className)}>{children}</div>
+      <div
+        className={cn(
+          "pt-0 pb-4 group-data-[size=compact]/accordion:pt-3",
+          className,
+        )}
+      >
+        {children}
+      </div>
     </AccordionPrimitive.Content>
   );
 }

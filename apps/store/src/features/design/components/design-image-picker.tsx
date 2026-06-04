@@ -165,7 +165,7 @@ export function DesignImagePicker({ onAdd }: DesignImagePickerProps) {
               >
                 <img
                   src={img.imageUrl}
-                  alt={img.sessionFirstMessage}
+                  alt={img.sessionFirstMessage ?? "AI 디자인 이미지"}
                   loading="lazy"
                   decoding="async"
                   className="h-full w-full object-cover"

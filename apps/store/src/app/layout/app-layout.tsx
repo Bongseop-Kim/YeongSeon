@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { matchPath, useLocation, useNavigate } from "react-router-dom";
 import Router from "@/app/router";
 import { Button } from "@/shared/ui-extended/button";
@@ -29,6 +30,7 @@ import {
 } from "@/shared/layout/footer";
 import { usePopup } from "@/shared/hooks/usePopup";
 import { KakaoChannelFloatingButton } from "@/widgets/kakao-channel-floating-button";
+import { NAVIGATE_TO_CART_EVENT } from "@/shared/lib/cart-toast";
 
 const HEADER_BTN_CLASS =
   "border-white/18 bg-white/10 text-white hover:bg-white hover:text-black";
@@ -78,6 +80,18 @@ export default function AppLayout() {
   const confirmLogin = useLoginConfirm();
   const signOutMutation = useSignOut();
   const { openPopup } = usePopup();
+
+  useEffect(() => {
+    const handleNavigateToCart = () => {
+      navigate(ROUTES.CART);
+    };
+
+    window.addEventListener(NAVIGATE_TO_CART_EVENT, handleNavigateToCart);
+
+    return () => {
+      window.removeEventListener(NAVIGATE_TO_CART_EVENT, handleNavigateToCart);
+    };
+  }, [navigate]);
   const isHomePage = location.pathname === ROUTES.HOME;
   const isDesignPage = location.pathname.startsWith(ROUTES.DESIGN);
   const shouldHideFooter = showHeader && !isHomePage && isMobile;

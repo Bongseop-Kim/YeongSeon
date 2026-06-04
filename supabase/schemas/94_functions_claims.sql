@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.create_claim(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
@@ -163,6 +163,9 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.create_claim(text, uuid, text, text, text, integer)
+IS 'SECURITY DEFINER is required so authenticated users create claims only through RPC validations after direct table INSERT is revoked; function still checks auth.uid() ownership and claim business rules.';
 
 -- ── admin_update_claim_status ─────────────────────────────────
 -- SECURITY DEFINER 사용 근거:

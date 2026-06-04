@@ -59,7 +59,11 @@ export default function QuoteRequestListPage() {
 
   const quoteRequestsByDate = useMemo(() => {
     const grouped = new Map<string, typeof filteredQuoteRequests>();
-    for (const quoteRequest of filteredQuoteRequests) {
+    const sortedQuoteRequests = [...filteredQuoteRequests].sort(
+      (a, b) => Date.parse(b.date) - Date.parse(a.date),
+    );
+
+    for (const quoteRequest of sortedQuoteRequests) {
       const dateKey = formatDate(quoteRequest.date);
       const group = grouped.get(dateKey) ?? [];
       if (!grouped.has(dateKey)) grouped.set(dateKey, group);

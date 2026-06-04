@@ -1,8 +1,9 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
+import { XIcon } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
-import { DialogPortal, DialogOverlay } from "@/shared/ui/dialog";
+import { DialogClose, DialogOverlay, DialogPortal } from "@/shared/ui/dialog";
 import {
   getDialogMobilePresentationClass,
   type DialogMobilePresentation,
@@ -10,6 +11,7 @@ import {
 
 export {
   Dialog,
+  DialogClose,
   DialogHeader,
   DialogFooter,
   DialogTitle,
@@ -37,6 +39,15 @@ const DialogContent = React.forwardRef<
         {...props}
       >
         {children}
+        {mobilePresentation === "sheet" ? (
+          <DialogClose
+            type="button"
+            aria-label="닫기"
+            className="absolute top-4 right-4 rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <XIcon className="size-4" aria-hidden="true" />
+          </DialogClose>
+        ) : null}
       </DialogPrimitive.Content>
     </DialogPortal>
   );

@@ -406,12 +406,12 @@ const ReformPage = () => {
                     />
                   </SummaryCard.Section>
                   <SummaryCard.Section>
-                    <Accordion type="single" collapsible>
+                    <Accordion type="single" collapsible size="compact">
                       <AccordionItem value="length-guide">
-                        <AccordionTrigger className="py-0 text-sm font-semibold">
+                        <AccordionTrigger>
                           내게 맞는 넥타이 길이
                         </AccordionTrigger>
-                        <AccordionContent className="pt-3">
+                        <AccordionContent>
                           <DataTable
                             headers={["키", "권장 길이"]}
                             data={HEIGHT_GUIDE.map((guide) => ({
