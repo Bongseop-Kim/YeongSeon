@@ -270,8 +270,8 @@ end;
 $$;
 
 -- ── generate_claim_number ────────────────────────────────────
--- SECURITY DEFINER 사유: 상위 RPC(create_claim 등) SECURITY DEFINER 내부에서
--- claims 테이블을 조회해 번호 시퀀스를 계산하므로 호출자 RLS에 영향받지 않아야 한다.
+-- SECURITY DEFINER 사유: SECURITY INVOKER RPC(create_claim)가 호출하더라도
+-- 전체 claims 번호 시퀀스 조회는 호출자 RLS에 영향받지 않아야 한다.
 CREATE OR REPLACE FUNCTION public.generate_claim_number()
 RETURNS text
 LANGUAGE plpgsql

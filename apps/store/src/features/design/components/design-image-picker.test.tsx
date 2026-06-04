@@ -7,10 +7,6 @@ const { useDesignImagesQuery } = vi.hoisted(() => ({
   useDesignImagesQuery: vi.fn(),
 }));
 
-const { useBreakpoint } = vi.hoisted(() => ({
-  useBreakpoint: vi.fn(),
-}));
-
 const { navigate } = vi.hoisted(() => ({
   navigate: vi.fn(),
 }));
@@ -23,10 +19,6 @@ const authState = vi.hoisted(() => ({
 
 vi.mock("@/features/design/hooks/use-design-images-query", () => ({
   useDesignImagesQuery,
-}));
-
-vi.mock("@/shared/lib/breakpoint-provider", () => ({
-  useBreakpoint,
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -70,7 +62,6 @@ describe("DesignImagePicker", () => {
     authState.user = { id: "user-1" };
     navigate.mockReset();
     modalConfirm.mockReset();
-    useBreakpoint.mockReturnValue({ isMobile: false });
     useDesignImagesQuery.mockReturnValue({
       data: { images: mockImages, total: 2 },
       isLoading: false,
@@ -158,8 +149,7 @@ describe("DesignImagePicker", () => {
     ).toBeDisabled();
   });
 
-  it("모바일에서는 필터 시트처럼 제목을 숨기고 CTA 여백을 맞춘다", async () => {
-    useBreakpoint.mockReturnValue({ isMobile: true });
+  it("공통 선택 Dialog 패턴으로 제목과 취소/선택 CTA를 표시한다", async () => {
     useDesignImagesQuery.mockReturnValue({
       data: { pages: [{ images: mockImages, total: 2 }] },
       isLoading: false,
@@ -176,15 +166,11 @@ describe("DesignImagePicker", () => {
     );
 
     const heading = screen.getByRole("heading", { name: "AI 디자인" });
-    expect(heading.parentElement).toHaveClass("sr-only");
+    expect(heading.parentElement).toHaveClass("border-b", "p-5");
 
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
     const cta = screen.getByRole("button", { name: "선택한 이미지 추가" });
-    expect(cta.parentElement?.parentElement).toHaveClass(
-      "px-2",
-      "pt-4",
-      "pb-2",
-    );
-    expect(cta.parentElement?.parentElement).not.toHaveClass("p-5");
+    expect(cta.parentElement).toHaveClass("border-t", "p-5");
   });
 
   it("여러 이미지 선택 후 추가 버튼 클릭 시 onAdd가 호출된다", async () => {
@@ -243,7 +229,7 @@ describe("DesignImagePicker", () => {
     expect(screen.getByText("아직 생성한 이미지가 없어요")).toBeInTheDocument();
   });
 
-  it("모달에는 취소 버튼을 표시하지 않는다", async () => {
+  it("취소 버튼은 선택을 버리고 모달을 닫는다", async () => {
     useDesignImagesQuery.mockReturnValue({
       data: { pages: [{ images: mockImages, total: 2 }] },
       isLoading: false,
@@ -260,10 +246,11 @@ describe("DesignImagePicker", () => {
     await userEvent.click(
       screen.getByRole("button", { name: /내 AI 디자인에서 선택/ }),
     );
+    await userEvent.click(screen.getByRole("button", { name: "파란 넥타이" }));
 
-    expect(
-      screen.queryByRole("button", { name: /취소/ }),
-    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "취소" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(onAdd).not.toHaveBeenCalled();
   });
 

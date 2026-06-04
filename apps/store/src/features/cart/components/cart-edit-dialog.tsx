@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
-import { Button } from "@/shared/ui-extended/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+import { Dialog } from "@/shared/ui-extended/dialog";
+import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 
 interface CartEditDialogProps {
   open: boolean;
@@ -30,29 +24,16 @@ export const CartEditDialog = ({
       open={open}
       onOpenChange={(isOpen) => !isOpen && !isSubmitting && onClose()}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+      <ResponsiveDialogScaffold
+        title={title}
+        cancelDisabled={isSubmitting}
+        confirmDisabled={isSubmitting}
+        confirmLabel={isSubmitting ? "변경 중..." : "변경"}
+        onCancel={onClose}
+        onConfirm={onConfirm}
+      >
         {children}
-        <DialogFooter>
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            취소
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={onConfirm}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "변경 중..." : "변경"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+      </ResponsiveDialogScaffold>
     </Dialog>
   );
 };

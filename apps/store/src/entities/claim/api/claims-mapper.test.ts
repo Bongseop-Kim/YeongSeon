@@ -140,6 +140,63 @@ describe("parseClaimListRows", () => {
     );
   });
 
+  it("sample 주문 취소 클레임의 item.sampleData를 파싱한다", () => {
+    expect(
+      parseClaimListRows([
+        createClaimListRowRaw({
+          item: {
+            id: "sample-order-order-1",
+            type: "sample",
+            quantity: 1,
+            product: null,
+            selectedOption: null,
+            reformData: {
+              sample_type: "fabric",
+              options: {
+                design_type: "PRINTING",
+                fabric_type: "silk",
+              },
+              pricing: {
+                total_cost: 30000,
+              },
+              reference_images: [{ url: "https://example.com/sample.jpg" }],
+              additional_notes: "샘플 요청",
+            },
+            sampleData: {
+              sample_type: "fabric",
+              options: {
+                design_type: "PRINTING",
+                fabric_type: "silk",
+              },
+              pricing: {
+                total_cost: 30000,
+              },
+              reference_images: [{ url: "https://example.com/sample.jpg" }],
+              additional_notes: "샘플 요청",
+            },
+            appliedCoupon: null,
+          },
+        }),
+      ])[0],
+    ).toEqual(
+      expect.objectContaining({
+        item: expect.objectContaining({
+          type: "sample",
+          sampleData: expect.objectContaining({
+            sampleType: "fabric",
+            options: expect.objectContaining({
+              designType: "PRINTING",
+              fabricType: "silk",
+            }),
+            pricing: { totalCost: 30000 },
+            referenceImageUrls: ["https://example.com/sample.jpg"],
+            additionalNotes: "샘플 요청",
+          }),
+        }),
+      }),
+    );
+  });
+
   describe("에러 케이스", () => {
     it("custom 타입에서 reformData가 없으면 에러를 던진다", () => {
       expect(() =>
@@ -159,6 +216,24 @@ describe("parseClaimListRows", () => {
       ).toThrow(
         'type이 "custom"인 경우 reformData(custom) 필드가 있어야 합니다.',
       );
+    });
+
+    it("sample 타입에서 sampleData가 없으면 에러를 던진다", () => {
+      expect(() =>
+        parseClaimListRows([
+          createClaimListRowRaw({
+            item: {
+              id: "sample-order-order-1",
+              type: "sample",
+              quantity: 1,
+              product: null,
+              selectedOption: null,
+              reformData: null,
+              appliedCoupon: null,
+            },
+          }),
+        ]),
+      ).toThrow('type이 "sample"인 경우 sampleData 필드가 있어야 합니다.');
     });
 
     it("refund_data 필수 값이 없으면 에러를 던진다", () => {
@@ -225,5 +300,43 @@ describe("toClaimItemView", () => {
       description: "상세 설명입니다.",
     });
     expect(view.description).toBe("상세 설명입니다.");
+  });
+
+  it("sample 클레임 item을 화면 모델로 매핑한다", () => {
+    const [sampleRow] = parseClaimListRows([
+      createClaimListRowRaw({
+        item: {
+          id: "sample-order-order-1",
+          type: "sample",
+          quantity: 1,
+          product: null,
+          selectedOption: null,
+          reformData: null,
+          sampleData: {
+            sample_type: "sewing",
+            options: {
+              tie_type: "3fold",
+              interlining: "soft",
+            },
+            pricing: {
+              total_cost: 20000,
+            },
+            reference_images: [],
+            additional_notes: "",
+          },
+          appliedCoupon: null,
+        },
+      }),
+    ]);
+
+    expect(toClaimItemView(sampleRow).item).toEqual(
+      expect.objectContaining({
+        type: "sample",
+        sampleData: expect.objectContaining({
+          sampleType: "sewing",
+          pricing: { totalCost: 20000 },
+        }),
+      }),
+    );
   });
 });

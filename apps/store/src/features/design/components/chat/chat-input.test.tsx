@@ -155,6 +155,35 @@ describe("ChatInput", () => {
     ).toBeInTheDocument();
   });
 
+  it("옵션 추가 다이얼로그는 취소 시 변경을 되돌리고 적용 시 유지한다", () => {
+    render(<ChatInput onSend={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "옵션 추가" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "적용" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "버건디" }));
+    expect(useDesignChatStore.getState().pendingAttachments).toEqual([
+      expect.objectContaining({ type: "color", label: "버건디" }),
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(useDesignChatStore.getState().pendingAttachments).toEqual([]);
+    expect(useDesignChatStore.getState().designContext.colors).toEqual([]);
+
+    fireEvent.click(screen.getByRole("button", { name: "옵션 추가" }));
+    fireEvent.click(screen.getByRole("button", { name: "버건디" }));
+    fireEvent.click(screen.getByRole("button", { name: "적용" }));
+
+    expect(useDesignChatStore.getState().pendingAttachments).toEqual([
+      expect.objectContaining({ type: "color", label: "버건디" }),
+    ]);
+    expect(useDesignChatStore.getState().designContext.colors).toEqual([
+      "#8B0000",
+    ]);
+  });
+
   it("토큰 잔액과 텍스트 충전 버튼을 입력 박스 우측 상단에 표시한다", () => {
     const onCharge = vi.fn();
     render(

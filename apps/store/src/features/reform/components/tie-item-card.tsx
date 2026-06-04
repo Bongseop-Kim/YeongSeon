@@ -222,8 +222,6 @@ const TieItemCard = ({ index, control, onRemove }: TieItemCardProps) => {
               <FieldError errors={[lengthFieldState.error]} />
             </div>
 
-            <hr className="border-border" />
-
             <div className="space-y-2">
               <Field
                 orientation="horizontal"

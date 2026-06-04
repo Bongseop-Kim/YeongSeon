@@ -8,9 +8,7 @@ import type {
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
 import type { TieItem } from "@yeongseon/shared/types/view/reform";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
-import { useModalStore } from "@/shared/store/modal";
 import { generateItemId } from "@/shared/lib/utils";
-import { ROUTES } from "@/shared/constants/ROUTES";
 import {
   clearGuest,
   getGuestItems,
@@ -18,6 +16,7 @@ import {
 } from "@/features/cart/utils/cart-local-storage";
 import { useAuthStore } from "@/shared/store/auth";
 import { toast } from "@/shared/lib/toast";
+import { showCartAddedToast } from "@/shared/lib/cart-toast";
 import {
   cartKeys,
   useClearCartItems,
@@ -57,7 +56,6 @@ export function useCart() {
   const isLoggedIn = !!userId;
   const queryClient = useQueryClient();
 
-  const { openModal } = useModalStore();
   const { data: reformPricing } = useReformPricing();
 
   const guestCartQuery = useQuery({
@@ -121,20 +119,14 @@ export function useCart() {
       });
 
       if (showModal) {
-        openModal({
-          title: "장바구니",
-          description: result.wasExistingItem
+        showCartAddedToast(
+          result.wasExistingItem
             ? "이미 장바구니에 있는 상품입니다. 수량을 추가했습니다."
             : "장바구니에 추가되었습니다.",
-          confirmText: "장바구니 보기",
-          cancelText: "닫기",
-          onConfirm: () => {
-            window.location.href = ROUTES.CART;
-          },
-        });
+        );
       }
     },
-    [items, openModal, syncItems],
+    [items, syncItems],
   );
 
   const addReformToCart = useCallback(
@@ -142,17 +134,9 @@ export function useCart() {
       const nextItems = addReformItemToCart(items, reformData, generateItemId);
       await syncItems(nextItems, items);
 
-      openModal({
-        title: "장바구니",
-        description: "수선 요청이 장바구니에 추가되었습니다.",
-        confirmText: "장바구니 보기",
-        cancelText: "닫기",
-        onConfirm: () => {
-          window.location.href = ROUTES.CART;
-        },
-      });
+      showCartAddedToast("수선 요청이 장바구니에 추가되었습니다.");
     },
-    [items, openModal, syncItems],
+    [items, syncItems],
   );
 
   const addMultipleReformToCart = useCallback(
@@ -165,17 +149,9 @@ export function useCart() {
 
       await syncItems(nextItems, items);
 
-      openModal({
-        title: "장바구니",
-        description: "수선 요청이 장바구니에 추가되었습니다.",
-        confirmText: "장바구니 보기",
-        cancelText: "닫기",
-        onConfirm: () => {
-          window.location.href = ROUTES.CART;
-        },
-      });
+      showCartAddedToast("수선 요청이 장바구니에 추가되었습니다.");
     },
-    [items, openModal, syncItems],
+    [items, syncItems],
   );
 
   const removeFromCart = useCallback(

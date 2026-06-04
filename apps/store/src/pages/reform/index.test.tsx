@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import ReformPage from "@/pages/reform";
@@ -346,17 +347,28 @@ describe("ReformPage", () => {
       screen.getByText("접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다."),
     ).toBeInTheDocument();
     expect(
-      within(summaryCard).queryByText("내게 맞는 넥타이 길이"),
-    ).not.toBeInTheDocument();
+      within(summaryCard).getByText("내게 맞는 넥타이 길이"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "내게 맞는 넥타이 길이" }),
+    ).toBeInTheDocument();
   });
 
-  it("키별 넥타이 길이 가이드를 본문에서 렌더링한다", () => {
+  it("키별 넥타이 길이 가이드를 SummaryCard에서 펼쳐 렌더링한다", async () => {
+    const user = userEvent.setup();
     render(<ReformPage />);
 
-    expect(screen.getByText("내게 맞는 넥타이 길이")).toBeInTheDocument();
-    expect(screen.getByText("키")).toBeInTheDocument();
-    expect(screen.getByText("권장 길이")).toBeInTheDocument();
-    expect(screen.getByText("170cm")).toBeInTheDocument();
-    expect(screen.getByText("49cm")).toBeInTheDocument();
+    const summaryCard = screen.getByTestId("summary-card");
+    const trigger = within(summaryCard).getByRole("button", {
+      name: "내게 맞는 넥타이 길이",
+    });
+
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await user.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(within(summaryCard).getByText("키")).toBeInTheDocument();
+    expect(within(summaryCard).getByText("권장 길이")).toBeInTheDocument();
+    expect(within(summaryCard).getByText("170cm")).toBeInTheDocument();
+    expect(within(summaryCard).getByText("49cm")).toBeInTheDocument();
   });
 });

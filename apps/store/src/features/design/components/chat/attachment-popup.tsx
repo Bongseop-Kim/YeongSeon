@@ -1,5 +1,3 @@
-import { X } from "lucide-react";
-
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
@@ -18,10 +16,6 @@ import type {
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
 import type { Attachment } from "@/features/design/types/chat";
 import { cn } from "@/shared/lib/utils";
-
-interface AttachmentPopupProps {
-  onClose: () => void;
-}
 
 const IMAGE_COUNT_OPTIONS = [1, 2, 3, 4] as const;
 
@@ -54,7 +48,7 @@ function replaceSingleAttachment(
   addAttachment(nextAttachment);
 }
 
-export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
+export function AttachmentPopup() {
   const designContext = useDesignChatStore((state) => state.designContext);
   const pendingAttachments = useDesignChatStore(
     (state) => state.pendingAttachments,
@@ -164,17 +158,7 @@ export function AttachmentPopup({ onClose }: AttachmentPopupProps) {
   };
 
   return (
-    <div
-      id="attachment-popup"
-      className="absolute left-0 top-full z-30 mt-2 w-72 rounded-xl border bg-white p-4 shadow-lg"
-    >
-      <div className="mb-3 flex items-center justify-between">
-        <FieldTitle>첨부 옵션</FieldTitle>
-        <Button variant="ghost" size="icon-sm" type="button" onClick={onClose}>
-          <X className="size-4" />
-        </Button>
-      </div>
-
+    <div>
       <div className="space-y-4">
         <section className="space-y-2">
           <div className="flex items-center justify-between">

@@ -10,13 +10,8 @@ import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
 import { Form } from "@/shared/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+import { Dialog } from "@/shared/ui-extended/dialog";
+import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 import {
   MobileReformSheet,
   TieItemCard,
@@ -51,6 +46,12 @@ import { analytics } from "@/shared/lib/analytics";
 import { DataTable } from "@/shared/ui/data-table";
 import { HEIGHT_GUIDE } from "@/shared/constants/HEIGHT_GUIDE";
 import { createShippingNoticeItems } from "@/shared/lib/shipping-notices";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/shared/ui/accordion";
 
 const DEFAULT_TIE_ITEM = {
   id: "tie-1",
@@ -404,6 +405,25 @@ const ReformPage = () => {
                       items={shippingNoticeItems}
                     />
                   </SummaryCard.Section>
+                  <SummaryCard.Section>
+                    <Accordion type="single" collapsible size="compact">
+                      <AccordionItem value="length-guide">
+                        <AccordionTrigger>
+                          내게 맞는 넥타이 길이
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <DataTable
+                            headers={["키", "권장 길이"]}
+                            data={HEIGHT_GUIDE.map((guide) => ({
+                              키: guide.height,
+                              "권장 길이": guide.length,
+                            }))}
+                            size="sm"
+                          />
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                  </SummaryCard.Section>
                 </SummaryCard>
               }
               actionBar={
@@ -712,37 +732,24 @@ const ReformPage = () => {
         open={bulkDialogOpen}
         onOpenChange={(open) => !open && setBulkDialogOpen(false)}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>일괄 적용</DialogTitle>
-          </DialogHeader>
+        <ResponsiveDialogScaffold
+          title="일괄 적용"
+          confirmLabel="적용"
+          onCancel={() => setBulkDialogOpen(false)}
+          onConfirm={async () => {
+            const didApply =
+              await bulkApplySectionRef.current?.handleBulkApply();
+            if (didApply) {
+              setBulkDialogOpen(false);
+            }
+          }}
+        >
           <BulkApplySection
             ref={bulkApplySectionRef}
             setValue={form.setValue}
             checkedIndices={checkedIndicesForBulk}
           />
-          <DialogFooter>
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setBulkDialogOpen(false)}
-            >
-              취소
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={async () => {
-                const didApply =
-                  await bulkApplySectionRef.current?.handleBulkApply();
-                if (didApply) {
-                  setBulkDialogOpen(false);
-                }
-              }}
-            >
-              적용
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+        </ResponsiveDialogScaffold>
       </Dialog>
     </>
   );

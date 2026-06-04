@@ -1,6 +1,7 @@
 import {
   type ChangeEvent,
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -11,6 +12,8 @@ import { Coins, Ellipsis, ImagePlus, X } from "lucide-react";
 import { analytics } from "@/shared/lib/analytics";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui-extended/button";
+import { Dialog } from "@/shared/ui-extended/dialog";
+import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 import { AttachmentPopup } from "@/features/design/components/chat/attachment-popup";
 import { FABRIC_OPTIONS } from "@/features/design/constants/design-options";
 import { useDesignChatStore } from "@/features/design/store/design-chat-store";
@@ -36,13 +39,20 @@ type RemovedAttachmentContext = {
   nextColorValues: string[];
 };
 
-const getNextColorValues = (attachments: Attachment[], removedIndex: number) =>
-  attachments
-    .filter(
-      (attachment, index) =>
-        index !== removedIndex && attachment.type === "color",
-    )
-    .map((attachment) => attachment.value);
+const getNextColorValues = (
+  attachments: Attachment[],
+  removedIndex: number,
+) => {
+  const colorValues: string[] = [];
+
+  attachments.forEach((attachment, index) => {
+    if (index !== removedIndex && attachment.type === "color") {
+      colorValues.push(attachment.value);
+    }
+  });
+
+  return colorValues;
+};
 
 const resolveRemovedAttachmentContext = (
   attachments: Attachment[],
@@ -130,7 +140,7 @@ function ImageAttachmentPreview({
         type="button"
         aria-label={`${fileName} 제거`}
         onClick={onRemove}
-        className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-black text-white shadow-sm transition-colors hover:bg-gray-800"
+        className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-zinc-950 text-white shadow-sm transition-colors hover:bg-gray-800"
       >
         <X className="size-3.5" />
       </button>
@@ -161,44 +171,43 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const removeAttachment = useDesignChatStore(
       (state) => state.removeAttachment,
     );
+    const clearAttachments = useDesignChatStore(
+      (state) => state.clearAttachments,
+    );
     const setDesignContext = useDesignChatStore(
       (state) => state.setDesignContext,
     );
     const [inputText, setInputText] = useState("");
     const [showPopup, setShowPopup] = useState(false);
-    const popupWrapperRef = useRef<HTMLDivElement>(null);
+    const optionSnapshotRef = useRef<{
+      designContext: DesignContext;
+      pendingAttachments: Attachment[];
+    } | null>(null);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const hasTrackedStartRef = useRef(false);
+
+    const openOptionDialog = useCallback(() => {
+      optionSnapshotRef.current = {
+        designContext: { ...designContext },
+        pendingAttachments: [...pendingAttachments],
+      };
+      setShowPopup(true);
+    }, [designContext, pendingAttachments]);
 
     useImperativeHandle(
       ref,
       () => ({
         focus: () => textareaRef.current?.focus(),
-        openOptions: () => setShowPopup(true),
+        openOptions: openOptionDialog,
       }),
-      [],
+      [openOptionDialog],
     );
 
     useEffect(() => {
       setInputText(draftText ?? "");
       textareaRef.current?.focus();
     }, [draftText, draftRevision]);
-
-    useEffect(() => {
-      if (!showPopup) return;
-      const handleClickOutside = (e: MouseEvent) => {
-        if (
-          popupWrapperRef.current &&
-          !popupWrapperRef.current.contains(e.target as Node)
-        ) {
-          setShowPopup(false);
-        }
-      };
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }, [showPopup]);
 
     const trimmedText = inputText.trim();
     const hasImageAttachments = pendingAttachments.some(
@@ -207,6 +216,40 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
     const hasNonImageAttachments = pendingAttachments.some(
       (attachment) => attachment.type !== "image",
     );
+
+    const restoreOptionSnapshot = () => {
+      const snapshot = optionSnapshotRef.current;
+      if (!snapshot) {
+        return;
+      }
+
+      setDesignContext(snapshot.designContext);
+      clearAttachments();
+      snapshot.pendingAttachments.forEach((attachment) => {
+        addAttachment(attachment);
+      });
+      optionSnapshotRef.current = null;
+    };
+
+    const handleOptionOpenChange = (nextOpen: boolean) => {
+      if (nextOpen) {
+        openOptionDialog();
+        return;
+      }
+
+      restoreOptionSnapshot();
+      setShowPopup(false);
+    };
+
+    const handleOptionCancel = () => {
+      restoreOptionSnapshot();
+      setShowPopup(false);
+    };
+
+    const handleOptionApply = () => {
+      optionSnapshotRef.current = null;
+      setShowPopup(false);
+    };
 
     const handleAttachmentRemove = (removedIndex: number) => {
       const removalContext = resolveRemovedAttachmentContext(
@@ -298,13 +341,18 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
 
     return (
       <div className="relative flex flex-col gap-2">
-        <div
-          ref={popupWrapperRef}
-          className="relative rounded-xl border bg-white p-2"
-        >
-          {showPopup ? (
-            <AttachmentPopup onClose={() => setShowPopup(false)} />
-          ) : null}
+        <div className="relative rounded-xl border bg-white p-2">
+          <Dialog open={showPopup} onOpenChange={handleOptionOpenChange}>
+            <ResponsiveDialogScaffold
+              title="첨부 옵션"
+              contentId="attachment-popup"
+              confirmLabel="적용"
+              onCancel={handleOptionCancel}
+              onConfirm={handleOptionApply}
+            >
+              <AttachmentPopup />
+            </ResponsiveDialogScaffold>
+          </Dialog>
           <div className="absolute right-3 top-3 flex items-center gap-1.5 text-xs">
             <span className="inline-flex items-center gap-1 text-muted-foreground">
               <Coins className="size-3 text-muted-foreground" />
@@ -393,6 +441,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   <input
                     ref={imageInputRef}
                     type="file"
+                    aria-label="이미지 파일 선택"
                     className="hidden"
                     accept="image/*"
                     multiple
@@ -416,7 +465,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                     aria-expanded={showPopup}
                     aria-controls="attachment-popup"
                     className="bg-transparent hover:bg-transparent"
-                    onClick={() => setShowPopup((prev) => !prev)}
+                    onClick={openOptionDialog}
                   >
                     <Ellipsis className="size-4" />
                   </Button>

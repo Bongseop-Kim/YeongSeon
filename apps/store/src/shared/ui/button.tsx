@@ -19,6 +19,8 @@ const buttonVariants = cva(
         link: "text-primary underline underline-offset-4 decoration-primary/30",
         text: "text-foreground underline underline-offset-4",
         none: "border-none bg-transparent shadow-none",
+        kakao:
+          "border border-brand-kakao bg-brand-kakao text-brand-ink hover:bg-brand-kakao-hover focus-visible:ring-brand-kakao",
         "filter-chip":
           "border! border-solid border-zinc-200! bg-white text-zinc-700 shadow-none hover:bg-zinc-50",
         "filter-chip-active":

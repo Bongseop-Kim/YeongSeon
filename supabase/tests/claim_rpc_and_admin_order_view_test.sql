@@ -8,7 +8,7 @@
 -- =============================================================
 
 BEGIN;
-SELECT plan(5);
+SELECT plan(7);
 
 -- ── 테스트 1: create_claim security context ──────────────────
 SELECT ok(
@@ -24,6 +24,108 @@ SELECT ok(
   ),
   'create_claim은 SECURITY INVOKER여야 한다'
 );
+
+SELECT ok(
+  has_table_privilege('authenticated', 'public.orders', 'SELECT')
+    AND has_table_privilege('authenticated', 'public.order_items', 'SELECT')
+    AND has_table_privilege('authenticated', 'public.claims', 'SELECT')
+    AND has_table_privilege('authenticated', 'public.claims', 'INSERT'),
+  'authenticated는 create_claim SECURITY INVOKER 실행에 필요한 최소 테이블 권한을 가진다'
+);
+
+DO $setup_claim_invoker$
+DECLARE
+  v_user uuid := 'c1000001-0000-0000-0000-000000000012';
+  v_order_id uuid := 'c1000001-0000-0000-0000-000000000013';
+  v_addr_id uuid;
+BEGIN
+  PERFORM test_helpers.create_test_user(v_user);
+  PERFORM test_helpers.create_test_profile(v_user, 'customer', '샘플 클레임 사용자');
+
+  INSERT INTO public.shipping_addresses (
+    user_id,
+    recipient_name,
+    recipient_phone,
+    address,
+    address_detail,
+    postal_code,
+    is_default
+  ) VALUES (
+    v_user,
+    '샘플 수령인',
+    '010-0000-0000',
+    '서울시 강남구',
+    '샘플로 1',
+    '12345',
+    false
+  )
+  RETURNING id INTO v_addr_id;
+
+  INSERT INTO public.orders (
+    id,
+    user_id,
+    order_number,
+    shipping_address_id,
+    total_price,
+    original_price,
+    order_type,
+    status,
+    shipping_cost
+  ) VALUES (
+    v_order_id,
+    v_user,
+    'TST-CLAIM-SAMPLE-001',
+    v_addr_id,
+    30000,
+    30000,
+    'sample',
+    '접수',
+    0
+  );
+
+  INSERT INTO public.order_items (
+    order_id,
+    item_id,
+    item_type,
+    item_data,
+    quantity,
+    unit_price
+  ) VALUES (
+    v_order_id,
+    'sample-order-' || v_order_id::text,
+    'sample',
+    jsonb_build_object(
+      'sample_type', 'fabric',
+      'options', jsonb_build_object('design_type', 'PRINTING'),
+      'pricing', jsonb_build_object('total_cost', 30000)
+    ),
+    1,
+    30000
+  );
+END $setup_claim_invoker$;
+
+SELECT test_helpers.set_auth(
+  'c1000001-0000-0000-0000-000000000012'::uuid,
+  'authenticated'
+);
+
+SET LOCAL ROLE authenticated;
+
+SELECT lives_ok(
+  $$
+    SELECT public.create_claim(
+      'cancel',
+      'c1000001-0000-0000-0000-000000000013'::uuid,
+      'sample-order-c1000001-0000-0000-0000-000000000013',
+      'change_mind',
+      NULL,
+      1
+    )
+  $$,
+  'authenticated 사용자는 sample 주문 취소 클레임을 create_claim RPC로 생성할 수 있다'
+);
+
+RESET ROLE;
 
 -- ── 테스트 2-3: 비활성→활성 전이 시 사용자 친화적 예외 ──────────
 DO $setup$

@@ -1,7 +1,7 @@
 import type { ProductDTO, ProductOptionDTO } from "./product";
 import type { TieItemDTO } from "./reform";
 import type { AppliedCouponDTO } from "./coupon";
-import type { CustomOrderDataDTO } from "./order-view";
+import type { CustomOrderDataDTO, SampleOrderDataDTO } from "./order-view";
 
 export type ClaimStatusDTO =
   | "접수"
@@ -22,12 +22,13 @@ export interface TokenRefundDataDTO {
 /** claim_list_view의 item jsonb 컬럼 shape */
 export interface ClaimItemRowDTO {
   id: string;
-  type: "product" | "reform" | "custom" | "token";
+  type: "product" | "reform" | "custom" | "token" | "sample";
   product: ProductDTO | null;
   selectedOption: ProductOptionDTO | null;
   quantity: number;
   reformData: { tie: TieItemDTO; cost: number } | null;
   customData: CustomOrderDataDTO | null;
+  sampleData?: SampleOrderDataDTO | null;
   appliedCoupon: AppliedCouponDTO | null;
 }
 

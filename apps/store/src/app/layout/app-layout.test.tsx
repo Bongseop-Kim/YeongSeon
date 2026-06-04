@@ -113,4 +113,32 @@ describe("AppLayout footer rendering", () => {
 
     expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
   });
+
+  it("CTA 없는 모바일 서브페이지에서는 카카오톡 플로팅 버튼을 기본 위치에 둔다", () => {
+    breakpointState.isMobile = true;
+
+    renderAppLayout(ROUTES.SHOP);
+
+    expect(
+      screen.getByRole("button", { name: "카카오톡 채널 채팅하기" }),
+    ).toHaveClass("bottom-5");
+  });
+
+  it("하단 CTA가 있는 모바일 페이지에서는 카카오톡 플로팅 버튼을 CTA 위로 올린다", () => {
+    breakpointState.isMobile = true;
+
+    renderAppLayout(`${ROUTES.SHOP}/product-1`);
+
+    expect(
+      screen.getByRole("button", { name: "카카오톡 채널 채팅하기" }),
+    ).toHaveClass("bottom-[calc(env(safe-area-inset-bottom,0px)+5.75rem)]");
+  });
+
+  it("design 페이지에서는 카카오톡 플로팅 버튼을 렌더링하지 않는다", () => {
+    renderAppLayout(ROUTES.DESIGN);
+
+    expect(
+      screen.queryByRole("button", { name: "카카오톡 채널 채팅하기" }),
+    ).not.toBeInTheDocument();
+  });
 });

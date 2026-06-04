@@ -28,7 +28,7 @@ export function NotificationConsentFlowModals({ consentFlow }: Props) {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent mobilePresentation="sheet">
           <DialogHeader>
             <DialogTitle>전화번호 인증</DialogTitle>
           </DialogHeader>

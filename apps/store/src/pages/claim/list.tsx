@@ -9,7 +9,7 @@ import { getClaimTypeLabel } from "@yeongseon/shared/utils/claim-utils";
 import { CLAIM_REASON_LABELS } from "@yeongseon/shared/constants/claim-status";
 import { formatDate } from "@yeongseon/shared/utils/format-date";
 import { OrderItemCard } from "@/shared/composite/order-item-card";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { buildClaimDetailRoute } from "@/shared/constants/ROUTES";
@@ -37,7 +37,6 @@ const CLAIM_TYPE_MAP: Record<Exclude<ClaimTypeFilter, "전체">, ClaimType> = {
 };
 
 export default function ClaimListPage() {
-  const navigate = useNavigate();
   const [searchFilters, setSearchFilters] = useState<ListFilters>({});
   const activeTab = useSearchTabs({
     tabs: CLAIM_TYPE_TABS,
@@ -77,9 +76,9 @@ export default function ClaimListPage() {
     const grouped = new Map<string, typeof filteredClaims>();
     for (const claim of filteredClaims) {
       const dateKey = formatDate(claim.date);
-      if (!grouped.has(dateKey)) grouped.set(dateKey, []);
-      const group = grouped.get(dateKey);
-      if (group) group.push(claim);
+      const group = grouped.get(dateKey) ?? [];
+      if (!grouped.has(dateKey)) grouped.set(dateKey, group);
+      group.push(claim);
     }
     return Array.from(grouped.entries());
   }, [filteredClaims]);
@@ -107,34 +106,30 @@ export default function ClaimListPage() {
               />
 
               {claimsByDate.length === 0 ? (
-                <div>
-                  <Empty
-                    title="취소/반품/교환/토큰환불 내역이 없습니다."
-                    description="문제가 있으시면 고객센터로 문의해주세요."
-                  />
-                </div>
+                <Empty
+                  title={
+                    activeTab === "전체"
+                      ? "취소/반품/교환/토큰환불 내역이 없습니다."
+                      : `${activeTab} 내역이 없습니다.`
+                  }
+                  description={
+                    activeTab === "전체"
+                      ? "문제가 있으시면 고객센터로 문의해주세요."
+                      : `${activeTab}에 해당하는 내역이 없습니다.`
+                  }
+                />
               ) : (
                 claimsByDate.map(([dateLabel, dateClaims]) => (
                   <section key={dateLabel} className="space-y-0">
-                    <h2 className="sticky top-0 z-10 bg-white py-3 text-lg font-semibold tracking-tight text-zinc-950">
+                    <h2 className="sticky top-0 z-10 bg-background py-3 text-lg font-semibold tracking-tight text-zinc-950">
                       {dateLabel}
                     </h2>
                     {dateClaims.map((claim) => (
-                      <article
+                      <Link
                         key={claim.id}
                         data-testid={`claim-card-${claim.orderId}-${claim.type}-${claim.id}`}
-                        className="cursor-pointer border-b border-stone-200 py-5"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() =>
-                          navigate(buildClaimDetailRoute(claim.id))
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            navigate(buildClaimDetailRoute(claim.id));
-                          }
-                        }}
+                        className="block border-b border-stone-200 py-5"
+                        to={buildClaimDetailRoute(claim.id)}
                       >
                         <div className="flex flex-col gap-5">
                           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -188,7 +183,7 @@ export default function ClaimListPage() {
                             </div>
                           </div>
                         </div>
-                      </article>
+                      </Link>
                     ))}
                   </section>
                 ))

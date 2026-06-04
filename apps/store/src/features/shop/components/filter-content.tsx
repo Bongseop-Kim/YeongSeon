@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/shared/ui-extended/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
 import FilterOptionList from "@/features/shop/components/filter-option-list";
@@ -50,8 +50,6 @@ interface FilterContentProps {
   onMaterialChange: (material: ProductMaterial) => void;
   onPriceRangeChange: (range: string) => void;
   onReset: () => void;
-  showApplyButton?: boolean;
-  onApply?: () => void;
   initialTab?: FilterTab;
 }
 
@@ -67,8 +65,6 @@ export const FilterContent = ({
   onMaterialChange,
   onPriceRangeChange,
   onReset,
-  showApplyButton = false,
-  onApply,
   initialTab = "category",
 }: FilterContentProps) => {
   const [activeTab, setActiveTab] = useState<FilterTab>(initialTab);
@@ -152,6 +148,7 @@ export const FilterContent = ({
               >
                 <span>{filter.label}</span>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     filter.onRemove();
@@ -244,14 +241,6 @@ export const FilterContent = ({
           />
         </TabsContent>
       </Tabs>
-
-      {showApplyButton && onApply && (
-        <div className="sticky bottom-0 border-t border-zinc-200 bg-background px-2 pt-4 pb-2">
-          <Button size="xl" type="button" className="w-full" onClick={onApply}>
-            적용하기
-          </Button>
-        </div>
-      )}
     </>
   );
 };
