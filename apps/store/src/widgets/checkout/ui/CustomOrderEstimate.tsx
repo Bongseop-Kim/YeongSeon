@@ -7,10 +7,8 @@ import {
   getSizeLabel,
   getTieTypeLabel,
 } from "@/features/custom-order";
-import {
-  formatSpecificationMoney,
-  OrderSpecificationConfirmation,
-} from "./OrderSpecificationConfirmation";
+import { OrderSpecificationConfirmation } from "./OrderSpecificationConfirmation";
+import { formatSpecificationMoney } from "./order-specification-format";
 
 type CustomOrderOptions = CustomOrderPaymentState["coreOptions"];
 

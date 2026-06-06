@@ -41,6 +41,7 @@ export * from "./constants/claim-status";
 export * from "./constants/shipping-events";
 export * from "./constants/courier-companies";
 export * from "./constants/order-status";
+export * from "./constants/repair-shipping";
 export * from "./constants/quote-request-status";
 export * from "./constants/delivery-request-options";
 

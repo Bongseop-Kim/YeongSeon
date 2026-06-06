@@ -12,6 +12,7 @@ export function useReformPricing() {
           "REFORM_BASE_COST",
           "REFORM_SHIPPING_COST",
           "REFORM_WIDTH_COST",
+          "REFORM_PICKUP_FEE",
         ]);
 
       if (error) throw error;
@@ -21,6 +22,7 @@ export function useReformPricing() {
       const baseCostRaw = map["REFORM_BASE_COST"];
       const shippingCostRaw = map["REFORM_SHIPPING_COST"];
       const widthCostRaw = map["REFORM_WIDTH_COST"];
+      const pickupFeeRaw = map["REFORM_PICKUP_FEE"];
 
       if (!Number.isFinite(baseCostRaw)) {
         throw new Error(
@@ -37,11 +39,17 @@ export function useReformPricing() {
           "pricing_constants에서 REFORM_WIDTH_COST를 찾을 수 없습니다.",
         );
       }
+      if (!Number.isFinite(pickupFeeRaw)) {
+        throw new Error(
+          "pricing_constants에서 REFORM_PICKUP_FEE를 찾을 수 없습니다.",
+        );
+      }
 
       return {
         baseCost: baseCostRaw as number,
         shippingCost: shippingCostRaw as number,
         widthReformCost: widthCostRaw as number,
+        pickupFee: pickupFeeRaw as number,
       };
     },
   });

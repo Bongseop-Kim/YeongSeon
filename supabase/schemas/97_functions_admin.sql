@@ -17,6 +17,7 @@ declare
   v_admin_id uuid := auth.uid();
   v_current_status text;
   v_order_type text;
+  v_repair_previous_status text;
 begin
   if v_admin_id is null or not public.is_admin() then
     raise exception 'Admin only';
@@ -79,8 +80,24 @@ begin
         raise exception 'Invalid rollback from "%" to "%" for sample order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'repair' then
+      select case
+        when exists (
+          select 1
+          from public.repair_pickup_requests r
+          where r.order_id = p_order_id
+        ) then '수거예정'
+        when exists (
+          select 1
+          from public.repair_shipping_receipts r
+          where r.order_id = p_order_id
+            and r.receipt_type = 'no_tracking'
+        ) then '발송확인중'
+        else '발송중'
+      end
+      into v_repair_previous_status;
+
       if not (
-        (v_current_status = '접수' and p_new_status = '발송중')
+        (v_current_status = '접수' and p_new_status = v_repair_previous_status)
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -131,12 +148,16 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '발송중' and p_new_status = '접수')
+        -- 송장 없는 접수: 관리자가 입고 확인 후 접수 처리
+        or (v_current_status = '발송확인중' and p_new_status = '접수')
+        -- 방문 수거: 수거(입고) 완료 후 접수 처리
+        or (v_current_status = '수거예정' and p_new_status = '접수')
         or (v_current_status = '접수' and p_new_status = '수선중')
         or (v_current_status = '수선중'   and p_new_status = '수선완료')
         or (v_current_status = '수선완료' and p_new_status = '배송중')
         or (v_current_status = '배송중'   and p_new_status = '배송완료')
         or (v_current_status = '배송완료' and p_new_status = '완료')
-        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '발송대기', '발송중'))
+        or (p_new_status = '취소' and v_current_status in ('대기중', '결제중', '발송대기', '발송중', '발송확인중', '수거예정'))
       ) then
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;

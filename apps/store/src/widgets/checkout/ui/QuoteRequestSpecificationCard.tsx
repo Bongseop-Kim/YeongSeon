@@ -8,10 +8,8 @@ import {
   getTieTypeLabel,
 } from "@/features/custom-order";
 import type { QuoteRequestDetail } from "@yeongseon/shared";
-import {
-  formatSpecificationMoney,
-  OrderSpecificationConfirmation,
-} from "./OrderSpecificationConfirmation";
+import { OrderSpecificationConfirmation } from "./OrderSpecificationConfirmation";
+import { formatSpecificationMoney } from "./order-specification-format";
 
 interface QuoteRequestSpecificationCardProps {
   quoteRequest: QuoteRequestDetail;

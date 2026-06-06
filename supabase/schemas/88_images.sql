@@ -22,6 +22,9 @@ CREATE INDEX idx_images_file_id ON public.images (file_id) WHERE file_id IS NOT 
 CREATE UNIQUE INDEX idx_images_reform_upload_unique
   ON public.images (entity_type, entity_id)
   WHERE entity_type = 'reform_upload';
+CREATE UNIQUE INDEX idx_images_repair_shipping_upload_unique
+  ON public.images (entity_type, entity_id)
+  WHERE entity_type = 'repair_shipping_upload';
 CREATE INDEX idx_images_deletion_claimed
   ON public.images (deletion_claimed_at)
   WHERE deletion_claimed_at IS NOT NULL AND deleted_at IS NULL;
@@ -211,13 +214,79 @@ BEGIN
       expires_at = EXCLUDED.expires_at,
       deleted_at = NULL,
       deletion_claimed_at = NULL
+  WHERE public.images.uploaded_by = EXCLUDED.uploaded_by
   RETURNING id INTO v_id;
+
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'Reform upload ownership conflict';
+  END IF;
 
   RETURN v_id;
 END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.register_reform_upload(text, text) TO authenticated;
+
+-- ── register_repair_shipping_upload ───────────────────────────
+-- 수선품 발송 사진 업로드 등록 (송장 등록/송장 없는 접수 첨부용).
+-- 업로드 직후 entity_id = file_id로 등록되고, submit_repair_tracking /
+-- submit_repair_no_tracking 제출 시 entity_type 'repair_shipping',
+-- entity_id = order_id로 재연결된다.
+CREATE OR REPLACE FUNCTION public.register_repair_shipping_upload(
+  p_url     text,
+  p_file_id text
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_id uuid;
+  v_user_id uuid;
+BEGIN
+  v_user_id := auth.uid();
+
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  IF nullif(trim(p_url), '') IS NULL THEN
+    RAISE EXCEPTION 'Repair shipping image url is required';
+  END IF;
+
+  IF nullif(trim(p_file_id), '') IS NULL THEN
+    RAISE EXCEPTION 'Repair shipping image file id is required';
+  END IF;
+
+  INSERT INTO public.images (
+    url, file_id, folder, entity_type, entity_id, uploaded_by, expires_at
+  )
+  VALUES (
+    p_url, p_file_id, '/repair-shipping', 'repair_shipping_upload', p_file_id, v_user_id, NULL
+  )
+  ON CONFLICT (entity_type, entity_id)
+    WHERE entity_type = 'repair_shipping_upload'
+  DO UPDATE
+  SET url = EXCLUDED.url,
+      file_id = EXCLUDED.file_id,
+      folder = EXCLUDED.folder,
+      uploaded_by = EXCLUDED.uploaded_by,
+      expires_at = EXCLUDED.expires_at,
+      deleted_at = NULL,
+      deletion_claimed_at = NULL
+  WHERE public.images.uploaded_by = EXCLUDED.uploaded_by
+  RETURNING id INTO v_id;
+
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'Repair shipping upload ownership conflict';
+  END IF;
+
+  RETURN v_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.register_repair_shipping_upload(text, text) TO authenticated;
 
 -- 만료 정책 (참고용 주석)
 -- | entity_type   | expires_at 설정 시점           | 기간  |

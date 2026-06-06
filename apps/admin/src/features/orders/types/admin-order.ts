@@ -240,3 +240,30 @@ export interface AdminOrderHistoryClaimEntry extends AdminOrderHistoryBaseEntry 
 export type AdminOrderHistoryEntry =
   | AdminOrderHistoryOrderEntry
   | AdminOrderHistoryClaimEntry;
+
+// ── 수선품 발송 부가 정보 ──────────────────────────────────────
+
+export interface AdminRepairPickupRequest {
+  id: string;
+  recipientName: string;
+  recipientPhone: string;
+  postalCode: string | null;
+  address: string;
+  detailAddress: string | null;
+  pickupFee: number;
+  createdAt: string;
+}
+
+export interface AdminRepairShippingPhoto {
+  url: string;
+  fileId: string;
+}
+
+export interface AdminRepairShippingReceipt {
+  id: string;
+  receiptType: "tracking" | "no_tracking";
+  reason: string | null;
+  memo: string | null;
+  photos: AdminRepairShippingPhoto[];
+  createdAt: string;
+}

@@ -2,6 +2,8 @@ import type {
   CreateOrderRequest,
   CreateOrderResponse,
 } from "@/entities/order/model/view/order-input";
+import type { RepairShippingPhoto } from "@/shared/store/order";
+import type { RepairNoTrackingReason } from "@yeongseon/shared/constants/repair-shipping";
 import type { CreateOrderInputDTO } from "@yeongseon/shared/types/dto/order-input";
 import type { OrderViewDTO } from "@yeongseon/shared/types/dto/order-view";
 import type { Order } from "@yeongseon/shared/types/view/order";
@@ -12,6 +14,7 @@ import {
   parseOrderItemRows,
   parseOrderDetailRow,
   toOrderItemInputDTO,
+  mapRepairShipping,
   toOrderView,
   toOrderViewFromDetail,
 } from "@/entities/order/api/order-mapper";
@@ -88,6 +91,7 @@ export const createOrder = async (
   const input: CreateOrderInputDTO = {
     shipping_address_id: request.shippingAddressId,
     items: request.items.map(toOrderItemInputDTO),
+    repair_shipping: mapRepairShipping(request.repairShipping),
   };
 
   const { data: orderResult, error: orderError } =
@@ -265,17 +269,43 @@ export const submitRepairTracking = async (
   orderId: string,
   courierCompany: string,
   trackingNumber: string,
+  photos: RepairShippingPhoto[] = [],
 ): Promise<void> => {
   const supabase = await getSupabase();
   const { error } = await supabase.rpc("submit_repair_tracking", {
     p_order_id: orderId,
     p_courier_company: courierCompany,
     p_tracking_number: trackingNumber,
+    p_photos: photos,
   });
 
   if (error) {
     throw new Error(
       error.message || "발송 정보를 등록하지 못했어요. 다시 시도해주세요.",
+    );
+  }
+};
+
+/**
+ * 송장번호 없는 발송 접수 (발송대기 → 발송확인중)
+ */
+export const submitRepairNoTracking = async (
+  orderId: string,
+  reason: RepairNoTrackingReason,
+  memo: string | null,
+  photos: RepairShippingPhoto[] = [],
+): Promise<void> => {
+  const supabase = await getSupabase();
+  const { error } = await supabase.rpc("submit_repair_no_tracking", {
+    p_order_id: orderId,
+    p_reason: reason,
+    p_memo: memo,
+    p_photos: photos,
+  });
+
+  if (error) {
+    throw new Error(
+      error.message || "발송 접수에 실패했어요. 다시 시도해주세요.",
     );
   }
 };

@@ -38,6 +38,7 @@
     "./types/view/cart": "./src/types/view/cart.ts",
     "./types/view/inquiry": "./src/types/view/inquiry.ts",
     "./constants/order-status": "./src/constants/order-status.ts",
+    "./constants/repair-shipping": "./src/constants/repair-shipping.ts",
     "./constants/claim-status": "./src/constants/claim-status.ts",
     "./constants/claim-actions": "./src/constants/claim-actions.ts",
     "./constants/courier-companies": "./src/constants/courier-companies.ts",

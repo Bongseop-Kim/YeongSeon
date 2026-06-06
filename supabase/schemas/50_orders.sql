@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
       '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',
       '접수','제작중','제작완료',
       '수선중','수선완료',
-      '발송대기','발송중'
+      '발송대기','발송중','발송확인중','수거예정'
     ])),
   CONSTRAINT orders_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,
@@ -60,6 +60,9 @@ CREATE INDEX idx_orders_stale_pending_created_at
   ON public.orders (created_at)
   WHERE status = '대기중';
 CREATE INDEX idx_orders_payment_group_id     ON public.orders (payment_group_id);
+
+COMMENT ON CONSTRAINT orders_status_check ON public.orders
+IS 'Allows shared order lifecycle statuses, including repair pickup and no-tracking states.';
 
 -- Trigger
 CREATE OR REPLACE TRIGGER update_orders_updated_at

@@ -13,11 +13,19 @@ import {
   toAdminOrderItem,
   toAdminOrderListItem,
 } from "@/features/orders/api/orders-mapper";
+import {
+  mapRepairPickupRequestRow,
+  mapRepairShippingReceiptRow,
+  type RepairPickupRequestRowDTO,
+  type RepairShippingReceiptRowDTO,
+} from "@/features/orders/api/orders-repair-shipping-mapper";
 import type {
   AdminOrderDetail,
   AdminOrderHistoryEntry,
   AdminOrderItem,
   AdminOrderListItem,
+  AdminRepairPickupRequest,
+  AdminRepairShippingReceipt,
 } from "@/features/orders/types/admin-order";
 
 interface AdminOrderListResult {
@@ -130,6 +138,39 @@ export async function getAdminOrderHistory(
     orderLogs: (orderLogsResult.data ?? []) as OrderStatusLogDTO[],
     claimLogs: (claimLogsResult.data ?? []) as ClaimStatusLogDTO[],
   });
+}
+
+/** 방문 수거 신청 정보 (수선 주문 전용, 없으면 null) */
+export async function getRepairPickupRequest(
+  orderId: string,
+): Promise<AdminRepairPickupRequest | null> {
+  const { data, error } = await supabase
+    .from("repair_pickup_requests")
+    .select("*")
+    .eq("order_id", orderId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  return mapRepairPickupRequestRow(data as RepairPickupRequestRowDTO);
+}
+
+/** 고객 발송 접수 기록 (송장 사진 / 송장 없는 접수) — 최신순 */
+export async function getRepairShippingReceipts(
+  orderId: string,
+): Promise<AdminRepairShippingReceipt[]> {
+  const { data, error } = await supabase
+    .from("repair_shipping_receipts")
+    .select("*")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return ((data ?? []) as RepairShippingReceiptRowDTO[]).map(
+    mapRepairShippingReceiptRow,
+  );
 }
 
 interface UpdateOrderStatusParams {

@@ -11,7 +11,11 @@
 --     - user_coupons 업데이트 시 WHERE user_id = v_user_id 조건 적용
 --   완화 조치: SET search_path TO 'public'으로 검색 경로 고정,
 --     입력값 유효성 검사(수량, 아이템 타입 등) 포함.
-CREATE OR REPLACE FUNCTION public.create_order_txn(p_shipping_address_id uuid, p_items jsonb)
+CREATE OR REPLACE FUNCTION public.create_order_txn(
+  p_shipping_address_id uuid,
+  p_items jsonb,
+  p_repair_shipping jsonb DEFAULT NULL
+)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -64,6 +68,9 @@ declare
   v_has_length_reform boolean;
   v_has_width_reform boolean;
   v_reform_image_row_count integer;
+  v_repair_method text;
+  v_pickup jsonb;
+  v_pickup_fee integer := 0;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -87,6 +94,14 @@ begin
       and user_id = v_user_id
   ) then
     raise exception 'Shipping address not found';
+  end if;
+
+  -- 수선품 발송 방식 (pickup은 결제 전 주문 생성 시에만 신청 가능)
+  if p_repair_shipping is not null and p_repair_shipping <> 'null'::jsonb then
+    v_repair_method := p_repair_shipping->>'method';
+    if v_repair_method is null or v_repair_method not in ('direct', 'pickup') then
+      raise exception 'Invalid repair shipping method: %', coalesce(v_repair_method, '(null)');
+    end if;
   end if;
 
   for v_item in select * from jsonb_array_elements(p_items)
@@ -366,11 +381,36 @@ begin
     );
   end if;
 
+  -- 방문 수거는 수선 아이템이 있을 때만 신청 가능
+  if v_repair_method = 'pickup' and jsonb_array_length(v_reform_items) = 0 then
+    raise exception 'Pickup is only available for repair orders';
+  end if;
+
   -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
   if jsonb_array_length(v_reform_items) > 0 then
     v_order_number := generate_order_number();
     v_shipping_cost := v_reform_shipping_cost;
-    v_total_price := v_reform_original - v_reform_discount + v_shipping_cost;
+
+    -- 방문 수거: 수거비(REFORM_PICKUP_FEE)는 택배비와 별도로 결제 금액에 합산
+    if v_repair_method = 'pickup' then
+      v_pickup := p_repair_shipping->'pickup';
+      if v_pickup is null or v_pickup = 'null'::jsonb then
+        raise exception 'Pickup info is required';
+      end if;
+      if nullif(trim(coalesce(v_pickup->>'recipient_name', '')), '') is null
+        or nullif(trim(coalesce(v_pickup->>'recipient_phone', '')), '') is null
+        or nullif(trim(coalesce(v_pickup->>'address', '')), '') is null then
+        raise exception 'Pickup recipient name, phone and address are required';
+      end if;
+
+      SELECT amount INTO v_pickup_fee
+      FROM pricing_constants WHERE key = 'REFORM_PICKUP_FEE';
+      IF v_pickup_fee IS NULL THEN
+        RAISE EXCEPTION 'Missing pricing constant: REFORM_PICKUP_FEE';
+      END IF;
+    end if;
+
+    v_total_price := v_reform_original - v_reform_discount + v_shipping_cost + v_pickup_fee;
 
     insert into orders (
       user_id, order_number, shipping_address_id,
@@ -383,6 +423,23 @@ begin
       'repair', '대기중', v_payment_group_id, v_shipping_cost
     )
     returning id into v_order_id;
+
+    -- 방문 수거 신청 정보 저장 (pickup_fee는 신청 시점 스냅샷)
+    if v_repair_method = 'pickup' then
+      insert into repair_pickup_requests (
+        order_id, recipient_name, recipient_phone,
+        postal_code, address, detail_address, pickup_fee
+      )
+      values (
+        v_order_id,
+        trim(v_pickup->>'recipient_name'),
+        trim(v_pickup->>'recipient_phone'),
+        nullif(trim(coalesce(v_pickup->>'postal_code', '')), ''),
+        trim(v_pickup->>'address'),
+        nullif(trim(coalesce(v_pickup->>'detail_address', '')), ''),
+        v_pickup_fee
+      );
+    end if;
 
     for v_item in select * from jsonb_array_elements(v_reform_items)
     loop
@@ -464,6 +521,9 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.create_order_txn(uuid, jsonb, jsonb)
+IS 'Security definer reason: creates orders, order_items, pickup requests, image links, and coupon reservations atomically with function-owner write privileges while enforcing auth.uid ownership checks and fixed search_path.';
 
 -- ── customer_confirm_purchase ─────────────────────────────────
 -- Allows a customer to manually confirm purchase after delivery.

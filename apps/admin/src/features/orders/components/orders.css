@@ -129,6 +129,12 @@
   background: var(--seed-color-bg-neutral-weak);
 }
 
+.orderPhotoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .orderRepairCard,
 .orderOptionCard {
   display: flex;

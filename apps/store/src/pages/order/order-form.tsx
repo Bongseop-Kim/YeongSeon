@@ -1,27 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/ROUTES";
 import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
-import { Input } from "@/shared/ui-extended/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
 import { PaymentActionBar } from "@/shared/composite/payment-action-bar";
 import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
+import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import {
   OrderFormItemCard,
   ReformOrderItemCard,
-  RepairShippingAddressBanner,
+  OrderRepairShippingSection,
+  createRepairShippingDraft,
+  createRepairShippingRequest,
+  getRepairShippingPaymentBlocker,
+  useRepairShippingInput,
 } from "@/features/order";
-import React from "react";
-import { COURIER_COMPANIES } from "@yeongseon/shared/constants/courier-companies";
 import { useOrderStore } from "@/shared/store/order";
+import type { CreateOrderRepairShippingRequest } from "@/entities/order";
 import { useCouponSelect } from "@/features/coupon";
 import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
@@ -31,41 +27,121 @@ import { useAuthStore } from "@/shared/store/auth";
 import { createOrder } from "@/entities/order";
 import { useReformPricing } from "@/entities/reform";
 import { type PaymentWidgetRef } from "@/shared/composite/payment-widget";
-import { useShippingAddressPopup } from "@/features/shipping";
+import { useShippingAddressPopup, PostcodeSearch } from "@/features/shipping";
 import {
   useNotificationConsentFlow,
   NotificationConsentFlowModals,
 } from "@/features/notification";
 import { UtilityPageSection } from "@/shared/composite/utility-page";
-import { Field, FieldTitle, FieldContent } from "@/shared/ui/field";
 import { buildPriceRows } from "@/shared/composite/order-summary-utils";
 import { SummaryCard } from "@/shared/composite/summary-card";
 import { PaymentWidgetAside } from "@/shared/composite/payment-widget-aside";
+
+type PriceRow = ReturnType<typeof buildPriceRows>[number];
+
+interface OrderPaymentSidebarProps {
+  priceRows: PriceRow[];
+  totalPayable: number;
+  userId?: string;
+  isPricingReady: boolean;
+  paymentWidgetRef: RefObject<PaymentWidgetRef | null>;
+}
+
+function OrderPaymentSidebar({
+  priceRows,
+  totalPayable,
+  userId,
+  isPricingReady,
+  paymentWidgetRef,
+}: OrderPaymentSidebarProps) {
+  return (
+    <SummaryCard>
+      <SummaryCard.Header
+        title="결제 금액"
+        description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
+      />
+      <SummaryCard.Section>
+        {priceRows.map((row) => (
+          <SummaryCard.Row
+            key={row.id}
+            label={row.label}
+            value={row.value}
+            className={row.className}
+          />
+        ))}
+        <SummaryCard.Total
+          label="총 결제 금액"
+          value={`${totalPayable.toLocaleString()}원`}
+          valueClassName="text-blue-600"
+        />
+      </SummaryCard.Section>
+      {userId && isPricingReady && (
+        <SummaryCard.Section>
+          <PaymentWidgetAside
+            title="결제 수단"
+            description="결제 방식과 약관 동의를 확인합니다."
+            paymentWidgetRef={paymentWidgetRef}
+            amount={totalPayable}
+            customerKey={userId}
+          />
+        </SummaryCard.Section>
+      )}
+    </SummaryCard>
+  );
+}
+
+interface OrderItemsSectionProps {
+  orderItems: CartItem[];
+  onChangeCoupon: (itemId: string) => void;
+}
+
+function OrderItemsSection({
+  orderItems,
+  onChangeCoupon,
+}: OrderItemsSectionProps) {
+  return (
+    <UtilityPageSection
+      title={`주문 상품 ${orderItems.length}개`}
+      description="상품별 쿠폰을 확인합니다."
+      className="pb-2"
+    >
+      <div className="border-t border-stone-200" data-testid="order-items-card">
+        {orderItems.map((item, index) => (
+          <Fragment key={item.id}>
+            {item.type === "product" ? (
+              <OrderFormItemCard
+                item={item}
+                onChangeCoupon={() => onChangeCoupon(item.id)}
+              />
+            ) : (
+              <ReformOrderItemCard
+                item={item}
+                onChangeCoupon={() => onChangeCoupon(item.id)}
+              />
+            )}
+            {index < orderItems.length - 1 ? <Separator /> : null}
+          </Fragment>
+        ))}
+      </div>
+    </UtilityPageSection>
+  );
+}
+
 const OrderFormPage = () => {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const paymentWidgetRef = useRef<PaymentWidgetRef | null>(null);
   const isPaymentProcessingRef = useRef(false);
   const navigate = useNavigate();
-  const [repairCourierCompany, setRepairCourierCompany] = useState("");
-  const [repairTrackingNumber, setRepairTrackingNumber] = useState("");
+
+  const { state: repairShipping, actions: repairShippingActions } =
+    useRepairShippingInput();
 
   const {
     items: orderItems,
     hasOrderItems,
     updateOrderItemCoupon,
-    setRepairTracking,
+    setRepairShipping,
   } = useOrderStore();
-
-  useEffect(() => {
-    setRepairTracking(
-      repairCourierCompany || repairTrackingNumber
-        ? {
-            courierCompany: repairCourierCompany,
-            trackingNumber: repairTrackingNumber,
-          }
-        : undefined,
-    );
-  }, [repairCourierCompany, repairTrackingNumber, setRepairTracking]);
   const { openCouponSelect, dialog: couponDialog } = useCouponSelect();
   const { user } = useAuthStore();
 
@@ -126,11 +202,31 @@ const OrderFormPage = () => {
         return;
       }
 
+      // 수선품 발송 정보 구성 (수거 신청은 주문 생성에 포함, 송장/접수는 결제 후 제출)
+      let repairShippingRequest: CreateOrderRepairShippingRequest | null = null;
+      if (hasReformItems) {
+        const repairShippingBlocker = getRepairShippingPaymentBlocker(
+          repairShipping,
+          selectedAddress ?? null,
+        );
+        if (repairShippingBlocker) {
+          toast.error(repairShippingBlocker);
+          return;
+        }
+
+        repairShippingRequest = createRepairShippingRequest(
+          repairShipping,
+          selectedAddress ?? null,
+        );
+        setRepairShipping(await createRepairShippingDraft(repairShipping));
+      }
+
       const orderResult = await createOrder({
         items: orderItems,
         shippingAddressId: selectedAddressId,
+        repairShipping: repairShippingRequest,
       });
-      if (orderResult.totalAmount !== totals.totalPrice) {
+      if (orderResult.totalAmount !== totalPayable) {
         throw new Error(
           `결제 금액이 변경되었습니다(서버: ${orderResult.totalAmount.toLocaleString()}원). 페이지를 새로고침 후 다시 시도해주세요.`,
         );
@@ -173,7 +269,24 @@ const OrderFormPage = () => {
     ? (reformPricing?.shippingCost ?? 0)
     : 0;
   const totals = calculateOrderTotals(orderItems, estimatedShippingCost);
-  const priceRows = buildPriceRows(totals);
+  // 방문 수거비 — pricing_constants(REFORM_PICKUP_FEE) 서버 단일 소스
+  const pickupFee =
+    hasReformItems && repairShipping.repairMethod === "pickup"
+      ? (reformPricing?.pickupFee ?? 0)
+      : 0;
+  const totalPayable = totals.totalPrice + pickupFee;
+  const priceRows = [
+    ...buildPriceRows(totals),
+    ...(pickupFee > 0
+      ? [
+          {
+            id: "pickup-fee",
+            label: "방문 수거비",
+            value: `${pickupFee.toLocaleString()}원`,
+          },
+        ]
+      : []),
+  ];
   const isPricingReady = !hasReformItems || !isReformPricingLoading;
 
   if (orderItems.length === 0) {
@@ -202,42 +315,17 @@ const OrderFormPage = () => {
               { label: "주문서" },
             ]}
             sidebar={
-              <SummaryCard>
-                <SummaryCard.Header
-                  title="결제 금액"
-                  description="주문서에 반영된 할인과 배송비를 포함한 예상 결제 금액입니다."
-                />
-                <SummaryCard.Section>
-                  {priceRows.map((row) => (
-                    <SummaryCard.Row
-                      key={row.id}
-                      label={row.label}
-                      value={row.value}
-                      className={row.className}
-                    />
-                  ))}
-                  <SummaryCard.Total
-                    label="총 결제 금액"
-                    value={`${totals.totalPrice.toLocaleString()}원`}
-                    valueClassName="text-blue-600"
-                  />
-                </SummaryCard.Section>
-                {user && isPricingReady && (
-                  <SummaryCard.Section>
-                    <PaymentWidgetAside
-                      title="결제 수단"
-                      description="결제 방식과 약관 동의를 확인합니다."
-                      paymentWidgetRef={paymentWidgetRef}
-                      amount={totals.totalPrice}
-                      customerKey={user.id}
-                    />
-                  </SummaryCard.Section>
-                )}
-              </SummaryCard>
+              <OrderPaymentSidebar
+                priceRows={priceRows}
+                totalPayable={totalPayable}
+                userId={user?.id}
+                isPricingReady={isPricingReady}
+                paymentWidgetRef={paymentWidgetRef}
+              />
             }
             actionBar={
               <PaymentActionBar
-                amount={totals.totalPrice}
+                amount={totalPayable}
                 onClick={handleRequestPayment}
                 isLoading={isPaymentLoading}
                 isPriceReady={isPricingReady}
@@ -260,78 +348,35 @@ const OrderFormPage = () => {
                 onChangeClick={openShippingPopup}
               />
 
-              <UtilityPageSection
-                title={`주문 상품 ${orderItems.length}개`}
-                description="상품별 쿠폰과 수선 접수 정보를 확인합니다."
-                className="pb-2"
-              >
-                <div
-                  className="border-t border-stone-200"
-                  data-testid="order-items-card"
-                >
-                  {hasReformItems && (
-                    <div className="py-5">
-                      <RepairShippingAddressBanner />
-                      <Field className="mt-4">
-                        <FieldTitle>이미 발송하셨나요?</FieldTitle>
-                        <FieldContent>
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <Select
-                                value={repairCourierCompany}
-                                onValueChange={setRepairCourierCompany}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="택배사 선택" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {COURIER_COMPANIES.map((c) => (
-                                    <SelectItem key={c.code} value={c.code}>
-                                      {c.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Input
-                              type="text"
-                              placeholder="송장번호"
-                              value={repairTrackingNumber}
-                              className="flex-[2]"
-                              onChange={(e) =>
-                                setRepairTrackingNumber(e.target.value)
-                              }
-                            />
-                          </div>
-                        </FieldContent>
-                      </Field>
-                      <Separator className="mt-5" />
-                    </div>
-                  )}
-                  {orderItems.map((item, index) => (
-                    <React.Fragment key={item.id}>
-                      {item.type === "product" ? (
-                        <OrderFormItemCard
-                          item={item}
-                          onChangeCoupon={() => handleChangeCoupon(item.id)}
-                        />
-                      ) : (
-                        <ReformOrderItemCard
-                          item={item}
-                          onChangeCoupon={() => handleChangeCoupon(item.id)}
-                        />
-                      )}
-                      {index < orderItems.length - 1 ? <Separator /> : null}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </UtilityPageSection>
+              {hasReformItems && (
+                <OrderRepairShippingSection
+                  state={repairShipping}
+                  actions={repairShippingActions}
+                  selectedAddress={selectedAddress ?? null}
+                  pickupFee={reformPricing?.pickupFee}
+                />
+              )}
+
+              <OrderItemsSection
+                orderItems={orderItems}
+                onChangeCoupon={handleChangeCoupon}
+              />
             </div>
           </PageLayout>
         </MainContent>
       </MainLayout>
       {couponDialog}
       <NotificationConsentFlowModals consentFlow={consentFlow} />
+      <PostcodeSearch
+        isOpen={repairShipping.isPickupPostcodeOpen}
+        onClose={() => repairShippingActions.setPickupPostcodeOpen(false)}
+        onComplete={(data) => {
+          repairShippingActions.applyPickupPostcode(
+            data.roadAddress || data.jibunAddress,
+            data.zonecode,
+          );
+        }}
+      />
     </>
   );
 };

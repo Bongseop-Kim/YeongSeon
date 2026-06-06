@@ -26,13 +26,54 @@ type OrderItemInput = {
   applied_user_coupon_id: string | null;
 };
 
+type RepairShippingInput = {
+  method: "direct" | "pickup";
+  pickup?: {
+    recipient_name: string;
+    recipient_phone: string;
+    postal_code: string | null;
+    address: string;
+    detail_address: string | null;
+  } | null;
+};
+
 type CreateOrderInput = {
   shipping_address_id: string;
   items: OrderItemInput[];
+  repair_shipping?: RepairShippingInput | null;
 };
 
 const MAX_ITEMS = 50;
 const MAX_REFORM_SIZE_BYTES = 64 * 1024;
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
+const validateRepairShipping = (
+  repairShipping: RepairShippingInput,
+  hasReformItems: boolean,
+) => {
+  if (
+    repairShipping.method !== "direct" &&
+    repairShipping.method !== "pickup"
+  ) {
+    throw new Error("Invalid repair shipping method");
+  }
+  if (repairShipping.method === "pickup") {
+    if (!hasReformItems) {
+      throw new Error("Pickup is only available for repair orders");
+    }
+    const pickup = repairShipping.pickup;
+    if (
+      !pickup ||
+      !isNonEmptyString(pickup.recipient_name) ||
+      !isNonEmptyString(pickup.recipient_phone) ||
+      !isNonEmptyString(pickup.address)
+    ) {
+      throw new Error("Pickup recipient name, phone and address are required");
+    }
+  }
+};
 
 const validateItemShape = (item: OrderItemInput) => {
   if (!item.item_id || !item.item_type) {
@@ -122,6 +163,13 @@ Deno.serve(async (req) => {
       }
       validateItemShape(item);
     }
+
+    if (payload.repair_shipping != null) {
+      const hasReformItems = payload.items.some(
+        (item) => item.item_type === "reform",
+      );
+      validateRepairShipping(payload.repair_shipping, hasReformItems);
+    }
   } catch (error) {
     return jsonResponse(400, {
       error: error instanceof Error ? error.message : "Invalid order item",
@@ -146,6 +194,7 @@ Deno.serve(async (req) => {
     {
       p_shipping_address_id: payload.shipping_address_id,
       p_items: payload.items,
+      p_repair_shipping: payload.repair_shipping ?? null,
     },
   );
 
