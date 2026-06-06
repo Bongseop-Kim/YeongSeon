@@ -9,11 +9,7 @@ export {
   submitRepairTracking,
   submitRepairNoTracking,
 } from "./api/order-api";
-export type {
-  CreateOrderRequest,
-  CreateOrderRepairShippingRequest,
-  CreateOrderResponse,
-} from "./model/view/order-input";
+export type { CreateOrderRepairShippingRequest } from "./model/view/order-input";
 export {
   fromOrderItemRowDTO,
   toOrderItemInputDTO,
