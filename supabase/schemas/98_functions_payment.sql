@@ -107,16 +107,6 @@ begin
     end if;
 
     if v_order.status != '결제중' then
-      if v_order.status in ('진행중', '발송대기', '발송중', '수거예정', '접수', '완료') then
-        v_updated_orders := v_updated_orders || jsonb_build_object(
-          'orderId',     v_order.id,
-          'orderType',   v_order.order_type,
-          'tokenAmount', null,
-          'couponIssued', null
-        );
-        continue;
-      end if;
-
       raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
     end if;
 
