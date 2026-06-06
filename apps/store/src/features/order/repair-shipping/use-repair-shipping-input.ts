@@ -144,7 +144,7 @@ export const isRepairShippingReceiptIncomplete = (
   state: RepairShippingInputState,
 ) =>
   state.trackingMode === "has-tracking"
-    ? !state.courierCompany || !state.trackingNumber.trim()
+    ? !state.courierCompany?.trim() || !state.trackingNumber.trim()
     : !state.noTrackingReason;
 
 const resolvePickupRequest = (
@@ -223,7 +223,10 @@ export const createRepairShippingDraft = async (
   }
 
   if (state.trackingMode === "has-tracking") {
-    const photos = await uploadRepairShippingPhotos(state.trackingPhotos);
+    const photos = [
+      ...state.uploadedTrackingPhotos,
+      ...(await uploadRepairShippingPhotos(state.trackingPhotos)),
+    ];
     return {
       method: "direct",
       tracking: {
@@ -235,7 +238,10 @@ export const createRepairShippingDraft = async (
   }
 
   if (state.trackingMode === "no-tracking") {
-    const photos = await uploadRepairShippingPhotos(state.noTrackingPhotos);
+    const photos = [
+      ...state.uploadedNoTrackingPhotos,
+      ...(await uploadRepairShippingPhotos(state.noTrackingPhotos)),
+    ];
     return {
       method: "direct",
       noTracking: {
