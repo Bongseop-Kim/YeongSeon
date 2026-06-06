@@ -10,7 +10,7 @@ import {
   FieldTitle,
 } from "@/shared/ui/field";
 import { formatPhoneNumber } from "@/shared/lib/phone-format";
-import type { PickupRequestInfo } from "./pickup-request-model";
+import type { PickupRequestInfo } from "../pickup-request-model";
 
 interface PickupShippingAddress {
   name: string;
