@@ -24,17 +24,26 @@ export interface CreateOrderItemInputDTO {
   applied_user_coupon_id: string | null;
 }
 
-/** 수선품 발송 방식 — pickup(방문 수거)은 결제 전(주문 생성 시)에만 신청 가능 */
-export interface CreateOrderRepairShippingInputDTO {
-  method: "direct" | "pickup";
-  pickup?: {
+interface CreateOrderDirectRepairShippingInputDTO {
+  method: "direct";
+  pickup?: null;
+}
+
+interface CreateOrderPickupRepairShippingInputDTO {
+  method: "pickup";
+  pickup: {
     recipient_name: string;
     recipient_phone: string;
     postal_code: string | null;
     address: string;
     detail_address: string | null;
-  } | null;
+  };
 }
+
+/** 수선품 발송 방식 — pickup(방문 수거)은 결제 전(주문 생성 시)에만 신청 가능 */
+export type CreateOrderRepairShippingInputDTO =
+  | CreateOrderDirectRepairShippingInputDTO
+  | CreateOrderPickupRepairShippingInputDTO;
 
 export interface CreateOrderInputDTO {
   shipping_address_id: string;

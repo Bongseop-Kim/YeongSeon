@@ -97,6 +97,8 @@ AS $$
       WHEN '결제중'   THEN ARRAY['cancel']
       WHEN '발송대기' THEN ARRAY['cancel']
       WHEN '발송중'   THEN ARRAY['advance', 'cancel']
+      WHEN '발송확인중' THEN ARRAY['advance', 'cancel']
+      WHEN '수거예정' THEN ARRAY['advance', 'cancel']
       WHEN '접수'     THEN ARRAY['advance', 'rollback']
       WHEN '수선중'   THEN ARRAY['advance', 'rollback']
       WHEN '수선완료' THEN ARRAY['advance', 'rollback']

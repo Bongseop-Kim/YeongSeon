@@ -214,7 +214,12 @@ BEGIN
       expires_at = EXCLUDED.expires_at,
       deleted_at = NULL,
       deletion_claimed_at = NULL
+  WHERE public.images.uploaded_by = EXCLUDED.uploaded_by
   RETURNING id INTO v_id;
+
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'Repair shipping upload ownership conflict';
+  END IF;
 
   RETURN v_id;
 END;

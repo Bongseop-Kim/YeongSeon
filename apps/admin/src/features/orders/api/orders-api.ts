@@ -13,13 +13,18 @@ import {
   toAdminOrderItem,
   toAdminOrderListItem,
 } from "@/features/orders/api/orders-mapper";
+import {
+  mapRepairPickupRequestRow,
+  mapRepairShippingReceiptRow,
+  type RepairPickupRequestRowDTO,
+  type RepairShippingReceiptRowDTO,
+} from "@/features/orders/api/orders-repair-shipping-mapper";
 import type {
   AdminOrderDetail,
   AdminOrderHistoryEntry,
   AdminOrderItem,
   AdminOrderListItem,
   AdminRepairPickupRequest,
-  AdminRepairShippingPhoto,
   AdminRepairShippingReceipt,
 } from "@/features/orders/types/admin-order";
 
@@ -135,17 +140,6 @@ export async function getAdminOrderHistory(
   });
 }
 
-interface RepairPickupRequestRowDTO {
-  id: string;
-  recipient_name: string;
-  recipient_phone: string;
-  postal_code: string | null;
-  address: string;
-  detail_address: string | null;
-  pickup_fee: number;
-  created_at: string;
-}
-
 /** 방문 수거 신청 정보 (수선 주문 전용, 없으면 null) */
 export async function getRepairPickupRequest(
   orderId: string,
@@ -159,38 +153,8 @@ export async function getRepairPickupRequest(
   if (error) throw new Error(error.message);
   if (!data) return null;
 
-  const row = data as RepairPickupRequestRowDTO;
-  return {
-    id: row.id,
-    recipientName: row.recipient_name,
-    recipientPhone: row.recipient_phone,
-    postalCode: row.postal_code,
-    address: row.address,
-    detailAddress: row.detail_address,
-    pickupFee: row.pickup_fee,
-    createdAt: row.created_at,
-  };
+  return mapRepairPickupRequestRow(data as RepairPickupRequestRowDTO);
 }
-
-interface RepairShippingReceiptRowDTO {
-  id: string;
-  receipt_type: "tracking" | "no_tracking";
-  reason: string | null;
-  memo: string | null;
-  photos: unknown;
-  created_at: string;
-}
-
-const toReceiptPhotos = (photos: unknown): AdminRepairShippingPhoto[] => {
-  if (!Array.isArray(photos)) return [];
-  return photos.filter(
-    (photo): photo is AdminRepairShippingPhoto =>
-      typeof photo === "object" &&
-      photo !== null &&
-      typeof (photo as { url?: unknown }).url === "string" &&
-      typeof (photo as { fileId?: unknown }).fileId === "string",
-  );
-};
 
 /** 고객 발송 접수 기록 (송장 사진 / 송장 없는 접수) — 최신순 */
 export async function getRepairShippingReceipts(
@@ -204,14 +168,9 @@ export async function getRepairShippingReceipts(
 
   if (error) throw new Error(error.message);
 
-  return ((data ?? []) as RepairShippingReceiptRowDTO[]).map((row) => ({
-    id: row.id,
-    receiptType: row.receipt_type,
-    reason: row.reason,
-    memo: row.memo,
-    photos: toReceiptPhotos(row.photos),
-    createdAt: row.created_at,
-  }));
+  return ((data ?? []) as RepairShippingReceiptRowDTO[]).map(
+    mapRepairShippingReceiptRow,
+  );
 }
 
 interface UpdateOrderStatusParams {

@@ -1,15 +1,24 @@
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 
-export interface CreateOrderRepairShippingRequest {
-  method: "direct" | "pickup";
-  pickup?: {
+interface CreateOrderDirectShippingRequest {
+  method: "direct";
+  pickup?: null;
+}
+
+interface CreateOrderPickupShippingRequest {
+  method: "pickup";
+  pickup: {
     recipientName: string;
     recipientPhone: string;
     postalCode: string | null;
     address: string;
     detailAddress: string | null;
-  } | null;
+  };
 }
+
+export type CreateOrderRepairShippingRequest =
+  | CreateOrderDirectShippingRequest
+  | CreateOrderPickupShippingRequest;
 
 export interface CreateOrderRequest {
   items: CartItem[];

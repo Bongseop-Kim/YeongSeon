@@ -6,5 +6,5 @@ export { SampleOrderCheckoutPage } from "./ui/SampleOrderCheckoutPage";
 export {
   getSampleOrderFabricLabel,
   getSampleOrderTypeLabel,
-  SampleOrderEstimate,
-} from "./ui/SampleOrderEstimate";
+} from "./ui/sample-order-estimate-labels";
+export { SampleOrderEstimate } from "./ui/SampleOrderEstimate";

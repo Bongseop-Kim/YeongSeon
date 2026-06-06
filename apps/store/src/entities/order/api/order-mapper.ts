@@ -30,6 +30,30 @@ import {
 } from "@/shared/lib/domain-type-guards";
 import { isRecord } from "@/shared/lib/type-guard";
 
+export const mapRepairShipping = (
+  repairShipping: CreateOrderRequest["repairShipping"],
+): CreateOrderInputDTO["repair_shipping"] => {
+  if (!repairShipping) return null;
+
+  if (repairShipping.method === "pickup") {
+    return {
+      method: "pickup",
+      pickup: {
+        recipient_name: repairShipping.pickup.recipientName,
+        recipient_phone: repairShipping.pickup.recipientPhone,
+        postal_code: repairShipping.pickup.postalCode,
+        address: repairShipping.pickup.address,
+        detail_address: repairShipping.pickup.detailAddress,
+      },
+    };
+  }
+
+  return {
+    method: "direct",
+    pickup: null,
+  };
+};
+
 export const toOrderItemInputDTO = (
   item: CreateOrderRequest["items"][number],
 ): CreateOrderInputDTO["items"][number] => {

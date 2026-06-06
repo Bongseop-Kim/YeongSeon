@@ -522,6 +522,9 @@ begin
 end;
 $$;
 
+COMMENT ON FUNCTION public.create_order_txn(uuid, jsonb, jsonb)
+IS 'Security definer reason: creates orders, order_items, pickup requests, image links, and coupon reservations atomically with function-owner write privileges while enforcing auth.uid ownership checks and fixed search_path.';
+
 -- ── customer_confirm_purchase ─────────────────────────────────
 -- Allows a customer to manually confirm purchase after delivery.
 -- Callable when status = '배송완료' or '배송중'.

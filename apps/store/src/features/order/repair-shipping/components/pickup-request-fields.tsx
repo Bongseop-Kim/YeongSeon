@@ -5,12 +5,13 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Field,
   FieldContent,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldTitle,
 } from "@/shared/ui/field";
 import { formatPhoneNumber } from "@/shared/lib/phone-format";
-import type { PickupRequestInfo } from "../pickup-request-model";
+import type { PickupRequestInfo } from "@/features/order/repair-shipping/pickup-request-model";
 
 interface PickupShippingAddress {
   name: string;
@@ -61,11 +62,17 @@ export function PickupRequestFields({
       ) : null}
 
       {useShippingAddress && shippingAddress ? (
-        <div className="space-y-1 text-sm text-zinc-600">
-          <p className="font-medium text-zinc-950">{shippingAddress.name}</p>
-          <p>{shippingAddress.address}</p>
-          <p>{formatPhoneNumber(shippingAddress.phone)}</p>
-        </div>
+        <Field>
+          <FieldTitle>{shippingAddress.name}</FieldTitle>
+          <FieldContent className="text-sm text-zinc-600">
+            <FieldDescription className="text-zinc-600">
+              {shippingAddress.address}
+            </FieldDescription>
+            <FieldDescription className="text-zinc-600">
+              {formatPhoneNumber(shippingAddress.phone)}
+            </FieldDescription>
+          </FieldContent>
+        </Field>
       ) : (
         <>
           <Field>
@@ -101,7 +108,7 @@ export function PickupRequestFields({
               <FieldTitle>수거지 주소</FieldTitle>
             </FieldLabel>
             <FieldContent className="gap-2">
-              <div className="flex gap-2">
+              <Field orientation="horizontal" className="gap-2">
                 <Input
                   id="pickup-address"
                   type="text"
@@ -125,7 +132,7 @@ export function PickupRequestFields({
                     주소 검색
                   </Button>
                 ) : null}
-              </div>
+              </Field>
               <Input
                 type="text"
                 aria-label="상세 주소"

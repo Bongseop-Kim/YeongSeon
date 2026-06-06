@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
+import { formatSpecificationMoney } from "./order-specification-format";
 
 interface SpecificationSummaryItem {
   label: string;
@@ -23,9 +24,6 @@ interface OrderSpecificationConfirmationProps {
 }
 
 const SUPPLIER = "영선산업 | 305-26-32033";
-
-export const formatSpecificationMoney = (value: number) =>
-  value.toLocaleString("ko-KR");
 
 function EstimateOptionRow({ label, value }: SpecificationOptionRow) {
   return (

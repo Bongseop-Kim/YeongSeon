@@ -1,13 +1,3 @@
--- 수선품 발송 개편: 방문 수거 신청 + 송장 없는 접수
--- 1) orders 상태 추가: '수거예정'(방문 수거, 결제 후), '발송확인중'(송장 없는 접수)
--- 2) repair_pickup_requests / repair_shipping_receipts 테이블 신설
--- 3) 방문 수거비 REFORM_PICKUP_FEE (기존 택배비 REFORM_SHIPPING_COST와 별도 관리)
--- 4) create_order_txn: p_repair_shipping 파라미터 추가, 수거비 합산
--- 5) confirm_payment_orders: 수거 신청 주문은 결제 후 '수거예정'
--- 6) submit_repair_tracking: 발송 사진 첨부, submit_repair_no_tracking 신설
--- 7) admin_update_order_status / get_order_customer_actions: 새 상태 전이 반영
-
--- ── 1. orders 상태 제약 ───────────────────────────────────────
 ALTER TABLE public.orders DROP CONSTRAINT orders_status_check;
 ALTER TABLE public.orders ADD CONSTRAINT orders_status_check
   CHECK (status = ANY (ARRAY[
@@ -17,21 +7,16 @@ ALTER TABLE public.orders ADD CONSTRAINT orders_status_check
     '발송대기','발송중','발송확인중','수거예정'
   ]));
 
--- ── 2. 방문 수거비 가격 상수 (어드민 가격 관리에서 별도 편집) ──
+COMMENT ON CONSTRAINT orders_status_check ON public.orders
+IS 'Allows shared order lifecycle statuses, including repair pickup and no-tracking states.';
+
 INSERT INTO public.pricing_constants (key, amount, category)
 VALUES ('REFORM_PICKUP_FEE', 3000, 'reform')
 ON CONFLICT (key) DO NOTHING;
 
--- ── 3. 신규 테이블 ────────────────────────────────────────────
--- =============================================================
--- 52_repair_shipping.sql  –  수선품 발송 부가 정보
---   - repair_pickup_requests : 방문 수거 신청 (결제 전 주문 생성 시에만)
---   - repair_shipping_receipts: 발송 접수 기록 (송장 사진 / 송장 없는 접수)
--- =============================================================
+COMMENT ON TABLE public.pricing_constants
+IS 'Unified pricing constants, including REFORM_PICKUP_FEE for repair pickup requests.';
 
--- ── repair_pickup_requests ────────────────────────────────────
--- 수선 주문의 방문 수거 신청 정보. create_order_txn(SECURITY DEFINER)만 INSERT.
--- pickup_fee는 신청 시점의 REFORM_PICKUP_FEE 스냅샷.
 CREATE TABLE IF NOT EXISTS public.repair_pickup_requests (
   id              uuid        NOT NULL DEFAULT gen_random_uuid(),
   order_id        uuid        NOT NULL,
@@ -50,9 +35,11 @@ CREATE TABLE IF NOT EXISTS public.repair_pickup_requests (
     FOREIGN KEY (order_id) REFERENCES public.orders (id) ON DELETE CASCADE
 );
 
+COMMENT ON TABLE public.repair_pickup_requests
+IS 'Repair order pickup requests created during order creation; pickup_fee stores the REFORM_PICKUP_FEE snapshot.';
+
 ALTER TABLE public.repair_pickup_requests ENABLE ROW LEVEL SECURITY;
 
--- 주문 소유자 조회
 CREATE POLICY "repair_pickup_requests_owner_select"
   ON public.repair_pickup_requests FOR SELECT
   TO authenticated
@@ -63,17 +50,11 @@ CREATE POLICY "repair_pickup_requests_owner_select"
     )
   );
 
--- 관리자 조회
 CREATE POLICY "repair_pickup_requests_admin_select"
   ON public.repair_pickup_requests FOR SELECT
   TO authenticated
   USING (public.is_admin());
 
--- ── repair_shipping_receipts ──────────────────────────────────
--- 고객의 수선품 발송 접수 기록.
---   tracking     : 송장 등록 시 첨부 사진이 있을 때만 생성
---   no_tracking  : 송장 없는 접수(사유 필수) — 주문 상태 '발송확인중'으로 전이
--- photos: [{ "url": text, "fileId": text }] (ImageKit)
 CREATE TABLE IF NOT EXISTS public.repair_shipping_receipts (
   id           uuid        NOT NULL DEFAULT gen_random_uuid(),
   order_id     uuid        NOT NULL,
@@ -96,12 +77,14 @@ CREATE TABLE IF NOT EXISTS public.repair_shipping_receipts (
     FOREIGN KEY (order_id) REFERENCES public.orders (id) ON DELETE CASCADE
 );
 
+COMMENT ON TABLE public.repair_shipping_receipts
+IS 'Customer repair shipping receipt records for tracking and no-tracking submissions; photos store ImageKit url/fileId objects.';
+
 CREATE INDEX idx_repair_shipping_receipts_order_id
   ON public.repair_shipping_receipts (order_id);
 
 ALTER TABLE public.repair_shipping_receipts ENABLE ROW LEVEL SECURITY;
 
--- 주문 소유자 조회
 CREATE POLICY "repair_shipping_receipts_owner_select"
   ON public.repair_shipping_receipts FOR SELECT
   TO authenticated
@@ -112,14 +95,11 @@ CREATE POLICY "repair_shipping_receipts_owner_select"
     )
   );
 
--- 관리자 조회
 CREATE POLICY "repair_shipping_receipts_admin_select"
   ON public.repair_shipping_receipts FOR SELECT
   TO authenticated
   USING (public.is_admin());
 
-
--- ── 4. 발송 사진 업로드 등록 ──────────────────────────────────
 CREATE UNIQUE INDEX idx_images_repair_shipping_upload_unique
   ON public.images (entity_type, entity_id)
   WHERE entity_type = 'repair_shipping_upload';
@@ -167,7 +147,12 @@ BEGIN
       expires_at = EXCLUDED.expires_at,
       deleted_at = NULL,
       deletion_claimed_at = NULL
+  WHERE public.images.uploaded_by = v_user_id
   RETURNING id INTO v_id;
+
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'Repair shipping upload ownership conflict';
+  END IF;
 
   RETURN v_id;
 END;
@@ -175,7 +160,73 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.register_repair_shipping_upload(text, text) TO authenticated;
 
--- ── 5. get_order_customer_actions: 수거예정/발송확인중에서도 취소 가능 ──
+CREATE OR REPLACE FUNCTION public.get_order_admin_actions(
+  p_order_type text,
+  p_status     text
+)
+RETURNS text[]
+LANGUAGE sql
+IMMUTABLE
+SET search_path TO 'public'
+AS $$
+  SELECT CASE
+    WHEN p_status IN ('완료', '취소', '실패') THEN ARRAY[]::text[]
+
+    WHEN p_order_type = 'sale' THEN CASE p_status
+      WHEN '대기중'   THEN ARRAY['advance', 'cancel']
+      WHEN '결제중'   THEN ARRAY['rollback', 'cancel']
+      WHEN '진행중'   THEN ARRAY['advance', 'rollback', 'cancel']
+      WHEN '배송중'   THEN ARRAY['advance']
+      WHEN '배송완료' THEN ARRAY['advance']
+      ELSE ARRAY[]::text[]
+    END
+
+    WHEN p_order_type = 'custom' THEN CASE p_status
+      WHEN '대기중'   THEN ARRAY['advance', 'cancel']
+      WHEN '결제중'   THEN ARRAY['rollback', 'cancel']
+      WHEN '접수'     THEN ARRAY['advance', 'rollback', 'cancel']
+      WHEN '제작중'   THEN ARRAY['advance', 'rollback']
+      WHEN '제작완료' THEN ARRAY['advance', 'rollback']
+      WHEN '배송중'   THEN ARRAY['advance']
+      WHEN '배송완료' THEN ARRAY['advance']
+      ELSE ARRAY[]::text[]
+    END
+
+    WHEN p_order_type = 'sample' THEN CASE p_status
+      WHEN '대기중'   THEN ARRAY['cancel']
+      WHEN '결제중'   THEN ARRAY['rollback', 'cancel']
+      WHEN '접수'     THEN ARRAY['advance', 'rollback', 'cancel']
+      WHEN '제작중'   THEN ARRAY['advance', 'rollback']
+      WHEN '배송중'   THEN ARRAY['advance']
+      WHEN '배송완료' THEN ARRAY['advance']
+      ELSE ARRAY[]::text[]
+    END
+
+    WHEN p_order_type = 'repair' THEN CASE p_status
+      WHEN '대기중'   THEN ARRAY['cancel']
+      WHEN '결제중'   THEN ARRAY['cancel']
+      WHEN '발송대기' THEN ARRAY['cancel']
+      WHEN '발송중'   THEN ARRAY['advance', 'cancel']
+      WHEN '발송확인중' THEN ARRAY['advance', 'cancel']
+      WHEN '수거예정' THEN ARRAY['advance', 'cancel']
+      WHEN '접수'     THEN ARRAY['advance', 'rollback']
+      WHEN '수선중'   THEN ARRAY['advance', 'rollback']
+      WHEN '수선완료' THEN ARRAY['advance', 'rollback']
+      WHEN '배송중'   THEN ARRAY['advance']
+      WHEN '배송완료' THEN ARRAY['advance']
+      ELSE ARRAY[]::text[]
+    END
+
+    WHEN p_order_type = 'token' THEN CASE p_status
+      WHEN '대기중' THEN ARRAY['advance', 'cancel']
+      WHEN '결제중' THEN ARRAY['rollback', 'cancel']
+      ELSE ARRAY[]::text[]
+    END
+
+    ELSE ARRAY[]::text[]
+  END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.get_order_customer_actions(
   p_order_type text,
   p_status     text,
@@ -224,7 +275,6 @@ begin
 end;
 $$;
 
--- ── 6. create_order_txn: p_repair_shipping 추가 (기존 2-인자 시그니처 제거) ──
 DROP FUNCTION public.create_order_txn(uuid, jsonb);
 
 CREATE OR REPLACE FUNCTION public.create_order_txn(
@@ -312,7 +362,6 @@ begin
     raise exception 'Shipping address not found';
   end if;
 
-  -- 수선품 발송 방식 (pickup은 결제 전 주문 생성 시에만 신청 가능)
   if p_repair_shipping is not null and p_repair_shipping <> 'null'::jsonb then
     v_repair_method := p_repair_shipping->>'method';
     if v_repair_method is null or v_repair_method not in ('direct', 'pickup') then
@@ -369,7 +418,6 @@ begin
           raise exception 'Selected option not found';
         end if;
 
-        -- Check option stock
         if v_option_stock is not null then
           if v_option_stock < v_quantity then
             raise exception 'Insufficient stock for option';
@@ -380,7 +428,7 @@ begin
             and id::text = v_selected_option_id;
         end if;
       else
-        -- No option selected: check product-level stock
+
         if v_product_stock is not null then
           if v_product_stock < v_quantity then
             raise exception 'Insufficient stock';
@@ -497,7 +545,7 @@ begin
 
       v_discount_amount := floor(v_capped_line_discount::numeric / v_quantity)::integer;
       v_discount_remainder := v_capped_line_discount % v_quantity;
-      -- Distribute +1 to the first v_discount_remainder units.
+
       v_line_discount_total := (v_discount_amount * v_quantity) + v_discount_remainder;
       v_used_coupon_ids := array_append(v_used_coupon_ids, v_applied_coupon_id);
     end if;
@@ -523,7 +571,6 @@ begin
     );
   end loop;
 
-  -- 아이템 타입별 분류 및 소계 계산
   v_payment_group_id := gen_random_uuid();
 
   for v_item in select * from jsonb_array_elements(v_normalized_items)
@@ -543,7 +590,6 @@ begin
     end if;
   end loop;
 
-  -- product 주문 생성 (shipping_cost=0)
   if jsonb_array_length(v_product_items) > 0 then
     v_order_number := generate_order_number();
     v_total_price := v_product_original - v_product_discount;
@@ -597,17 +643,14 @@ begin
     );
   end if;
 
-  -- 방문 수거는 수선 아이템이 있을 때만 신청 가능
   if v_repair_method = 'pickup' and jsonb_array_length(v_reform_items) = 0 then
     raise exception 'Pickup is only available for repair orders';
   end if;
 
-  -- repair 주문 생성 (shipping_cost=v_reform_shipping_cost)
   if jsonb_array_length(v_reform_items) > 0 then
     v_order_number := generate_order_number();
     v_shipping_cost := v_reform_shipping_cost;
 
-    -- 방문 수거: 수거비(REFORM_PICKUP_FEE)는 택배비와 별도로 결제 금액에 합산
     if v_repair_method = 'pickup' then
       v_pickup := p_repair_shipping->'pickup';
       if v_pickup is null or v_pickup = 'null'::jsonb then
@@ -640,7 +683,6 @@ begin
     )
     returning id into v_order_id;
 
-    -- 방문 수거 신청 정보 저장 (pickup_fee는 신청 시점 스냅샷)
     if v_repair_method = 'pickup' then
       insert into repair_pickup_requests (
         order_id, recipient_name, recipient_phone,
@@ -683,7 +725,6 @@ begin
         nullif(v_item->>'applied_user_coupon_id', '')::uuid
       );
 
-      -- reform 이미지 라이프사이클 추적: tie 이미지를 images 테이블에 등록
       v_tie_image := nullif(trim(v_item->'reform_data'->'tie'->>'image'), '');
       v_tie_file_id := nullif(trim(v_item->'reform_data'->'tie'->>'fileId'), '');
       IF v_tie_image IS NOT NULL THEN
@@ -718,9 +759,6 @@ begin
     );
   end if;
 
-  -- 쿠폰을 즉시 'used'로 마킹하지 않고 'reserved'로 예약.
-  -- 결제 확정(confirm_payment_orders) 시 'used'로 전환,
-  -- 결제 실패(unlock_payment_orders) 시 'active'로 복원.
   if array_length(v_used_coupon_ids, 1) is not null then
     update user_coupons
     set status = 'reserved',
@@ -738,7 +776,9 @@ begin
 end;
 $$;
 
--- ── 7. confirm_payment_orders: 수거 신청 주문 → 수거예정 ──────
+COMMENT ON FUNCTION public.create_order_txn(uuid, jsonb, jsonb)
+IS 'Security definer reason: creates orders, order_items, pickup requests, image links, and coupon reservations atomically with function-owner write privileges while enforcing auth.uid ownership checks and fixed search_path.';
+
 CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
   p_payment_group_id uuid,
   p_user_id uuid,
@@ -746,7 +786,7 @@ CREATE OR REPLACE FUNCTION public.confirm_payment_orders(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY DEFINER  -- order_status_logs INSERT에 일반 유저 RLS 없음
+SECURITY DEFINER
 SET search_path TO 'public'
 AS $$
 declare
@@ -767,7 +807,7 @@ declare
   v_pricing_key text;
   v_discount_amount integer;
 begin
-  -- p_user_id NULL 이면 호출자 신원 불명 → 즉시 거부
+
   if p_user_id is null then
     raise exception 'Forbidden';
   end if;
@@ -778,7 +818,6 @@ begin
 
   v_caller_role := auth.role();
 
-  -- service_role만 auth.uid() = null 상태로 우회 가능
   if auth.uid() is null then
     if v_caller_role is distinct from 'service_role' then
       raise exception 'Forbidden';
@@ -787,7 +826,6 @@ begin
     raise exception 'Forbidden';
   end if;
 
-  -- payment_key 마스킹: 끝 8자리만 유지, 나머지 ****
   v_masked_key := case
     when length(p_payment_key) <= 8 then '****'
     else '****' || right(p_payment_key, 8)
@@ -801,16 +839,24 @@ begin
   loop
     v_count := v_count + 1;
 
-    -- IS DISTINCT FROM: p_user_id가 NULL이어도 안전하게 비교
     if v_order.user_id is distinct from p_user_id then
       raise exception 'Forbidden: order % not owned by user', v_order.id;
     end if;
 
     if v_order.status != '결제중' then
+      if v_order.status in ('진행중', '발송대기', '발송중', '수거예정', '접수', '완료') then
+        v_updated_orders := v_updated_orders || jsonb_build_object(
+          'orderId',     v_order.id,
+          'orderType',   v_order.order_type,
+          'tokenAmount', null,
+          'couponIssued', null
+        );
+        continue;
+      end if;
+
       raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
     end if;
 
-    -- repair → 발송대기 / 방문 수거 신청 주문은 수거예정
     v_post_status := case v_order.order_type
       when 'sale'   then '진행중'
       when 'token'  then '완료'
@@ -836,7 +882,6 @@ begin
       'payment confirmed: ' || v_masked_key
     );
 
-    -- token 주문: 토큰 지급
     if v_order.order_type = 'token' then
       select
         (oi.item_data->>'token_amount')::integer,
@@ -857,7 +902,6 @@ begin
         else v_plan_key
       end;
 
-      -- 토큰 지급: source_order_id + expires_at 설정 (만료: 구매 시점 + 1년)
       insert into public.design_tokens (
         user_id, amount, type, token_class, description, work_id,
         source_order_id, expires_at
@@ -877,7 +921,7 @@ begin
 
     v_coupon_row_count := 0;
     if v_order.order_type = 'sample' then
-      -- order_items에서 sample_type, design_type 추출
+
       select oi.item_data->>'sample_type',
              oi.item_data->'options'->>'design_type'
       into v_sample_type, v_sample_design_type
@@ -892,9 +936,6 @@ begin
         v_sample_design_type
       ) as mapped;
 
-      -- ⚠️ 샘플 할인값의 원본은 pricing_constants이며,
-      -- coupons 테이블의 SAMPLE_DISCOUNT_* row는 이 값을 기반으로 자동 동기화됩니다.
-      -- 쿠폰 관리 페이지에서 직접 수정하지 마세요.
       select pc.amount into v_discount_amount
       from public.pricing_constants pc
       where pc.key = v_pricing_key;
@@ -903,7 +944,6 @@ begin
         raise exception 'Sample discount pricing key % is not configured; coupons_name_unique upsert cannot continue', v_pricing_key;
       end if;
 
-      -- coupons row 동기화 (user_coupons FK용)
       insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
       values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
       on conflict (name)
@@ -935,7 +975,6 @@ begin
     raise exception 'No orders found for payment_group_id %', p_payment_group_id;
   end if;
 
-  -- 결제 확정 후 예약된 쿠폰을 사용 처리
   update public.user_coupons
   set status = 'used',
       used_at = now(),
@@ -957,7 +996,9 @@ begin
 end;
 $$;
 
--- ── 8. admin_update_order_status: 수거예정/발송확인중 → 접수, 취소 허용 ──
+COMMENT ON FUNCTION public.confirm_payment_orders(uuid, uuid, text)
+IS 'Security definer reason: service-role payment confirmation updates orders, coupon state, token balances, and audit logs with function-owner privileges while validating user ownership and fixed search_path.';
+
 CREATE OR REPLACE FUNCTION public.admin_update_order_status(
   p_order_id uuid,
   p_new_status text,
@@ -973,6 +1014,7 @@ declare
   v_admin_id uuid := auth.uid();
   v_current_status text;
   v_order_type text;
+  v_repair_previous_status text;
 begin
   if v_admin_id is null or not public.is_admin() then
     raise exception 'Admin only';
@@ -1035,8 +1077,24 @@ begin
         raise exception 'Invalid rollback from "%" to "%" for sample order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'repair' then
+      select case
+        when exists (
+          select 1
+          from public.repair_pickup_requests r
+          where r.order_id = p_order_id
+        ) then '수거예정'
+        when exists (
+          select 1
+          from public.repair_shipping_receipts r
+          where r.order_id = p_order_id
+            and r.receipt_type = 'no_tracking'
+        ) then '발송확인중'
+        else '발송중'
+      end
+      into v_repair_previous_status;
+
       if not (
-        (v_current_status = '접수' and p_new_status = '발송중')
+        (v_current_status = '접수' and p_new_status = v_repair_previous_status)
         or (v_current_status = '수선중' and p_new_status = '접수')
         or (v_current_status = '수선완료' and p_new_status = '수선중')
       ) then
@@ -1087,9 +1145,9 @@ begin
     elsif v_order_type = 'repair' then
       if not (
         (v_current_status = '발송중' and p_new_status = '접수')
-        -- 송장 없는 접수: 관리자가 입고 확인 후 접수 처리
+
         or (v_current_status = '발송확인중' and p_new_status = '접수')
-        -- 방문 수거: 수거(입고) 완료 후 접수 처리
+
         or (v_current_status = '수거예정' and p_new_status = '접수')
         or (v_current_status = '접수' and p_new_status = '수선중')
         or (v_current_status = '수선중'   and p_new_status = '수선완료')
@@ -1101,7 +1159,7 @@ begin
         raise exception 'Invalid transition from "%" to "%" for repair order', v_current_status, p_new_status;
       end if;
     elsif v_order_type = 'token' then
-      -- token 완료는 confirm_payment 흐름에서만 처리. 관리자 수동 완료 불가.
+
       if not (
         p_new_status = '취소' and v_current_status in ('대기중', '결제중')
       ) then
@@ -1131,8 +1189,11 @@ begin
 end;
 $$;
 
--- ── 9. submit_repair_tracking: 발송 사진(p_photos) 추가 (기존 3-인자 시그니처 제거) ──
+COMMENT ON FUNCTION public.admin_update_order_status(uuid, text, text, boolean)
+IS 'Security definer reason: admin-only status transitions update orders and audit logs with function-owner privileges after public.is_admin and transition validation.';
+
 DROP FUNCTION public.submit_repair_tracking(uuid, text, text);
+DROP FUNCTION IF EXISTS public.submit_repair_no_tracking(uuid, text, text);
 
 CREATE OR REPLACE FUNCTION public.submit_repair_tracking(
   p_order_id uuid,
@@ -1218,7 +1279,6 @@ begin
     '고객 발송 처리: ' || v_courier_code || ' ' || v_tracking_number
   );
 
-  -- 발송 사진: 업로드 시 등록된 repair_shipping_upload 이미지를 주문에 연결
   if jsonb_array_length(v_photos) > 0 then
     for v_photo in select * from jsonb_array_elements(v_photos)
     loop
@@ -1244,18 +1304,21 @@ begin
       end if;
     end loop;
 
-    insert into public.repair_shipping_receipts (
-      order_id, receipt_type, photos
-    ) values (
-      p_order_id, 'tracking', v_photos
-    );
   end if;
+
+  insert into public.repair_shipping_receipts (
+    order_id, receipt_type, photos
+  ) values (
+    p_order_id, 'tracking', coalesce(v_photos, p_photos, '[]'::jsonb)
+  );
 end;
 $$;
 
+COMMENT ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb)
+IS 'Security definer reason: allows authenticated order owners to update repair tracking, image linkage, and audit-log tables with function-owner privileges while enforcing auth.uid ownership checks.';
+
 GRANT EXECUTE ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb) TO authenticated;
 
--- ── 10. submit_repair_no_tracking: 송장 없는 접수 → 발송확인중 ──
 CREATE OR REPLACE FUNCTION public.submit_repair_no_tracking(
   p_order_id uuid,
   p_reason text,
@@ -1333,7 +1396,6 @@ begin
     '고객 송장 없는 발송 접수: ' || v_reason
   );
 
-  -- 발송 사진: 업로드 시 등록된 repair_shipping_upload 이미지를 주문에 연결
   if jsonb_array_length(v_photos) > 0 then
     for v_photo in select * from jsonb_array_elements(v_photos)
     loop
@@ -1367,5 +1429,8 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.submit_repair_no_tracking(uuid, text, text, jsonb)
+IS 'Security definer reason: allows authenticated order owners to submit no-tracking repair receipts, image linkage, and audit logs with function-owner privileges while enforcing auth.uid ownership checks.';
 
 GRANT EXECUTE ON FUNCTION public.submit_repair_no_tracking(uuid, text, text, jsonb) TO authenticated;

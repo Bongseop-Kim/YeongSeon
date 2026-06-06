@@ -61,6 +61,9 @@ CREATE INDEX idx_orders_stale_pending_created_at
   WHERE status = '대기중';
 CREATE INDEX idx_orders_payment_group_id     ON public.orders (payment_group_id);
 
+COMMENT ON CONSTRAINT orders_status_check ON public.orders
+IS 'Allows shared order lifecycle statuses, including repair pickup and no-tracking states.';
+
 -- Trigger
 CREATE OR REPLACE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON public.orders

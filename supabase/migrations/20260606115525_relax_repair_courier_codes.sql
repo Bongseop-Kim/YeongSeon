@@ -1,7 +1,3 @@
--- 송장 등록 택배사 허용 목록 완화
--- 택배사 목록(편의점 택배 등 추가)은 프론트 상수(@yeongseon/shared courier-companies)가
--- 단일 소스이므로, submit_repair_tracking은 코드 형식(소문자 영문/숫자, 30자 이내)만 검증한다.
-
 CREATE OR REPLACE FUNCTION public.submit_repair_tracking(
   p_order_id uuid,
   p_courier_company text,
@@ -33,8 +29,6 @@ begin
     raise exception '택배사를 선택해주세요';
   end if;
 
-  -- 택배사 목록은 프론트 상수(@yeongseon/shared courier-companies)가 단일 소스.
-  -- 서버는 코드 형식만 검증한다 (소문자 영문/숫자, 30자 이내).
   v_courier_code := lower(trim(p_courier_company));
   if v_courier_code !~ '^[a-z0-9_-]{1,30}$' then
     raise exception '올바르지 않은 택배사 코드입니다: %', p_courier_company;
@@ -88,7 +82,6 @@ begin
     '고객 발송 처리: ' || v_courier_code || ' ' || v_tracking_number
   );
 
-  -- 발송 사진: 업로드 시 등록된 repair_shipping_upload 이미지를 주문에 연결
   if jsonb_array_length(v_photos) > 0 then
     for v_photo in select * from jsonb_array_elements(v_photos)
     loop
@@ -114,11 +107,15 @@ begin
       end if;
     end loop;
 
-    insert into public.repair_shipping_receipts (
-      order_id, receipt_type, photos
-    ) values (
-      p_order_id, 'tracking', v_photos
-    );
   end if;
+
+  insert into public.repair_shipping_receipts (
+    order_id, receipt_type, photos
+  ) values (
+    p_order_id, 'tracking', coalesce(v_photos, p_photos, '[]'::jsonb)
+  );
 end;
 $$;
+
+COMMENT ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb)
+IS 'Security definer reason: allows authenticated order owners to update repair tracking, image linkage, and audit-log tables with function-owner privileges while enforcing auth.uid ownership checks.';

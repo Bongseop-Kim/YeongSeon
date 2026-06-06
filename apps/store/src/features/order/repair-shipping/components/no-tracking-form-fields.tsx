@@ -110,13 +110,15 @@ export function NoTrackingFormFields({
           />
         </FieldContent>
       </Field>
-      <p className="flex gap-2 text-sm leading-6 text-zinc-500">
-        <Info className="mt-1 size-4 shrink-0" />
-        <span>
-          송장번호 없이 접수하면 입고 확인까지 시간이 걸릴 수 있어요. 확인
-          전까지 &lsquo;발송 확인 중&rsquo;으로 표시됩니다.
-        </span>
-      </p>
+      <Field>
+        <FieldContent className="flex-row gap-2 text-zinc-500">
+          <Info className="mt-1 size-4 shrink-0" />
+          <FieldDescription className="leading-6">
+            송장번호 없이 접수하면 입고 확인까지 시간이 걸릴 수 있어요. 확인
+            전까지 &lsquo;발송 확인 중&rsquo;으로 표시됩니다.
+          </FieldDescription>
+        </FieldContent>
+      </Field>
     </FieldGroup>
   );
 }

@@ -3,7 +3,7 @@ import { Button } from "@/shared/ui-extended/button";
 import { Separator } from "@/shared/ui/separator";
 import { REPAIR_SHIPPING_ADDRESS } from "@/shared/constants/REPAIR_SHIPPING";
 import { cn } from "@/shared/lib/utils";
-import { useCopyRepairAddress } from "../use-copy-repair-address";
+import { useCopyRepairAddress } from "@/features/order/repair-shipping/use-copy-repair-address";
 
 interface RepairAddressRowsProps {
   className?: string;

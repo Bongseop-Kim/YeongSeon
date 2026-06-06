@@ -275,10 +275,23 @@ export function OrderDetailSection() {
       {orderType === "repair" ? (
         <>
           <RepairOrderDetail items={reformItems} />
-          <RepairShippingInfoSection
-            pickupRequest={repairShippingInfo.pickupRequest}
-            receipts={repairShippingInfo.receipts}
-          />
+          {repairShippingInfo.isLoading ? (
+            <AdminPanelSkeleton lines={3} />
+          ) : repairShippingInfo.error ? (
+            <Callout
+              tone="critical"
+              title="수선품 발송 정보를 불러오지 못했습니다"
+              description={
+                repairShippingInfo.error.message ?? "알 수 없는 오류"
+              }
+              role="alert"
+            />
+          ) : (
+            <RepairShippingInfoSection
+              pickupRequest={repairShippingInfo.pickupRequest}
+              receipts={repairShippingInfo.receipts}
+            />
+          )}
         </>
       ) : null}
 

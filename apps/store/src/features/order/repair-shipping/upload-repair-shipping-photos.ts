@@ -1,7 +1,7 @@
 import { upload } from "@imagekit/react";
 import { getImageKitAuth, IMAGEKIT_PUBLIC_KEY } from "@/shared/lib/imagekit";
-import { supabase } from "@/shared/lib/supabase";
 import { IMAGE_FOLDERS } from "@yeongseon/shared";
+import { registerRepairShippingPhotosRpc } from "@/entities/order";
 import type { RepairShippingPhoto } from "@/shared/store/order";
 
 /**
@@ -37,13 +37,10 @@ export async function uploadRepairShippingPhotos(
       throw new Error("파일 ID를 받지 못했습니다.");
     }
 
-    const { error } = await supabase.rpc("register_repair_shipping_upload", {
-      p_url: response.url,
-      p_file_id: response.fileId,
+    await registerRepairShippingPhotosRpc({
+      url: response.url,
+      fileId: response.fileId,
     });
-    if (error) {
-      throw new Error(`발송 사진 등록에 실패했습니다: ${error.message}`);
-    }
 
     photos.push({ url: response.url, fileId: response.fileId });
   }

@@ -25,6 +25,8 @@ import {
   TrackingFormFields,
   NoTrackingFormFields,
   uploadRepairShippingPhotos,
+  isRepairShippingReceiptIncomplete,
+  useRepairShippingInput,
   type TrackingMode,
 } from "@/features/order";
 import type { RepairNoTrackingReason } from "@/shared/constants/REPAIR_SHIPPING";
@@ -56,30 +58,12 @@ const RepairShippingPage = () => {
   const prefilledTracking = state?.prefilledTracking ?? null;
   const prefilledNoTracking = state?.prefilledNoTracking ?? null;
 
-  const [trackingMode, setTrackingMode] = useState<TrackingMode>(
-    prefilledNoTracking ? "no-tracking" : "has-tracking",
-  );
-  const [courierCompany, setCourierCompany] = useState(
-    prefilledTracking?.courierCompany ?? "",
-  );
-  const [trackingNumber, setTrackingNumber] = useState(
-    prefilledTracking?.trackingNumber ?? "",
-  );
-  // 주문서에서 이미 업로드된 사진(URL)과 이 페이지에서 새로 고른 파일을 분리 관리
-  const [uploadedTrackingPhotos, setUploadedTrackingPhotos] = useState<
-    RepairShippingPhoto[]
-  >(prefilledTracking?.photos ?? []);
-  const [trackingPhotos, setTrackingPhotos] = useState<File[]>([]);
-  const [noTrackingReason, setNoTrackingReason] = useState<
-    RepairNoTrackingReason | ""
-  >(prefilledNoTracking?.reason ?? "");
-  const [uploadedNoTrackingPhotos, setUploadedNoTrackingPhotos] = useState<
-    RepairShippingPhoto[]
-  >(prefilledNoTracking?.photos ?? []);
-  const [noTrackingPhotos, setNoTrackingPhotos] = useState<File[]>([]);
-  const [noTrackingMemo, setNoTrackingMemo] = useState(
-    prefilledNoTracking?.memo ?? "",
-  );
+  const { state: repairShipping, actions: repairShippingActions } =
+    useRepairShippingInput({
+      initialTrackingMode: prefilledNoTracking ? "no-tracking" : "has-tracking",
+      initialTracking: prefilledTracking,
+      initialNoTracking: prefilledNoTracking,
+    });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const queryClient = useQueryClient();
@@ -92,7 +76,7 @@ const RepairShippingPage = () => {
     }
   }, [order, isLoading, navigate, orderId]);
 
-  const isHasTracking = trackingMode === "has-tracking";
+  const isHasTracking = repairShipping.trackingMode === "has-tracking";
 
   const handleSubmit = async () => {
     if (!orderId) return;
@@ -100,35 +84,40 @@ const RepairShippingPage = () => {
     // 검증을 통과한 시점의 값으로 제출 클로저를 만든다
     let submitReceipt: () => Promise<void>;
     if (isHasTracking) {
-      if (!courierCompany) {
+      if (!repairShipping.courierCompany) {
         toast.error("택배사를 선택해주세요.");
         return;
       }
-      if (!trackingNumber.trim()) {
+      if (!repairShipping.trackingNumber.trim()) {
         toast.error("송장 번호를 입력해주세요.");
         return;
       }
       submitReceipt = async () => {
-        const newPhotos = await uploadRepairShippingPhotos(trackingPhotos);
+        const newPhotos = await uploadRepairShippingPhotos(
+          repairShipping.trackingPhotos,
+        );
         await submitRepairTracking(
           orderId,
-          courierCompany,
-          trackingNumber.trim(),
-          [...uploadedTrackingPhotos, ...newPhotos],
+          repairShipping.courierCompany,
+          repairShipping.trackingNumber.trim(),
+          [...repairShipping.uploadedTrackingPhotos, ...newPhotos],
         );
       };
     } else {
+      const noTrackingReason = repairShipping.noTrackingReason;
       if (!noTrackingReason) {
         toast.error("접수 사유를 선택해주세요.");
         return;
       }
       submitReceipt = async () => {
-        const newPhotos = await uploadRepairShippingPhotos(noTrackingPhotos);
+        const newPhotos = await uploadRepairShippingPhotos(
+          repairShipping.noTrackingPhotos,
+        );
         await submitRepairNoTracking(
           orderId,
           noTrackingReason,
-          noTrackingMemo.trim() || null,
-          [...uploadedNoTrackingPhotos, ...newPhotos],
+          repairShipping.noTrackingMemo.trim() || null,
+          [...repairShipping.uploadedNoTrackingPhotos, ...newPhotos],
         );
       };
     }
@@ -173,14 +162,8 @@ const RepairShippingPage = () => {
     return null;
   }
 
-  const isFormIncomplete = isHasTracking
-    ? !courierCompany || !trackingNumber.trim()
-    : !noTrackingReason;
+  const isFormIncomplete = isRepairShippingReceiptIncomplete(repairShipping);
   const submitLabel = isHasTracking ? "발송 완료 등록" : "발송 확인 요청";
-
-  // 미리보기에서 제거된 URL만 남긴다 (업로드 완료 사진 삭제 반영)
-  const keepPhotosByUrls = (urls: string[]) => (prev: RepairShippingPhoto[]) =>
-    prev.filter((photo) => urls.includes(photo.url));
 
   return (
     <MainLayout>
@@ -216,38 +199,46 @@ const RepairShippingPage = () => {
               >
                 <div className="space-y-5 border-t border-stone-200 pt-5">
                   <TrackingModeToggle
-                    value={trackingMode}
+                    value={repairShipping.trackingMode as TrackingMode}
                     onChange={(mode) => {
-                      if (mode) setTrackingMode(mode);
+                      if (mode) repairShippingActions.setTrackingMode(mode);
                     }}
                   />
 
                   {isHasTracking ? (
                     <TrackingFormFields
                       idPrefix="repair-shipping"
-                      courierCompany={courierCompany}
-                      onCourierCompanyChange={setCourierCompany}
-                      trackingNumber={trackingNumber}
-                      onTrackingNumberChange={setTrackingNumber}
-                      photos={trackingPhotos}
-                      onPhotosChange={setTrackingPhotos}
-                      photoUrls={uploadedTrackingPhotos.map((p) => p.url)}
-                      onPhotoUrlsChange={(urls) =>
-                        setUploadedTrackingPhotos(keepPhotosByUrls(urls))
+                      courierCompany={repairShipping.courierCompany}
+                      onCourierCompanyChange={
+                        repairShippingActions.setCourierCompany
+                      }
+                      trackingNumber={repairShipping.trackingNumber}
+                      onTrackingNumberChange={
+                        repairShippingActions.setTrackingNumber
+                      }
+                      photos={repairShipping.trackingPhotos}
+                      onPhotosChange={repairShippingActions.setTrackingPhotos}
+                      photoUrls={repairShipping.uploadedTrackingPhotos.map(
+                        (p) => p.url,
+                      )}
+                      onPhotoUrlsChange={
+                        repairShippingActions.retainUploadedTrackingPhotoUrls
                       }
                     />
                   ) : (
                     <NoTrackingFormFields
                       idPrefix="repair-shipping"
-                      reason={noTrackingReason}
-                      onReasonChange={setNoTrackingReason}
-                      photos={noTrackingPhotos}
-                      onPhotosChange={setNoTrackingPhotos}
-                      memo={noTrackingMemo}
-                      onMemoChange={setNoTrackingMemo}
-                      photoUrls={uploadedNoTrackingPhotos.map((p) => p.url)}
-                      onPhotoUrlsChange={(urls) =>
-                        setUploadedNoTrackingPhotos(keepPhotosByUrls(urls))
+                      reason={repairShipping.noTrackingReason}
+                      onReasonChange={repairShippingActions.setNoTrackingReason}
+                      photos={repairShipping.noTrackingPhotos}
+                      onPhotosChange={repairShippingActions.setNoTrackingPhotos}
+                      memo={repairShipping.noTrackingMemo}
+                      onMemoChange={repairShippingActions.setNoTrackingMemo}
+                      photoUrls={repairShipping.uploadedNoTrackingPhotos.map(
+                        (p) => p.url,
+                      )}
+                      onPhotoUrlsChange={
+                        repairShippingActions.retainUploadedNoTrackingPhotoUrls
                       }
                     />
                   )}

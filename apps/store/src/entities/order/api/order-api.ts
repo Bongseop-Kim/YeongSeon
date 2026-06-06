@@ -14,6 +14,7 @@ import {
   parseOrderItemRows,
   parseOrderDetailRow,
   toOrderItemInputDTO,
+  mapRepairShipping,
   toOrderView,
   toOrderViewFromDetail,
 } from "@/entities/order/api/order-mapper";
@@ -90,20 +91,7 @@ export const createOrder = async (
   const input: CreateOrderInputDTO = {
     shipping_address_id: request.shippingAddressId,
     items: request.items.map(toOrderItemInputDTO),
-    repair_shipping: request.repairShipping
-      ? {
-          method: request.repairShipping.method,
-          pickup: request.repairShipping.pickup
-            ? {
-                recipient_name: request.repairShipping.pickup.recipientName,
-                recipient_phone: request.repairShipping.pickup.recipientPhone,
-                postal_code: request.repairShipping.pickup.postalCode,
-                address: request.repairShipping.pickup.address,
-                detail_address: request.repairShipping.pickup.detailAddress,
-              }
-            : null,
-        }
-      : null,
+    repair_shipping: mapRepairShipping(request.repairShipping),
   };
 
   const { data: orderResult, error: orderError } =

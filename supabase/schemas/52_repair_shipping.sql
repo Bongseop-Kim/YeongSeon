@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS public.repair_pickup_requests (
     FOREIGN KEY (order_id) REFERENCES public.orders (id) ON DELETE CASCADE
 );
 
+COMMENT ON TABLE public.repair_pickup_requests
+IS 'Repair order pickup requests created during order creation; pickup_fee stores the REFORM_PICKUP_FEE snapshot.';
+
 ALTER TABLE public.repair_pickup_requests ENABLE ROW LEVEL SECURITY;
 
 -- 주문 소유자 조회
@@ -70,6 +73,9 @@ CREATE TABLE IF NOT EXISTS public.repair_shipping_receipts (
   CONSTRAINT repair_shipping_receipts_order_id_fkey
     FOREIGN KEY (order_id) REFERENCES public.orders (id) ON DELETE CASCADE
 );
+
+COMMENT ON TABLE public.repair_shipping_receipts
+IS 'Customer repair shipping receipt records for tracking and no-tracking submissions; photos store ImageKit url/fileId objects.';
 
 CREATE INDEX idx_repair_shipping_receipts_order_id
   ON public.repair_shipping_receipts (order_id);

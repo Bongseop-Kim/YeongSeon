@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS public.pricing_constants (
     CHECK (category IN ('custom_order', 'fabric', 'reform', 'token', 'sample_discount'))
 );
 
+COMMENT ON TABLE public.pricing_constants
+IS 'Unified pricing constants, including REFORM_PICKUP_FEE for repair pickup requests.';
+
 ALTER TABLE public.pricing_constants ENABLE ROW LEVEL SECURITY;
 
 -- 가격 정보는 비민감 공개 데이터이므로 anon read 허용

@@ -107,6 +107,16 @@ begin
     end if;
 
     if v_order.status != '결제중' then
+      if v_order.status in ('진행중', '발송대기', '발송중', '수거예정', '접수', '완료') then
+        v_updated_orders := v_updated_orders || jsonb_build_object(
+          'orderId',     v_order.id,
+          'orderType',   v_order.order_type,
+          'tokenAmount', null,
+          'couponIssued', null
+        );
+        continue;
+      end if;
+
       raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
     end if;
 
@@ -257,6 +267,9 @@ begin
 end;
 $$;
 
+COMMENT ON FUNCTION public.confirm_payment_orders(uuid, uuid, text)
+IS 'Security definer reason: service-role payment confirmation updates orders, coupon state, token balances, and audit logs with function-owner privileges while validating user ownership and fixed search_path.';
+
 -- confirm_payment_orders: service_role 전용
 REVOKE EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.confirm_payment_orders(uuid, uuid, text) TO service_role;
@@ -320,7 +333,7 @@ begin
       -- 멱등: 이미 lock됨
       v_already_locked := true;
 
-    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '수거예정', '접수', '완료') then
       -- 이미 결제 완료 상태
       v_already_confirmed := true;
 
@@ -346,6 +359,9 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.lock_payment_orders(uuid, uuid)
+IS 'Security definer reason: service-role payment locking updates order statuses and audit logs with function-owner privileges while validating user ownership and fixed search_path.';
 
 -- lock_payment_orders: service_role 전용
 REVOKE EXECUTE ON FUNCTION public.lock_payment_orders(uuid, uuid) FROM anon, authenticated;
@@ -406,7 +422,7 @@ begin
       -- 멱등: 이미 대기중
       null;
 
-    elsif v_order.status in ('진행중', '발송대기', '발송중', '접수', '완료') then
+    elsif v_order.status in ('진행중', '발송대기', '발송중', '수거예정', '접수', '완료') then
       -- 다른 경로로 이미 confirm됨 — skip
       null;
 
@@ -434,6 +450,9 @@ begin
   return jsonb_build_object('success', true);
 end;
 $$;
+
+COMMENT ON FUNCTION public.unlock_payment_orders(uuid, uuid)
+IS 'Security definer reason: service-role payment unlock restores order and coupon reservation state with function-owner privileges while validating user ownership and fixed search_path.';
 
 -- unlock_payment_orders: service_role 전용
 REVOKE EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) FROM anon, authenticated;
@@ -556,14 +575,18 @@ begin
       end if;
     end loop;
 
-    insert into public.repair_shipping_receipts (
-      order_id, receipt_type, photos
-    ) values (
-      p_order_id, 'tracking', v_photos
-    );
   end if;
+
+  insert into public.repair_shipping_receipts (
+    order_id, receipt_type, photos
+  ) values (
+    p_order_id, 'tracking', coalesce(v_photos, p_photos, '[]'::jsonb)
+  );
 end;
 $$;
+
+COMMENT ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb)
+IS 'Security definer reason: allows authenticated order owners to update repair tracking, image linkage, and audit-log tables with function-owner privileges while enforcing auth.uid ownership checks.';
 
 GRANT EXECUTE ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb) TO authenticated;
 
@@ -682,5 +705,8 @@ begin
   );
 end;
 $$;
+
+COMMENT ON FUNCTION public.submit_repair_no_tracking(uuid, text, text, jsonb)
+IS 'Security definer reason: allows authenticated order owners to submit no-tracking repair receipts, image linkage, and audit logs with function-owner privileges while enforcing auth.uid ownership checks.';
 
 GRANT EXECUTE ON FUNCTION public.submit_repair_no_tracking(uuid, text, text, jsonb) TO authenticated;
