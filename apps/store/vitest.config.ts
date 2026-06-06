@@ -67,6 +67,7 @@ export default defineConfig({
         "src/app/layout/**",
         "src/app/providers/**",
         "src/app/router/**",
+        "src/shared/lib/breakpoint-provider.tsx",
         "src/store/**",
         "src/**/store/**",
         // 타입 선언 파일
@@ -83,6 +84,7 @@ export default defineConfig({
         "src/shared/lib/imagekit.ts",
         "src/shared/lib/query-client.ts",
         "src/shared/lib/toast.ts",
+        "src/shared/lib/posthog.ts",
         "src/shared/lib/utils.ts",
         "src/shared/lib/type-guard.ts",
         "src/shared/ui-extended/**",
