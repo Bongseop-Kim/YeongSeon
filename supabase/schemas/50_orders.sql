@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
       '대기중','결제중','진행중','배송중','배송완료','완료','취소','실패',
       '접수','제작중','제작완료',
       '수선중','수선완료',
-      '발송대기','발송중'
+      '발송대기','발송중','발송확인중','수거예정'
     ])),
   CONSTRAINT orders_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE CASCADE,

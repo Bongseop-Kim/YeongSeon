@@ -8,6 +8,8 @@ import {
   getAdminOrderItems,
   getAdminOrders,
   getRelatedOrders,
+  getRepairPickupRequest,
+  getRepairShippingReceipts,
   updateOrderStatus,
   updateOrderTracking,
 } from "./orders-api";
@@ -20,6 +22,7 @@ const ORDER_DETAIL_KEY = ["orders", "detail"] as const;
 const ORDER_ITEMS_KEY = ["orders", "items"] as const;
 const ORDER_HISTORY_KEY = ["orders", "history"] as const;
 const ORDER_RELATED_KEY = ["orders", "related"] as const;
+const ORDER_REPAIR_SHIPPING_KEY = ["orders", "repair-shipping"] as const;
 
 export function useAdminOrderTable(params: {
   orderType: OrderType;
@@ -94,6 +97,29 @@ export function useRelatedOrders(
     relatedOrders: query.data ?? [],
     isLoading: query.isLoading,
     error: query.error,
+  };
+}
+
+export function useRepairShippingInfo(
+  orderId: string | undefined,
+  enabled: boolean,
+) {
+  const pickupQuery = useQuery({
+    queryKey: [...ORDER_REPAIR_SHIPPING_KEY, "pickup", orderId ?? null],
+    queryFn: () => getRepairPickupRequest(orderId ?? ""),
+    enabled: Boolean(orderId) && enabled,
+  });
+  const receiptsQuery = useQuery({
+    queryKey: [...ORDER_REPAIR_SHIPPING_KEY, "receipts", orderId ?? null],
+    queryFn: () => getRepairShippingReceipts(orderId ?? ""),
+    enabled: Boolean(orderId) && enabled,
+  });
+
+  return {
+    pickupRequest: pickupQuery.data ?? null,
+    receipts: receiptsQuery.data ?? [],
+    isLoading: pickupQuery.isLoading || receiptsQuery.isLoading,
+    error: pickupQuery.error ?? receiptsQuery.error,
   };
 }
 

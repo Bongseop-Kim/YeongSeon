@@ -27,6 +27,8 @@ export const ORDER_STATUS_FLOW: Record<OrderType, Record<string, string>> = {
   },
   repair: {
     발송중: "접수",
+    발송확인중: "접수",
+    수거예정: "접수",
     접수: "수선중",
     수선중: "수선완료",
     수선완료: "배송중",
@@ -62,6 +64,8 @@ export const ORDER_ROLLBACK_FLOW: Record<OrderType, Record<string, string>> = {
 
 export const ORDER_STATUS_LABELS: Partial<Record<OrderStatus, string>> = {
   발송대기: "발송 대기중",
+  발송확인중: "발송 확인 중",
+  수거예정: "수거 예정",
 };
 
 export const ORDER_STATUS_COLORS: Record<string, string> = {
@@ -75,6 +79,8 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   수선완료: "lime",
   발송대기: "warning",
   발송중: "blue",
+  발송확인중: "cyan",
+  수거예정: "warning",
   배송중: "blue",
   배송완료: "geekblue",
   완료: "success",
@@ -114,6 +120,8 @@ export const ORDER_STATUS_OPTIONS: Record<
     { label: "결제중", value: "결제중" },
     { label: "발송대기", value: "발송대기" },
     { label: "발송중", value: "발송중" },
+    { label: "발송확인중", value: "발송확인중" },
+    { label: "수거예정", value: "수거예정" },
     { label: "접수", value: "접수" },
     { label: "수선중", value: "수선중" },
     { label: "수선완료", value: "수선완료" },

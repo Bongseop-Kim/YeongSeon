@@ -21,7 +21,9 @@ export type OrderStatus =
   | "수선중"
   | "수선완료"
   | "발송대기"
-  | "발송중";
+  | "발송중"
+  | "발송확인중"
+  | "수거예정";
 
 // 일반 상품 주문 아이템
 export interface ProductOrderItem {

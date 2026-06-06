@@ -165,11 +165,10 @@ vi.mock("@/shared/ui-extended/button", () => ({
 }));
 
 vi.mock("@/features/order", () => ({
-  RepairShippingAddressBanner: ({ embedded }: { embedded?: boolean }) => (
-    <div data-testid="repair-shipping-banner">
-      {embedded ? "repair-shipping-banner-embedded" : "repair-shipping-banner"}
-    </div>
+  RepairAddressRows: () => (
+    <div data-testid="repair-address-rows">repair-address-rows</div>
   ),
+  RepairAddressCopyButton: () => <button>주소 복사</button>,
 }));
 
 vi.mock("@/entities/order", () => ({
@@ -343,8 +342,10 @@ describe("OrderDetailPage", () => {
     expect(
       screen.getByRole("heading", { name: "현재 할 일" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("수선품 보내실 곳")).toBeInTheDocument();
+    expect(screen.getByTestId("repair-address-rows")).toBeInTheDocument();
     expect(
-      screen.getByText("repair-shipping-banner-embedded"),
+      screen.getByRole("button", { name: "송장번호 등록하기" }),
     ).toBeInTheDocument();
   });
 

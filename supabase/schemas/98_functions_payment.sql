@@ -110,12 +110,18 @@ begin
       raise exception 'Order % is not payable (status: %)', v_order.id, v_order.status;
     end if;
 
-    -- repair → 발송대기 (기존: else '접수')
+    -- repair → 발송대기 / 방문 수거 신청 주문은 수거예정
     v_post_status := case v_order.order_type
       when 'sale'   then '진행중'
       when 'token'  then '완료'
       when 'sample' then '접수'
-      when 'repair' then '발송대기'
+      when 'repair' then case
+        when exists (
+          select 1 from public.repair_pickup_requests r
+          where r.order_id = v_order.id
+        ) then '수거예정'
+        else '발송대기'
+      end
       else '접수'
     end;
 
@@ -435,13 +441,14 @@ GRANT EXECUTE ON FUNCTION public.unlock_payment_orders(uuid, uuid) TO service_ro
 
 -- ── submit_repair_tracking ────────────────────────────────────────
 -- 고객이 직접 수선품 발송 후 송장번호를 등록하는 RPC.
--- 발송대기 → 발송중 전이.
+-- 발송대기 → 발송중 전이. 발송 사진(p_photos: [{url, fileId}])은 선택.
 -- SECURITY DEFINER: order_status_logs는 INSERT RLS 정책이 없으므로 audit log 작성을 위해 DEFINER 필요.
 -- 소유권 검증은 auth.uid()와 orders.user_id 비교로 수행.
 CREATE OR REPLACE FUNCTION public.submit_repair_tracking(
   p_order_id uuid,
   p_courier_company text,
-  p_tracking_number text
+  p_tracking_number text,
+  p_photos jsonb DEFAULT '[]'::jsonb
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -453,6 +460,11 @@ declare
   v_order record;
   v_courier_code text;
   v_tracking_number text;
+  v_photos jsonb;
+  v_photo jsonb;
+  v_photo_url text;
+  v_photo_file_id text;
+  v_photo_row_count integer;
 begin
   v_user_id := auth.uid();
   if v_user_id is null then
@@ -463,9 +475,11 @@ begin
     raise exception '택배사를 선택해주세요';
   end if;
 
+  -- 택배사 목록은 프론트 상수(@yeongseon/shared courier-companies)가 단일 소스.
+  -- 서버는 코드 형식만 검증한다 (소문자 영문/숫자, 30자 이내).
   v_courier_code := lower(trim(p_courier_company));
-  if v_courier_code not in ('cj', 'hanjin', 'logen', 'epost', 'lotte', 'kyungdong') then
-    raise exception '지원하지 않는 택배사 코드입니다: % (허용 값: cj, hanjin, logen, epost, lotte, kyungdong)', p_courier_company;
+  if v_courier_code !~ '^[a-z0-9_-]{1,30}$' then
+    raise exception '올바르지 않은 택배사 코드입니다: %', p_courier_company;
   end if;
 
   if p_tracking_number is null or trim(p_tracking_number) = '' then
@@ -473,6 +487,14 @@ begin
   end if;
 
   v_tracking_number := trim(p_tracking_number);
+
+  v_photos := coalesce(p_photos, '[]'::jsonb);
+  if jsonb_typeof(v_photos) <> 'array' then
+    raise exception '발송 사진 형식이 올바르지 않습니다';
+  end if;
+  if jsonb_array_length(v_photos) > 3 then
+    raise exception '발송 사진은 최대 3장까지 첨부할 수 있습니다';
+  end if;
 
   select id, user_id, status
   into v_order
@@ -507,7 +529,158 @@ begin
     p_order_id, v_user_id, '발송대기', '발송중',
     '고객 발송 처리: ' || v_courier_code || ' ' || v_tracking_number
   );
+
+  -- 발송 사진: 업로드 시 등록된 repair_shipping_upload 이미지를 주문에 연결
+  if jsonb_array_length(v_photos) > 0 then
+    for v_photo in select * from jsonb_array_elements(v_photos)
+    loop
+      v_photo_url := nullif(trim(coalesce(v_photo->>'url', '')), '');
+      v_photo_file_id := nullif(trim(coalesce(v_photo->>'fileId', '')), '');
+      if v_photo_url is null or v_photo_file_id is null then
+        raise exception '발송 사진 정보가 올바르지 않습니다';
+      end if;
+
+      update public.images
+      set folder = '/repair-shipping',
+          entity_type = 'repair_shipping',
+          entity_id = p_order_id::text
+      where entity_type = 'repair_shipping_upload'
+        and entity_id = v_photo_file_id
+        and file_id = v_photo_file_id
+        and url = v_photo_url
+        and uploaded_by = v_user_id;
+
+      get diagnostics v_photo_row_count = row_count;
+      if v_photo_row_count = 0 then
+        raise exception 'Repair shipping photo not found or not owned';
+      end if;
+    end loop;
+
+    insert into public.repair_shipping_receipts (
+      order_id, receipt_type, photos
+    ) values (
+      p_order_id, 'tracking', v_photos
+    );
+  end if;
 end;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.submit_repair_tracking(uuid, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_repair_tracking(uuid, text, text, jsonb) TO authenticated;
+
+-- ── submit_repair_no_tracking ─────────────────────────────────────
+-- 송장번호 없이(퀵/해외배송/송장 분실) 수선품 발송을 접수하는 RPC.
+-- 발송대기 → 발송확인중 전이. 관리자가 입고 확인 후 접수 처리한다.
+-- SECURITY DEFINER 근거는 submit_repair_tracking과 동일.
+CREATE OR REPLACE FUNCTION public.submit_repair_no_tracking(
+  p_order_id uuid,
+  p_reason text,
+  p_memo text DEFAULT NULL,
+  p_photos jsonb DEFAULT '[]'::jsonb
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+declare
+  v_user_id uuid;
+  v_order record;
+  v_reason text;
+  v_memo text;
+  v_photos jsonb;
+  v_photo jsonb;
+  v_photo_url text;
+  v_photo_file_id text;
+  v_photo_row_count integer;
+begin
+  v_user_id := auth.uid();
+  if v_user_id is null then
+    raise exception 'Unauthorized';
+  end if;
+
+  v_reason := nullif(trim(coalesce(p_reason, '')), '');
+  if v_reason is null or v_reason not in ('quick', 'overseas', 'lost') then
+    raise exception '접수 사유를 선택해주세요 (허용 값: quick, overseas, lost)';
+  end if;
+
+  v_memo := nullif(trim(coalesce(p_memo, '')), '');
+  if v_memo is not null and char_length(v_memo) > 500 then
+    raise exception '메모는 500자 이내로 입력해주세요';
+  end if;
+
+  v_photos := coalesce(p_photos, '[]'::jsonb);
+  if jsonb_typeof(v_photos) <> 'array' then
+    raise exception '발송 사진 형식이 올바르지 않습니다';
+  end if;
+  if jsonb_array_length(v_photos) > 3 then
+    raise exception '발송 사진은 최대 3장까지 첨부할 수 있습니다';
+  end if;
+
+  select id, user_id, status
+  into v_order
+  from public.orders
+  where id = p_order_id
+  for update;
+
+  if not found then
+    raise exception '주문을 찾을 수 없습니다';
+  end if;
+
+  if v_order.user_id is distinct from v_user_id then
+    raise exception 'Forbidden';
+  end if;
+
+  if v_order.status != '발송대기' then
+    raise exception '발송대기 상태에서만 접수할 수 있습니다 (현재 상태: %)', v_order.status;
+  end if;
+
+  update public.orders
+  set
+    status     = '발송확인중',
+    shipped_at = now(),
+    updated_at = now()
+  where id = p_order_id;
+
+  insert into public.order_status_logs (
+    order_id, changed_by, previous_status, new_status, memo
+  ) values (
+    p_order_id, v_user_id, '발송대기', '발송확인중',
+    '고객 송장 없는 발송 접수: ' || v_reason
+  );
+
+  -- 발송 사진: 업로드 시 등록된 repair_shipping_upload 이미지를 주문에 연결
+  if jsonb_array_length(v_photos) > 0 then
+    for v_photo in select * from jsonb_array_elements(v_photos)
+    loop
+      v_photo_url := nullif(trim(coalesce(v_photo->>'url', '')), '');
+      v_photo_file_id := nullif(trim(coalesce(v_photo->>'fileId', '')), '');
+      if v_photo_url is null or v_photo_file_id is null then
+        raise exception '발송 사진 정보가 올바르지 않습니다';
+      end if;
+
+      update public.images
+      set folder = '/repair-shipping',
+          entity_type = 'repair_shipping',
+          entity_id = p_order_id::text
+      where entity_type = 'repair_shipping_upload'
+        and entity_id = v_photo_file_id
+        and file_id = v_photo_file_id
+        and url = v_photo_url
+        and uploaded_by = v_user_id;
+
+      get diagnostics v_photo_row_count = row_count;
+      if v_photo_row_count = 0 then
+        raise exception 'Repair shipping photo not found or not owned';
+      end if;
+    end loop;
+  end if;
+
+  insert into public.repair_shipping_receipts (
+    order_id, receipt_type, reason, memo, photos
+  ) values (
+    p_order_id, 'no_tracking', v_reason, v_memo, v_photos
+  );
+end;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.submit_repair_no_tracking(uuid, text, text, jsonb) TO authenticated;

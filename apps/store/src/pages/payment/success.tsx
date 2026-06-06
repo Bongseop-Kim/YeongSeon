@@ -81,8 +81,8 @@ const PaymentSuccessPage = () => {
           (order) => order.orderType === "repair",
         );
 
-        const prefilledTracking = repairOrder
-          ? useOrderStore.getState().repairTracking
+        const repairShipping = repairOrder
+          ? useOrderStore.getState().repairShipping
           : undefined;
 
         clearOrderItems();
@@ -99,6 +99,23 @@ const PaymentSuccessPage = () => {
         }
         if (paymentResult.type === "token_purchase") {
           navigate(ROUTES.TOKEN_PURCHASE_SUCCESS, { replace: true });
+        } else if (repairOrder && repairShipping?.method === "pickup") {
+          // 방문 수거 신청 주문 — 발송 등록 없이 수거를 기다리면 된다
+          openModal({
+            title: "방문 수거 신청 완료",
+            description:
+              "기사님이 수거지에 방문해 수선품을 수거할 예정이에요. 수거 일정은 따로 안내드립니다.",
+            confirmText: "주문 상세 보기",
+            cancelText: "주문 목록으로",
+            onConfirm: () => {
+              navigate(`${ROUTES.ORDER_DETAIL}/${repairOrder.orderId}`, {
+                replace: true,
+              });
+            },
+            onCancel: () => {
+              navigate(ROUTES.ORDER_LIST, { replace: true });
+            },
+          });
         } else if (repairOrder) {
           openModal({
             title: "수선 주문 배송 정보 안내",
@@ -110,7 +127,8 @@ const PaymentSuccessPage = () => {
               navigate(`${ROUTES.REPAIR_SHIPPING}/${repairOrder.orderId}`, {
                 replace: true,
                 state: {
-                  prefilledTracking: prefilledTracking ?? null,
+                  prefilledTracking: repairShipping?.tracking ?? null,
+                  prefilledNoTracking: repairShipping?.noTracking ?? null,
                 },
               });
             },

@@ -1,7 +1,8 @@
 export interface CourierCompany {
   code: string;
   name: string;
-  trackingUrlTemplate: string;
+  /** 배송조회 페이지 — 없으면 조회 링크 없이 선택/접수만 가능 */
+  trackingUrlTemplate?: string;
 }
 
 export const COURIER_COMPANIES: CourierCompany[] = [
@@ -18,6 +19,12 @@ export const COURIER_COMPANIES: CourierCompany[] = [
       "https://www.hanjin.com/kor/CMS/DeliveryMgr/WaybillResult.do?mession=&wblnumText2={trackingNumber}",
   },
   {
+    code: "lotte",
+    name: "롯데택배",
+    trackingUrlTemplate:
+      "https://www.lotteglogis.com/home/reservation/tracking/index?InvNo={trackingNumber}",
+  },
+  {
     code: "logen",
     name: "로젠택배",
     trackingUrlTemplate:
@@ -30,10 +37,16 @@ export const COURIER_COMPANIES: CourierCompany[] = [
       "https://service.epost.go.kr/trace.RetrieveDomRi498.postal?sid1={trackingNumber}",
   },
   {
-    code: "lotte",
-    name: "롯데택배",
+    code: "cupost",
+    name: "CU 편의점택배",
     trackingUrlTemplate:
-      "https://www.lotteglogis.com/home/reservation/tracking/index?InvNo={trackingNumber}",
+      "https://www.cupost.co.kr/postbox/delivery/localResult.cupost?invoice_no={trackingNumber}",
+  },
+  {
+    code: "cvsnet",
+    name: "GS25 편의점택배",
+    trackingUrlTemplate:
+      "https://www.cvsnet.co.kr/invoice/tracking.do?invoice_no={trackingNumber}",
   },
   {
     code: "kyungdong",
@@ -41,6 +54,18 @@ export const COURIER_COMPANIES: CourierCompany[] = [
     trackingUrlTemplate:
       "https://kdexp.com/service/delivery/tracksearch.do?barcode={trackingNumber}",
   },
+  {
+    code: "daesin",
+    name: "대신택배",
+    trackingUrlTemplate:
+      "https://home.ds3211.co.kr/freight/internalFreightSearch.ht?billno={trackingNumber}",
+  },
+  // 아래 택배사는 조회 페이지 구조가 자주 바뀌어 링크 없이 이름만 제공
+  { code: "ilyang", name: "일양로지스" },
+  { code: "chunil", name: "천일택배" },
+  { code: "hapdong", name: "합동택배" },
+  { code: "slx", name: "SLX택배" },
+  { code: "etc", name: "기타" },
 ];
 
 export const COURIER_COMPANY_NAMES = COURIER_COMPANIES.map((c) => c.name);
@@ -62,7 +87,7 @@ export function buildTrackingUrl(
   trackingNumber: string,
 ): string | null {
   const courier = getCourierCompany(courierCodeOrName);
-  if (!courier) return null;
+  if (!courier?.trackingUrlTemplate) return null;
   return courier.trackingUrlTemplate.replace(
     "{trackingNumber}",
     trackingNumber,

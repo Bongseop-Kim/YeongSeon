@@ -4,7 +4,16 @@ export {
   useOrderDetail,
   useConfirmPurchase,
 } from "./api/order-query";
-export { createOrder, submitRepairTracking } from "./api/order-api";
+export {
+  createOrder,
+  submitRepairTracking,
+  submitRepairNoTracking,
+} from "./api/order-api";
+export type {
+  CreateOrderRequest,
+  CreateOrderRepairShippingRequest,
+  CreateOrderResponse,
+} from "./model/view/order-input";
 export {
   fromOrderItemRowDTO,
   toOrderItemInputDTO,

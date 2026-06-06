@@ -10,6 +10,7 @@ import {
   useAdminOrderHistory,
   useAdminOrderItems,
   useOrderStatusUpdate,
+  useRepairShippingInfo,
   useTrackingSave,
   useTrackingState,
 } from "@/features/orders/api/orders-query";
@@ -19,6 +20,7 @@ import { OrderInfoSection } from "./order-info-section";
 import { OrderStatusActions } from "./order-status-actions";
 import { CustomOrderDetail } from "./custom-order-detail";
 import { RepairOrderDetail } from "./repair-order-detail";
+import { RepairShippingInfoSection } from "./repair-shipping-info-section";
 import { ShippingAddressSection } from "./shipping-address-section";
 import { TrackingSection } from "./tracking-section";
 import { OrderItemsTable } from "./order-items-table";
@@ -66,6 +68,10 @@ export function OrderDetailSection() {
   const defaultCourier = useDefaultCourier();
   const statusUpdate = useOrderStatusUpdate(orderId, refetch);
   const trackingSave = useTrackingSave(refetch);
+  const repairShippingInfo = useRepairShippingInfo(
+    orderId,
+    orderType === "repair",
+  );
   const {
     courierCompany,
     setCourierCompany,
@@ -267,7 +273,13 @@ export function OrderDetailSection() {
         <CustomOrderDetail items={sampleItems} />
       ) : null}
       {orderType === "repair" ? (
-        <RepairOrderDetail items={reformItems} />
+        <>
+          <RepairOrderDetail items={reformItems} />
+          <RepairShippingInfoSection
+            pickupRequest={repairShippingInfo.pickupRequest}
+            receipts={repairShippingInfo.receipts}
+          />
+        </>
       ) : null}
 
       {orderType !== "token" && orderType !== "repair" && orderId ? (

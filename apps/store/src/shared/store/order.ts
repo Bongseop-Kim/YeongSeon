@@ -2,21 +2,42 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem } from "@yeongseon/shared/types/view/cart";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import type { RepairNoTrackingReason } from "@yeongseon/shared/constants/repair-shipping";
 
-interface TrackingInfo {
-  courierCompany: string;
-  trackingNumber: string;
+/** ImageKit에 업로드 완료된 발송 사진 */
+export interface RepairShippingPhoto {
+  url: string;
+  fileId: string;
+}
+
+/**
+ * 주문서에서 입력한 수선품 발송 정보.
+ * 결제 리다이렉트 후 success 페이지에서 발송 등록에 사용하므로
+ * 직렬화 가능한 값만 담는다 (File 금지 — 사진은 결제 직전 업로드).
+ */
+export interface RepairShippingDraft {
+  method: "direct" | "pickup";
+  tracking?: {
+    courierCompany: string;
+    trackingNumber: string;
+    photos: RepairShippingPhoto[];
+  };
+  noTracking?: {
+    reason: RepairNoTrackingReason;
+    memo: string;
+    photos: RepairShippingPhoto[];
+  };
 }
 
 interface OrderState {
   items: CartItem[];
-  repairTracking: TrackingInfo | undefined;
+  repairShipping: RepairShippingDraft | undefined;
   setOrderItems: (items: CartItem[]) => void;
   updateOrderItemCoupon: (
     itemId: string,
     coupon: AppliedCoupon | undefined,
   ) => void;
-  setRepairTracking: (trackingInfo: TrackingInfo | undefined) => void;
+  setRepairShipping: (draft: RepairShippingDraft | undefined) => void;
   clearOrderItems: () => void;
   hasOrderItems: () => boolean;
 }
@@ -25,7 +46,7 @@ export const useOrderStore = create<OrderState>()(
   persist(
     (set, get) => ({
       items: [],
-      repairTracking: undefined,
+      repairShipping: undefined,
 
       setOrderItems: (items) => {
         set({ items });
@@ -39,12 +60,12 @@ export const useOrderStore = create<OrderState>()(
         });
       },
 
-      setRepairTracking: (trackingInfo) => {
-        set({ repairTracking: trackingInfo });
+      setRepairShipping: (draft) => {
+        set({ repairShipping: draft });
       },
 
       clearOrderItems: () => {
-        set({ items: [], repairTracking: undefined });
+        set({ items: [], repairShipping: undefined });
       },
 
       hasOrderItems: () => {

@@ -26,7 +26,7 @@ import { MainContent, MainLayout } from "@/shared/layout/main-layout";
 import { PageLayout } from "@/shared/layout/page-layout";
 import { Separator } from "@/shared/ui/separator";
 import { Button } from "@/shared/ui-extended/button";
-import { RepairShippingAddressBanner } from "@/features/order";
+import { RepairAddressRows, RepairAddressCopyButton } from "@/features/order";
 import { useConfirmPurchase, useOrderDetail } from "@/entities/order";
 import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { buildClaimFormRoute, ROUTES } from "@/shared/constants/ROUTES";
@@ -192,12 +192,28 @@ const RepairShippingPendingSection = ({ orderId }: { orderId: string }) => {
   const navigate = useNavigate();
 
   return (
-    <RepairShippingAddressBanner
-      embedded
-      onRegisterTracking={() =>
-        navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)
-      }
-    />
+    <div className="space-y-5">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-950">
+            수선품 보내실 곳
+          </h3>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            택배 발송 시 아래 주소를 이용해 주세요.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <RepairAddressCopyButton />
+          <Button
+            size="sm"
+            onClick={() => navigate(`${ROUTES.REPAIR_SHIPPING}/${orderId}`)}
+          >
+            송장번호 등록하기
+          </Button>
+        </div>
+      </div>
+      <RepairAddressRows />
+    </div>
   );
 };
 

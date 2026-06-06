@@ -31,6 +31,7 @@ VALUES
   ('FABRIC_YARN_DYED_SILK', 25000, 'fabric'),
   ('FOLD7_COST', 55000, 'custom_order'),
   ('REFORM_BASE_COST', 16000, 'reform'),
+  ('REFORM_PICKUP_FEE', 3000, 'reform'),
   ('REFORM_SHIPPING_COST', 4500, 'reform'),
   ('REFORM_WIDTH_COST', 30000, 'reform'),
   ('sample_discount_fabric_and_sewing_printing', 200000, 'sample_discount'),
