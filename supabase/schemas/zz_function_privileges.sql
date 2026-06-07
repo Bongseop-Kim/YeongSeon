@@ -24,6 +24,10 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF to_regprocedure('public.generate_claim_number()') IS NOT NULL THEN
+    GRANT EXECUTE ON FUNCTION public.generate_claim_number() TO authenticated;
+  END IF;
+
   FOREACH v_signature IN ARRAY ARRAY[
     'public.product_is_liked_rpc(integer)'
   ]
