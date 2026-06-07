@@ -12,14 +12,20 @@ type StatusBadgeTone =
 interface StatusBadgeProps {
   children: ReactNode;
   tone?: StatusBadgeTone;
+  testId?: string;
 }
 
-export function StatusBadge({ children, tone = "neutral" }: StatusBadgeProps) {
+export function StatusBadge({
+  children,
+  tone = "neutral",
+  testId,
+}: StatusBadgeProps) {
   return (
     <Text
       as="span"
       textStyle="t2Bold"
       className={`statusBadge statusBadge-${tone}`}
+      data-testid={testId}
     >
       {children}
     </Text>

@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
 export const statusRow = (page: Page, status: string) =>
-  page.locator("main").getByText(status, { exact: true }).first();
+  page.getByTestId("current-status").getByText(status, { exact: true });
 
 export const advanceStatus = async (
   page: Page,
@@ -11,12 +11,11 @@ export const advanceStatus = async (
   await page.getByRole("button", { name: buttonName }).click();
   const dialog = page.locator('[role="dialog"], [role="alertdialog"]').last();
   if (memo) {
-    await dialog
-      .getByRole("textbox", { name: /메모|사유/ })
-      .fill(memo, { timeout: 1_000 })
-      .catch(() => {
-        /* Some status dialogs do not expose an optional memo field. */
-      });
+    await dialog.waitFor({ state: "visible" });
+    const memoField = dialog.getByRole("textbox", { name: /메모|사유/ });
+    if ((await memoField.count()) > 0) {
+      await memoField.fill(memo);
+    }
   }
   await dialog.getByRole("button", { name: "변경" }).click();
 };

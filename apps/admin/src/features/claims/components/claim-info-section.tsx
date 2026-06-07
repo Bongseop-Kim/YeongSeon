@@ -39,7 +39,10 @@ export function ClaimInfoSection({ claim }: ClaimInfoSectionProps) {
         <ClaimDetailItem
           label="상태"
           value={
-            <StatusBadge tone={getClaimStatusTone(claim.status)}>
+            <StatusBadge
+              tone={getClaimStatusTone(claim.status)}
+              testId="current-status"
+            >
               {claim.status}
             </StatusBadge>
           }

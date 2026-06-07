@@ -2,6 +2,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 
 interface OrderStatusBadgeProps {
   children: string;
+  testId?: string;
 }
 
 function getOrderStatusTone(status: string) {
@@ -17,8 +18,10 @@ function getOrderStatusTone(status: string) {
   return "neutral";
 }
 
-export function OrderStatusBadge({ children }: OrderStatusBadgeProps) {
+export function OrderStatusBadge({ children, testId }: OrderStatusBadgeProps) {
   return (
-    <StatusBadge tone={getOrderStatusTone(children)}>{children}</StatusBadge>
+    <StatusBadge tone={getOrderStatusTone(children)} testId={testId}>
+      {children}
+    </StatusBadge>
   );
 }
