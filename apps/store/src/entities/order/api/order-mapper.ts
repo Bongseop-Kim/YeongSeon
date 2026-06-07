@@ -410,6 +410,8 @@ const parseAppliedCouponField = (
     coupon: {
       id: v.coupon.id,
       name: v.coupon.name,
+      displayName:
+        typeof v.coupon.displayName === "string" ? v.coupon.displayName : null,
       discountType: v.coupon.discountType,
       discountValue: v.coupon.discountValue,
       expiryDate: v.coupon.expiryDate,

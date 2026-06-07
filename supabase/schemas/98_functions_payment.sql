@@ -204,10 +204,26 @@ begin
       end if;
 
       -- coupons row 동기화 (user_coupons FK용)
-      insert into public.coupons (name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
-      values (v_coupon_name, 'fixed', v_discount_amount, v_discount_amount, '2099-12-31', true)
+      insert into public.coupons (name, display_name, discount_type, discount_value, max_discount_amount, expiry_date, is_active)
+      values (
+        v_coupon_name,
+        case v_coupon_name
+          when 'SAMPLE_DISCOUNT_SEWING' then '봉제 샘플 할인 쿠폰'
+          when 'SAMPLE_DISCOUNT_FABRIC_PRINTING' then '원단 샘플 할인 쿠폰 (날염)'
+          when 'SAMPLE_DISCOUNT_FABRIC_YARN_DYED' then '원단 샘플 할인 쿠폰 (선염)'
+          when 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_PRINTING' then '원단+봉제 샘플 할인 쿠폰 (날염)'
+          when 'SAMPLE_DISCOUNT_FABRIC_AND_SEWING_YARN_DYED' then '원단+봉제 샘플 할인 쿠폰 (선염)'
+          else v_coupon_name
+        end,
+        'fixed',
+        v_discount_amount,
+        v_discount_amount,
+        '2099-12-31',
+        true
+      )
       on conflict (name)
       do update set discount_value = excluded.discount_value,
+                   display_name = excluded.display_name,
                    max_discount_amount = excluded.max_discount_amount,
                    discount_type = excluded.discount_type,
                    expiry_date = excluded.expiry_date,

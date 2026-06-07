@@ -18,6 +18,7 @@ const createUserCouponRecordRaw = (
   coupon: {
     id: "coupon-1",
     name: "10% 할인",
+    display_name: "봄맞이 10% 할인",
     discount_type: "percentage",
     discount_value: 10,
     max_discount_amount: 3000,
@@ -42,6 +43,7 @@ describe("parseUserCouponRecords", () => {
         coupon: {
           id: "coupon-1",
           name: "10% 할인",
+          display_name: "봄맞이 10% 할인",
           discount_type: "percentage",
           discount_value: 10,
           max_discount_amount: 3000,

@@ -7,7 +7,7 @@ import {
 } from "@/entities/coupon/api/coupons-mapper";
 
 const COUPON_COLUMNS =
-  "id, name, discount_type, discount_value, max_discount_amount, description, expiry_date, additional_info";
+  "id, name, display_name, discount_type, discount_value, max_discount_amount, description, expiry_date, additional_info";
 
 const USER_COUPON_COLUMNS = `id, user_id, coupon_id, status, issued_at, expires_at, used_at, coupon:coupons(${COUPON_COLUMNS})`;
 

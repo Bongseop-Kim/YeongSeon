@@ -3,6 +3,7 @@ export type CouponDiscountType = "percentage" | "fixed";
 export interface AdminCoupon {
   id: string;
   name: string;
+  displayName: string;
   discountType: CouponDiscountType;
   discountValue: number;
   maxDiscountAmount: number | null;
@@ -16,6 +17,7 @@ export interface AdminCoupon {
 
 export interface AdminCouponFormValues {
   name: string;
+  displayName: string;
   discountType: CouponDiscountType;
   discountValue: number | null;
   maxDiscountAmount: number | null;
@@ -33,6 +35,7 @@ export interface AdminCouponListResult {
 export function createDefaultCouponFormValues(): AdminCouponFormValues {
   return {
     name: "",
+    displayName: "",
     discountType: "percentage",
     discountValue: null,
     maxDiscountAmount: null,

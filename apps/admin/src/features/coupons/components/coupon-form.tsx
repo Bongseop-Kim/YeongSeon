@@ -160,9 +160,18 @@ export function CouponForm({
         className="adminSettingsField"
         control={control}
         name="name"
-        label="쿠폰명"
+        label="내부 관리명"
         required
         error={errors.name?.message}
+      />
+
+      <ControlledTextField
+        className="adminSettingsField"
+        control={control}
+        name="displayName"
+        label="고객 표시명"
+        required
+        error={errors.displayName?.message}
       />
 
       <RadioSelectBoxRoot

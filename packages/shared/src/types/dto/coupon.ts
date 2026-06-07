@@ -1,6 +1,7 @@
 export interface CouponDTO {
   id: string;
   name: string;
+  displayName?: string | null;
   discountType: "percentage" | "fixed";
   discountValue: number;
   maxDiscountAmount?: number | null;

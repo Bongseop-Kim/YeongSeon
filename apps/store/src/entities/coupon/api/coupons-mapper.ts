@@ -51,6 +51,7 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
   return {
     id: v.id,
     name: v.name,
+    display_name: typeof v.display_name === "string" ? v.display_name : null,
     discount_type: v.discount_type,
     discount_value: v.discount_value,
     max_discount_amount:
@@ -110,6 +111,7 @@ export const parseUserCouponRecords = (data: unknown): UserCouponRecord[] => {
 export const mapRecordToCoupon = (record: CouponRecord): Coupon => ({
   id: record.id,
   name: record.name,
+  displayName: record.display_name,
   discountType: record.discount_type,
   discountValue: Number(record.discount_value),
   maxDiscountAmount:

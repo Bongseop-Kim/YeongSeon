@@ -1,3 +1,4 @@
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import type {
   AdminCoupon,
   AdminCouponFormValues,
@@ -8,6 +9,7 @@ import type {
 
 interface CouponMutationDto {
   name: string;
+  display_name: string;
   discount_type: CouponDiscountType;
   discount_value: number;
   max_discount_amount: number | null;
@@ -57,6 +59,7 @@ export function toAdminCoupon(value: unknown): AdminCoupon {
   return {
     id: stringValue(row.id),
     name: stringValue(row.name),
+    displayName: stringValue(row.display_name),
     discountType: discountTypeValue(row.discount_type),
     discountValue: numberValue(row.discount_value),
     maxDiscountAmount: nullableNumberValue(row.max_discount_amount),
@@ -77,6 +80,7 @@ export function toCouponMutationDto(
 
   return {
     name: values.name.trim(),
+    display_name: values.displayName.trim(),
     discount_type: values.discountType,
     discount_value: values.discountValue ?? 0,
     max_discount_amount: maxDiscountAmount,
@@ -90,6 +94,7 @@ export function toCouponMutationDto(
 export function toCouponFormValues(coupon: AdminCoupon): AdminCouponFormValues {
   return {
     name: coupon.name,
+    displayName: formatCouponName(coupon),
     discountType: coupon.discountType,
     discountValue: coupon.discountValue,
     maxDiscountAmount: coupon.maxDiscountAmount,

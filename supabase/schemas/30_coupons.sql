@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS public.coupons (
   id                  uuid          NOT NULL DEFAULT extensions.uuid_generate_v4(),
   name                text          NOT NULL,
+  display_name        text,
   discount_type       text          NOT NULL,
   discount_value      numeric(10,2) NOT NULL,
   max_discount_amount numeric(10,2),

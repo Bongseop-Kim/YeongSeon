@@ -161,6 +161,7 @@ AS $$
         'coupon', jsonb_build_object(
           'id', c.id,
           'name', c.name,
+          'displayName', c.display_name,
           'discountType', c.discount_type,
           'discountValue', c.discount_value,
           'maxDiscountAmount', c.max_discount_amount,
@@ -212,4 +213,3 @@ AS $$
   left join coupons on coupons.id = cart.applied_user_coupon_id
   order by cart.created_at asc;
 $$;
-
