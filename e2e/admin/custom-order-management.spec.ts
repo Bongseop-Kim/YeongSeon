@@ -10,7 +10,7 @@ import {
   seedCustomOrder,
   type SeededClaimOrder,
 } from "@/utils/store-data";
-import { statusRow } from "@/utils/admin-helpers";
+import { advanceStatus, statusRow } from "@/utils/admin-helpers";
 
 test.describe.serial("Admin 주문 제작 관리", () => {
   test.skip(
@@ -70,19 +70,12 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage.goto(`/orders/show/${noSampleOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E custom processing");
-    await authenticatedPage
-      .getByRole("button", { name: "제작중으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage
-        .locator("tr")
-        .filter({ hasText: "상태" })
-        .filter({ hasText: "제작중" })
-        .first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "제작중으로 변경",
+      "E2E custom processing",
+    );
+    await expect(statusRow(authenticatedPage, "제작중")).toBeVisible();
   });
 
   // SC-custom-008: admin 제작중 → 제작완료 → 배송중
@@ -95,21 +88,19 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
     // 제작중 → 제작완료
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E production done");
-    await authenticatedPage
-      .getByRole("button", { name: "제작완료로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "제작완료로 변경",
+      "E2E production done",
+    );
     await expect(statusRow(authenticatedPage, "제작완료")).toBeVisible();
 
     // 제작완료 → 배송중
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E shipping start");
-    await authenticatedPage
-      .getByRole("button", { name: "배송중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "배송중으로 변경",
+      "E2E shipping start",
+    );
     await expect(statusRow(authenticatedPage, "배송중")).toBeVisible();
   });
 
@@ -147,12 +138,7 @@ test.describe.serial("Admin 주문 제작 관리", () => {
     await authenticatedPage.goto(`/orders/show/${rollbackOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    const statusRow = authenticatedPage
-      .locator("tr")
-      .filter({ hasText: "상태" })
-      .filter({ hasText: "접수" })
-      .first();
-    await expect(statusRow).toBeVisible();
+    await expect(statusRow(authenticatedPage, "접수")).toBeVisible();
     await expect(
       authenticatedPage.getByText("E2E custom rollback memo"),
     ).toBeVisible();

@@ -46,8 +46,9 @@ const addProductToCart = async (page: Page, productId: number) => {
   await page.goto(`/shop/${productId}`);
   await expectAuthenticatedRoute(page);
   await page.getByTestId("product-add-to-cart").click();
-  await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
-  await page.getByRole("button", { name: "닫기" }).click();
+  await expect(
+    page.getByText("장바구니에 추가되었습니다.").last(),
+  ).toBeVisible();
   await page.goto("/cart");
 };
 
@@ -107,8 +108,9 @@ test.describe.serial("Store 주문 플로우", () => {
     await authenticatedPage.getByTestId("cart-select-all").click();
 
     await expect(
-      authenticatedPage.getByTestId("cart-order-summary"),
-    ).toContainText("총 2개");
+      authenticatedPage.getByRole("heading", { name: "주문 금액" }),
+    ).toBeVisible();
+    await expect(authenticatedPage.getByText("총 2개")).toBeVisible();
 
     await expect(
       authenticatedPage.getByTestId("cart-remove-selected"),
@@ -152,8 +154,8 @@ test.describe.serial("Store 주문 플로우", () => {
       authenticatedPage.getByRole("heading", { name: "주문 상품 1개" }),
     ).toBeVisible();
     await expect(
-      authenticatedPage.getByTestId("order-shipping-card"),
-    ).toContainText(fixtures.shippingAddress.recipientName);
+      authenticatedPage.getByText(fixtures.shippingAddress.recipientName),
+    ).toBeVisible();
     await expect(
       authenticatedPage.getByTestId("order-items-card"),
     ).toContainText(fixtures.storeProduct.name);
@@ -219,6 +221,12 @@ test.describe.serial("Store 주문 플로우", () => {
     const completedOrderResult = requireCreateOrderResult(createOrderResult);
     latestOrderId = completedOrderResult?.orders[0]?.order_id ?? null;
 
+    await expect(authenticatedPage).toHaveURL(/\/order\/order-list$/);
+    await expect(
+      authenticatedPage.getByTestId(`order-card-${latestOrderId}`),
+    ).toBeVisible();
+
+    await authenticatedPage.getByTestId(`order-card-${latestOrderId}`).click();
     await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(
       authenticatedPage.getByTestId("order-detail-root"),
@@ -309,10 +317,7 @@ test.describe.serial("Store 주문 플로우", () => {
       authenticatedPage.getByTestId(`order-card-${latestOrderId}`),
     ).toBeVisible();
 
-    await authenticatedPage
-      .locator(`[data-testid^="order-item-link-${latestOrderId}-"]`)
-      .first()
-      .click();
+    await authenticatedPage.getByTestId(`order-card-${latestOrderId}`).click();
 
     await expectOrderDetailUrl(authenticatedPage, latestOrderId);
     await expect(

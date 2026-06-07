@@ -10,7 +10,11 @@ import {
   seedSaleOrder,
   seedShippingOrder,
 } from "@/utils/store-data";
-import { statusRow } from "@/utils/admin-helpers";
+import {
+  advanceStatus,
+  saveOutboundShipping,
+  statusRow,
+} from "@/utils/admin-helpers";
 
 test.describe.serial("Admin 주문 관리", () => {
   test.skip(
@@ -65,14 +69,18 @@ test.describe.serial("Admin 주문 관리", () => {
     await authenticatedPage.goto(`/orders/show/${managedOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await expect(authenticatedPage.getByText("주문 정보")).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "주문 정보" }),
+    ).toBeVisible();
     await expect(
       authenticatedPage.getByText(managedOrder.orderNumber),
     ).toBeVisible();
     await expect(
       authenticatedPage.getByText(managedOrder.productName),
     ).toBeVisible();
-    await expect(authenticatedPage.getByText("주문 아이템")).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "주문 아이템" }),
+    ).toBeVisible();
   });
 
   test("주문 상태를 대기중에서 배송중까지 순방향 전이한다", async ({
@@ -80,20 +88,18 @@ test.describe.serial("Admin 주문 관리", () => {
   }) => {
     await authenticatedPage.goto(`/orders/show/${managedOrder.orderId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E forward transition");
-    await authenticatedPage
-      .getByRole("button", { name: "진행중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "진행중으로 변경",
+      "E2E forward transition",
+    );
     await expect(statusRow(authenticatedPage, "진행중")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E shipping transition");
-    await authenticatedPage
-      .getByRole("button", { name: "배송중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "배송중으로 변경",
+      "E2E shipping transition",
+    );
     await expect(statusRow(authenticatedPage, "배송중")).toBeVisible();
   });
 
@@ -102,12 +108,11 @@ test.describe.serial("Admin 주문 관리", () => {
   }) => {
     await authenticatedPage.goto(`/orders/show/${rollbackOrder.orderId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E rollback setup");
-    await authenticatedPage
-      .getByRole("button", { name: "진행중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "진행중으로 변경",
+      "E2E rollback setup",
+    );
     await expect(statusRow(authenticatedPage, "진행중")).toBeVisible();
     await expect(
       adminRollbackOrderStatus({
@@ -136,20 +141,20 @@ test.describe.serial("Admin 주문 관리", () => {
     await authenticatedPage.goto(`/orders/show/${shippingOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E delivered transition");
-    await authenticatedPage
-      .getByRole("button", { name: "배송완료로 변경" })
-      .click();
+    await saveOutboundShipping(authenticatedPage, "1234567890");
+
+    await advanceStatus(
+      authenticatedPage,
+      "배송완료로 변경",
+      "E2E delivered transition",
+    );
     await expect(statusRow(authenticatedPage, "배송완료")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E complete transition");
-    await authenticatedPage
-      .getByRole("button", { name: "완료로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "완료로 변경",
+      "E2E complete transition",
+    );
     await expect(statusRow(authenticatedPage, "완료")).toBeVisible();
   });
 
@@ -174,7 +179,9 @@ test.describe.serial("Admin 주문 관리", () => {
     ).toBeVisible();
     await authenticatedPage.goto(`/claims/show/${claimSeed.claimId}`);
 
-    await expect(authenticatedPage.getByText("클레임 정보")).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("heading", { name: "클레임 정보" }),
+    ).toBeVisible();
     await expect(
       authenticatedPage.getByText(claimSeed.claimNumber),
     ).toBeVisible();
@@ -182,12 +189,11 @@ test.describe.serial("Admin 주문 관리", () => {
       authenticatedPage.getByText(claimOrder.orderNumber),
     ).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E claim approval");
-    await authenticatedPage
-      .getByRole("button", { name: "수거요청 으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "수거요청으로 변경",
+      "E2E claim approval",
+    );
     await expect(statusRow(authenticatedPage, "수거요청")).toBeVisible();
   });
 });

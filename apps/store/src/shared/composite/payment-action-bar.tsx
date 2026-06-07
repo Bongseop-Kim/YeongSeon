@@ -9,6 +9,7 @@ interface PaymentActionBarProps {
   isPriceReady?: boolean;
   isPriceError?: boolean;
   helperText?: ReactNode;
+  readyLabel?: string;
   "data-testid"?: string;
 }
 
@@ -17,13 +18,15 @@ function getButtonLabel({
   isLoading,
   isPriceReady,
   isPriceError,
+  readyLabel,
 }: Pick<
   PaymentActionBarProps,
-  "amount" | "isLoading" | "isPriceReady" | "isPriceError"
+  "amount" | "isLoading" | "isPriceReady" | "isPriceError" | "readyLabel"
 >) {
   if (isLoading) return "결제 요청 중...";
   if (isPriceError) return "가격 정보를 확인할 수 없습니다";
   if (!isPriceReady || amount === null) return "가격 로딩 중...";
+  if (readyLabel) return readyLabel;
   return `${amount.toLocaleString()}원 결제하기`;
 }
 
@@ -35,6 +38,7 @@ export function PaymentActionBar({
   isPriceReady = true,
   isPriceError = false,
   helperText,
+  readyLabel,
   "data-testid": testId,
 }: PaymentActionBarProps) {
   const label = getButtonLabel({
@@ -42,6 +46,7 @@ export function PaymentActionBar({
     isLoading,
     isPriceReady,
     isPriceError,
+    readyLabel,
   });
   const isDisabled =
     disabled || isLoading || isPriceError || !isPriceReady || amount === null;

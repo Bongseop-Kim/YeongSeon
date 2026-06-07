@@ -42,9 +42,11 @@ test.describe.serial("Store 수선 주문 플로우", () => {
       .getByRole("button", { name: "넥타이 추가" })
       .click();
 
-    // 2번째 tie-item 카드가 렌더링되는지 확인 (측정 방식 라디오 버튼이 2개 그룹 존재)
-    const measurementLabels = authenticatedPage.getByText("측정 방식");
-    await expect(measurementLabels).toHaveCount(2);
+    // 2번째 tie-item 카드가 렌더링되는지 확인
+    await expect(authenticatedPage.getByText("항목 2")).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("spinbutton", { name: /착용자 키/ }),
+    ).toHaveCount(2);
   });
 
   // SC-repair-002: 수선 주문 결제 (mock)
@@ -95,15 +97,18 @@ test.describe.serial("Store 수선 주문 플로우", () => {
     await authenticatedPage.goto("/reform");
     await expectAuthenticatedRoute(authenticatedPage);
 
-    // 수선 길이 입력 (첫 번째 tie 카드)
-    await authenticatedPage.locator('input[type="number"]').first().fill("145");
+    // 필수 자동수선 입력 (첫 번째 tie 카드)
+    await authenticatedPage
+      .getByRole("spinbutton", { name: /착용자 키/ })
+      .first()
+      .fill("175");
+    await expect(
+      authenticatedPage.getByText(/\d[\d,]*원/).first(),
+    ).toBeVisible();
 
     // 주문하기 클릭
     await authenticatedPage.getByRole("button", { name: "주문하기" }).click();
     await expect(authenticatedPage).toHaveURL(/\/order\/order-form$/);
-
-    // 취소/환불 불가 동의 체크 (hasReformItems=true 일 때 필수)
-    await authenticatedPage.locator("#order-form-cancellation-consent").click();
 
     // 주문 제출
     await authenticatedPage.getByTestId("order-submit-button").click();
@@ -131,7 +136,12 @@ test.describe.serial("Store 수선 주문 플로우", () => {
       capturedResult?.orders.find((o) => o.order_type === "repair")?.order_id ??
       null;
 
-    // 주문 상세 페이지로 이동
+    await expect(
+      authenticatedPage.getByText("수선 주문 배송 정보 안내"),
+    ).toBeVisible();
+    await authenticatedPage
+      .getByRole("button", { name: "수선 주문으로 이동" })
+      .click();
     await expect(authenticatedPage).toHaveURL(
       new RegExp(`/order/${latestRepairOrderId}$`),
     );

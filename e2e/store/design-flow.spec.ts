@@ -1,12 +1,10 @@
 /**
  * Design/Token E2E 테스트
- * SC-design-001 ~ SC-design-013
+ * SC-design-001 ~ SC-design-007, SC-design-009
  *
  * 주의:
  *  - SC-design-004/005: 실제 AI API 호출은 opt-in으로만 실행
- *  - SC-design-006: AI 응답 mock 필요 → 실제 환경에서만 가능, skip 처리
- *  - SC-design-012: admin Edge Function 호출로 cancel-token-payment 필요
- *  - SC-design-013: 신규 계정 필요, 복잡도 높아 skip 처리
+ *  - 환불/신규 가입 시나리오는 현재 e2e 실행 대상이 아니므로 정의하지 않음
  */
 
 import type { Page } from "@playwright/test";
@@ -16,7 +14,7 @@ import {
   hasConfiguredAuth,
   test,
 } from "@/fixtures/auth";
-import { getSupabaseConfig, readAuthMeta } from "@/utils/store-data";
+import { readAuthMeta } from "@/utils/store-data";
 import {
   GRANT_TOKEN_UNAVAILABLE,
   getStoreTokenBalance,
@@ -66,10 +64,9 @@ const hasCode = (e: unknown): e is { code: string } =>
   typeof e === "object" && e !== null && "code" in e;
 
 /**
- * 토큰 지급을 시도하고, DB 오버로딩 충돌 시 현재 테스트를 skip 처리합니다.
- * test.skip은 반드시 test 함수 본문 내에서 호출해야 합니다.
+ * 토큰 지급을 시도하고, DB 오버로딩 충돌 여부를 반환합니다.
  */
-const tryGrantTokens = async (
+const grantTokensIfAvailable = async (
   userId: string,
   amount: number,
   description: string,
@@ -83,6 +80,29 @@ const tryGrantTokens = async (
     }
     throw err;
   }
+};
+
+const ensureTokenBalance = async (
+  userId: string,
+  minimumBalance: number,
+  grantAmount: number,
+  description: string,
+) => {
+  const balance = await getStoreTokenBalance();
+  if (balance.total >= minimumBalance) return balance;
+
+  const granted = await grantTokensIfAvailable(
+    userId,
+    grantAmount,
+    description,
+  );
+  if (!granted) {
+    throw new Error(
+      "manage_design_tokens_admin DB 오버로딩 충돌로 토큰 지급 불가",
+    );
+  }
+
+  return getStoreTokenBalance();
 };
 
 // ── 경로 상수 ────────────────────────────────────────────────────────────────
@@ -170,13 +190,6 @@ test.describe.serial("Design/Token 플로우", () => {
     await expect(page.locator("text=결제 수단").first()).toBeVisible({
       timeout: 20_000,
     });
-
-    // 청약철회 동의 체크박스
-    const consentCheckbox = page.locator("#withdrawal-consent");
-    await consentCheckbox.waitFor({ timeout: 10_000 });
-    if (!(await consentCheckbox.isChecked())) {
-      await consentCheckbox.click();
-    }
 
     // 결제하기 버튼 (enabled 될 때까지 대기)
     const payButton = page.getByRole("button", { name: /원 결제하기/ });
@@ -278,12 +291,6 @@ test.describe.serial("Design/Token 플로우", () => {
     // 결제 수단 섹션 렌더링 대기
     await expect(page.getByText("결제 수단")).toBeVisible({ timeout: 20_000 });
 
-    const consentCheckbox = page.locator("#withdrawal-consent");
-    await consentCheckbox.waitFor({ timeout: 10_000 });
-    if (!(await consentCheckbox.isChecked())) {
-      await consentCheckbox.click();
-    }
-
     // 결제하기 버튼 클릭
     const payButton = page.getByRole("button", { name: /원 결제하기/ });
     await payButton.waitFor({ timeout: 10_000 });
@@ -314,32 +321,22 @@ test.describe.serial("Design/Token 플로우", () => {
   }) => {
     const page = authenticatedPage;
 
-    // 테스트용 토큰 지급 (잔액이 없을 경우를 대비)
-    const balance = await getStoreTokenBalance();
-    if (balance.total === 0) {
-      const granted = await tryGrantTokens(
-        storeMeta.userId,
-        10,
-        "E2E SC-design-003 지급",
-      );
-      if (!granted) {
-        test.skip(
-          true,
-          "manage_design_tokens_admin DB 오버로딩 충돌로 토큰 지급 불가",
-        );
-        return;
-      }
-    }
+    await ensureTokenBalance(storeMeta.userId, 1, 10, "E2E SC-design-003 지급");
 
     await page.goto(ROUTES.DESIGN);
     await expectAuthenticatedRoute(page);
     await dismissOnboardingDialog(page);
 
     // ChatHeader에 토큰 잔액 표시 확인
-    // "N tokens" 패턴의 텍스트
-    await expect(page.getByText(/\d+[\d,]* tokens/)).toBeVisible({
+    await expect(
+      page
+        .locator("main")
+        .getByText(/^\d+[\d,]*$/)
+        .first(),
+    ).toBeVisible({
       timeout: 15_000,
     });
+    await expect(page.getByRole("button", { name: "충전" })).toBeVisible();
   });
 
   // ── SC-design-004: 텍스트 생성 요청 ──────────────────────────────────────
@@ -348,22 +345,7 @@ test.describe.serial("Design/Token 플로우", () => {
     const page = authenticatedPage;
     await installMockAiDesign(page, { type: "text" });
 
-    // 토큰 확보
-    const balance = await getStoreTokenBalance();
-    if (balance.total < 5) {
-      const granted = await tryGrantTokens(
-        storeMeta.userId,
-        20,
-        "E2E SC-design-004 지급",
-      );
-      if (!granted) {
-        test.skip(
-          true,
-          "manage_design_tokens_admin DB 오버로딩 충돌로 토큰 지급 불가",
-        );
-        return;
-      }
-    }
+    await ensureTokenBalance(storeMeta.userId, 5, 20, "E2E SC-design-004 지급");
 
     await page.goto(ROUTES.DESIGN);
     await expectAuthenticatedRoute(page);
@@ -375,12 +357,15 @@ test.describe.serial("Design/Token 플로우", () => {
     await textarea.fill("빨간색 줄무늬 넥타이 디자인을 추천해줘");
 
     // 전송 버튼 클릭
-    const sendButton004 = page.getByLabel("메시지 전송");
+    const sendButton004 = page.getByRole("button", {
+      exact: true,
+      name: "생성",
+    });
     await expect(sendButton004).toBeEnabled({ timeout: 10_000 });
     await sendButton004.click();
 
     await expect(
-      page.getByText("타일 기반 디자인을 생성했습니다."),
+      page.getByRole("button", { name: "이미지 다운로드" }),
     ).toBeVisible({
       timeout: 15_000,
     });
@@ -398,22 +383,12 @@ test.describe.serial("Design/Token 플로우", () => {
     const page = authenticatedPage;
     await installMockAiDesign(page, { type: "image" });
 
-    // 토큰 확보 (이미지 생성은 3~5 토큰 소모)
-    const balance = await getStoreTokenBalance();
-    if (balance.total < 10) {
-      const granted = await tryGrantTokens(
-        storeMeta.userId,
-        30,
-        "E2E SC-design-005 지급",
-      );
-      if (!granted) {
-        test.skip(
-          true,
-          "manage_design_tokens_admin DB 오버로딩 충돌로 토큰 지급 불가",
-        );
-        return;
-      }
-    }
+    await ensureTokenBalance(
+      storeMeta.userId,
+      10,
+      30,
+      "E2E SC-design-005 지급",
+    );
 
     await page.goto(ROUTES.DESIGN);
     await expectAuthenticatedRoute(page);
@@ -426,15 +401,13 @@ test.describe.serial("Design/Token 플로우", () => {
     await textarea.fill("파란색 격자무늬 넥타이 패턴 이미지를 생성해줘");
 
     // 전송
-    const sendButton005 = page.getByLabel("메시지 전송");
+    const sendButton005 = page.getByRole("button", {
+      exact: true,
+      name: "생성",
+    });
     await expect(sendButton005).toBeEnabled({ timeout: 10_000 });
     await sendButton005.click();
 
-    await expect(
-      page.getByText("타일 기반 디자인을 생성했습니다."),
-    ).toBeVisible({
-      timeout: 15_000,
-    });
     await expect(
       page.getByRole("button", { name: "이미지 다운로드" }),
     ).toBeVisible({
@@ -456,21 +429,12 @@ test.describe.serial("Design/Token 플로우", () => {
     const page = authenticatedPage;
     await installMockAiDesign(page, { type: "image-missing" });
 
-    const balanceBefore = await getStoreTokenBalance();
-    if (balanceBefore.total < 10) {
-      const granted = await tryGrantTokens(
-        storeMeta.userId,
-        20,
-        "E2E SC-design-006 지급",
-      );
-      if (!granted) {
-        test.skip(
-          true,
-          "manage_design_tokens_admin DB 오버로딩 충돌로 토큰 지급 불가",
-        );
-        return;
-      }
-    }
+    const balanceBefore = await ensureTokenBalance(
+      storeMeta.userId,
+      10,
+      20,
+      "E2E SC-design-006 지급",
+    );
 
     await page.goto(ROUTES.DESIGN);
     await expectAuthenticatedRoute(page);
@@ -480,12 +444,15 @@ test.describe.serial("Design/Token 플로우", () => {
     await textarea.waitFor({ timeout: 10_000 });
     await textarea.fill("이미지 없는 응답 테스트");
 
-    const sendButton006 = page.getByLabel("메시지 전송");
+    const sendButton006 = page.getByRole("button", {
+      exact: true,
+      name: "생성",
+    });
     await expect(sendButton006).toBeEnabled({ timeout: 10_000 });
     await sendButton006.click();
 
     await expect(
-      page.getByText("타일 기반 디자인을 생성했습니다."),
+      page.getByRole("button", { name: "이미지 다운로드" }),
     ).toBeVisible({
       timeout: 15_000,
     });
@@ -508,11 +475,9 @@ test.describe.serial("Design/Token 플로우", () => {
     });
     const balance = await getStoreTokenBalance();
     if (balance.total !== 0) {
-      test.skip(
-        true,
-        "토큰 초기화 불가 (manage_design_tokens_admin DB 오버로딩 충돌). 잔액이 0이어야 합니다.",
+      throw new Error(
+        "토큰 초기화 불가. SC-design-007은 시작 잔액이 0이어야 합니다.",
       );
-      return;
     }
     expect(balance.total).toBe(0);
 
@@ -520,7 +485,6 @@ test.describe.serial("Design/Token 플로우", () => {
     await expectAuthenticatedRoute(page);
     await dismissOnboardingDialog(page);
 
-    // generate 함수가 insufficient_tokens 오류를 반환하도록 mock
     await page.route("**/functions/v1/generate-tile", async (route) => {
       await route.fulfill({
         status: 402,
@@ -535,25 +499,17 @@ test.describe.serial("Design/Token 플로우", () => {
     const textarea = page.getByLabel("디자인 요청 메시지");
     await textarea.waitFor({ timeout: 10_000 });
     await textarea.fill("토큰 부족 테스트");
-    const sendButton = page.getByLabel("메시지 전송");
+    const sendButton = page.getByRole("button", {
+      exact: true,
+      name: "생성",
+    });
     await expect(sendButton).toBeEnabled({ timeout: 10_000 });
     await sendButton.click();
 
-    // 토큰 부족 안내 표시 확인
-    // use-design-chat에서 InsufficientTokensError 처리 시 AI 말풍선에 메시지 표시
-    // "토큰이 부족합니다. 현재 잔액: 0토큰, 필요: 1토큰" 형태
+    await expect(page.getByRole("button", { name: "충전" })).toBeVisible();
     await expect(
-      page.getByText(/토큰이 부족합니다/i, { exact: false }),
-    ).toBeVisible({ timeout: 15_000 });
-  });
-
-  // ── SC-design-008: 환불 대기 중 생성 시도 ────────────────────────────────
-  // 주의: use-design-chat.ts에서 refund_pending 오류 처리가 구현되지 않은 경우 skip
-
-  test.skip("SC-design-008: 환불 대기 중 생성 시도 (refund_pending 오류 처리 미구현 - skip)", async () => {
-    // use-design-chat.ts에서 refund_pending 오류 처리가 구현된 후 활성화
-    // 구현 시: 403 + refund_pending 응답 → "환불 대기 중입니다" 안내 표시
-    // 현재는 InsufficientTokensError만 처리하며 refund_pending은 일반 에러로 처리됨
+      page.getByRole("button", { name: "이미지 다운로드" }),
+    ).not.toBeVisible();
   });
 
   // ── SC-design-009: 토큰 내역 조회 ────────────────────────────────────────
@@ -562,7 +518,7 @@ test.describe.serial("Design/Token 플로우", () => {
     const page = authenticatedPage;
 
     // 토큰 지급 (내역이 있도록) - 실패해도 페이지 접근은 가능하므로 무시
-    await tryGrantTokens(storeMeta.userId, 5, "E2E SC-design-009 지급");
+    await grantTokensIfAvailable(storeMeta.userId, 5, "E2E SC-design-009 지급");
 
     await page.goto(ROUTES.TOKEN_HISTORY);
     await expectAuthenticatedRoute(page);
@@ -575,208 +531,11 @@ test.describe.serial("Design/Token 플로우", () => {
     });
 
     await expect(
-      page.getByRole("heading", { name: "사용 및 환불 이력" }),
+      page.getByRole("heading", { name: /사용 내역/ }),
     ).toBeVisible();
 
     // 잔액 또는 이력 섹션이 렌더링되는지 확인 (스켈레톤 이후)
     await page.waitForTimeout(2_000);
-    const balanceText = page
-      .getByRole("complementary")
-      .locator(".text-3xl.font-semibold");
-    await expect(balanceText).toBeVisible();
-  });
-
-  // ── SC-design-010: paid 토큰 수동 환불 신청 ──────────────────────────────
-
-  test("SC-design-010: paid 토큰 수동 환불 신청", async ({
-    authenticatedPage,
-  }) => {
-    const page = authenticatedPage;
-
-    await page.goto(ROUTES.ORDER_LIST);
-    await expectAuthenticatedRoute(page);
-
-    // "환불 신청" 버튼이 있는지 확인
-    const refundButton = page
-      .getByRole("button", { name: "환불 신청" })
-      .first();
-    const hasRefundButton = await refundButton
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
-
-    if (!hasRefundButton) {
-      test.skip(
-        true,
-        "환불 가능한 토큰 주문이 없습니다. SC-design-001로 토큰을 구매하세요.",
-      );
-      return;
-    }
-
-    await refundButton.click();
-
-    // 환불 다이얼로그 확인
-    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("환불 신청")).toBeVisible();
-
-    // 환불 신청 확인 버튼 클릭
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "환불 신청" })
-      .click();
-
-    // 성공 토스트 또는 "환불 신청 중" 배지 확인
-    await expect(page.getByText(/환불 신청이 완료|환불 신청 중/)).toBeVisible({
-      timeout: 10_000,
-    });
-  });
-
-  // ── SC-design-011: 동일 주문 중복 환불 신청 ──────────────────────────────
-
-  test("SC-design-011: 동일 주문 수동 환불 중복 신청 시도", async ({
-    authenticatedPage,
-  }) => {
-    const page = authenticatedPage;
-
-    await page.goto(ROUTES.ORDER_LIST);
-    await expectAuthenticatedRoute(page);
-
-    await page.waitForTimeout(2_000);
-
-    // "환불 신청 중" 배지가 있는지 확인 (이미 pending 상태)
-    const pendingBadge = page.getByText("환불 신청 중").first();
-    const hasPending = await pendingBadge
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
-
-    if (!hasPending) {
-      test.skip(
-        true,
-        "pending 환불 요청이 없습니다. SC-design-010을 먼저 실행하세요.",
-      );
-      return;
-    }
-
-    // 이미 pending인 주문에 "환불 신청" 버튼이 없음을 확인
-    // (pending 상태에서는 "환불 신청 중" 배지와 "신청 취소" 버튼이 표시됨)
-    await expect(pendingBadge).toBeVisible();
-
-    // 동일 주문에 환불 신청 버튼이 없어야 함
-    const refundButtons = pendingBadge
-      .locator("xpath=ancestor::div[contains(@class,'rounded-lg')][1]")
-      .getByRole("button", { name: "환불 신청" });
-    const refundButtonCount = await refundButtons.count();
-
-    // pending 상태의 주문에는 환불 신청 버튼이 없어야 함
-    // (환불 신청 중 배지 + 신청 취소 버튼만 있어야 함)
-    expect(refundButtonCount).toBe(0);
-  });
-
-  // ── SC-design-012: 관리자 수동 환불 요청 승인 ────────────────────────────
-
-  test("SC-design-012: 관리자 수동 환불 요청 승인", async ({
-    authenticatedPage,
-  }) => {
-    const page = authenticatedPage;
-
-    // pending 환불 요청 확인
-    await page.goto(ROUTES.ORDER_LIST);
-    await expectAuthenticatedRoute(page);
-    await page.waitForTimeout(2_000);
-
-    const pendingBadge = page.getByText("환불 신청 중").first();
-    const hasPending = await pendingBadge
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
-
-    if (!hasPending) {
-      test.skip(
-        true,
-        "pending 환불 요청이 없습니다. SC-design-010을 먼저 실행하세요.",
-      );
-      return;
-    }
-    // admin 앱에서 클레임 목록 확인 (admin baseURL은 playwright config에서 5174)
-    // store 테스트에서는 admin 페이지에 직접 접근하기 어려우므로
-    // admin API를 통해 환불 승인 처리
-
-    // 잔액 기록 (승인 후 차감 확인)
-    const balanceBefore = await getStoreTokenBalance();
-
-    // admin claims 목록에서 token_refund 클레임 찾기
-    // (admin 페이지로 직접 이동하여 UI 확인은 admin project에서 수행)
-    // 여기서는 API 레벨에서 승인 처리
-    const { supabaseUrl, supabaseAnonKey } = await getSupabaseConfig();
-    const adminMeta = await readAuthMeta("admin");
-
-    // token_refund 클레임 조회
-    const claimsResponse = await fetch(
-      `${supabaseUrl}/rest/v1/claims?select=id,status,order_id&user_id=eq.${storeMeta.userId}&type=eq.token_refund&status=eq.접수&order=created_at.desc&limit=1`,
-      {
-        headers: {
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${adminMeta.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!claimsResponse.ok) {
-      throw new Error(
-        `claims 조회 실패: ${claimsResponse.status} ${await claimsResponse.text()}`,
-      );
-    }
-
-    const claims = (await claimsResponse.json()) as Array<{
-      id: string;
-      status: string;
-      order_id: string;
-    }>;
-
-    if (!claims[0]) {
-      test.skip(true, "승인할 pending token_refund 클레임이 없습니다.");
-      return;
-    }
-
-    const claimId = claims[0].id;
-    const _orderId = claims[0].order_id;
-
-    // Edge Function cancel-token-payment 호출 (환불 승인)
-    const approvalResponse = await fetch(
-      `${supabaseUrl}/functions/v1/cancel-token-payment`,
-      {
-        method: "POST",
-        headers: {
-          apikey: supabaseAnonKey,
-          Authorization: `Bearer ${adminMeta.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ request_id: claimId }),
-      },
-    );
-
-    if (!approvalResponse.ok) {
-      const errorText = await approvalResponse.text();
-      throw new Error(
-        `cancel-token-payment Edge Function 오류: ${approvalResponse.status} ${errorText}`,
-      );
-    }
-
-    // 토큰 차감 확인
-    await page.waitForTimeout(2_000);
-    const balanceAfter = await getStoreTokenBalance();
-    expect(balanceAfter.total).toBeLessThan(balanceBefore.total);
-
-    // 주문 목록에서 "환불 완료" 배지 확인
-    await page.reload();
-    await page.waitForTimeout(2_000);
-    await expect(page.getByText("환불 완료").first()).toBeVisible({
-      timeout: 10_000,
-    });
-  });
-
-  // ── SC-design-013: 신규 가입 시 bonus 토큰 지급 (skip) ──────────────────
-
-  test.skip("SC-design-013: 신규 가입 시 bonus 토큰 지급 (테스트 제외)", async () => {
-    // 사용자 요청에 따라 최초 1회 지급 시나리오는 E2E 대상에서 제외
+    await expect(page.getByText(/\d+토큰/).last()).toBeVisible();
   });
 });

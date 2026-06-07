@@ -38,31 +38,21 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     ]);
   });
 
-  // SC-custom-001: 마법사 전 단계 완료
-  test("주문 제작 마법사 전 단계를 완료하면 확인 단계가 표시된다 (SC-custom-001)", async ({
+  // SC-custom-001: 주문 제작 단일 폼 표시
+  test("주문 제작 폼 기본 사양과 결제 버튼이 표시된다 (SC-custom-001)", async ({
     authenticatedPage,
   }) => {
     await authenticatedPage.goto("/custom-order");
     await expectAuthenticatedRoute(authenticatedPage);
 
-    // 수량 단계: 기본값 4, 그냥 다음 클릭
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 원단 단계: 기본값(POLY + PRINTING), 다음 클릭
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 봉제 단계: AUTO 타이 선택 후 다음 클릭
-    await authenticatedPage.locator('label[for="tie-type-auto"]').click();
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 스펙/마무리/샘플 단계는 isSkippable=true 이므로 자동 스킵됨
-
-    // 참고자료 단계: 다음 클릭
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 확인 단계: "주문하기" 버튼 표시 확인
+    await expect(authenticatedPage.getByText("수량 선택")).toBeVisible();
+    await expect(authenticatedPage.getByText("원단 조합")).toBeVisible();
+    await expect(authenticatedPage.getByText("봉제 스타일")).toBeVisible();
     await expect(
-      authenticatedPage.getByRole("button", { name: "주문하기" }),
+      authenticatedPage.getByRole("heading", { name: "주문 요약" }),
+    ).toBeVisible();
+    await expect(
+      authenticatedPage.getByRole("button", { name: /원 결제하기/ }),
     ).toBeVisible();
   });
 
@@ -73,21 +63,9 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     await authenticatedPage.goto("/custom-order");
     await expectAuthenticatedRoute(authenticatedPage);
 
-    // 수량 단계
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 원단 단계
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 봉제 단계: AUTO 선택
-    await authenticatedPage.locator('label[for="tie-type-auto"]').click();
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 참고자료 단계
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 확인 단계: 주문하기 클릭
-    await authenticatedPage.getByRole("button", { name: "주문하기" }).click();
+    await authenticatedPage
+      .getByRole("button", { name: /원 결제하기/ })
+      .click();
 
     // 결제 페이지로 이동 확인
     await expect(authenticatedPage).toHaveURL(/\/order\/custom-payment$/);
@@ -157,18 +135,13 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     await authenticatedPage.goto("/custom-order");
     await expectAuthenticatedRoute(authenticatedPage);
 
-    // 수량 단계 통과
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 원단 단계 통과
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 봉제 단계: AUTO 타이 선택
-    await authenticatedPage.locator('label[for="tie-type-auto"]').click();
+    await authenticatedPage
+      .getByRole("radio", { name: "자동 타이 (지퍼)" })
+      .click();
 
     // dimple 체크박스가 disabled 아님을 확인
     await expect(
-      authenticatedPage.locator("#sewing-style-dimple"),
+      authenticatedPage.getByRole("checkbox", { name: "딤플" }),
     ).not.toBeDisabled();
   });
 
@@ -179,18 +152,13 @@ test.describe.serial("Store 주문 제작 플로우", () => {
     await authenticatedPage.goto("/custom-order");
     await expectAuthenticatedRoute(authenticatedPage);
 
-    // 수량 단계 통과
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 원단 단계 통과
-    await authenticatedPage.getByRole("button", { name: "다음" }).click();
-
-    // 봉제 단계: 수동 타이 선택 (기본값이 null/unset이므로 MANUAL 라디오 카드 클릭)
-    await authenticatedPage.locator('label[for="tie-type-manual"]').click();
+    await authenticatedPage
+      .getByRole("radio", { name: "수동 타이 (손매듭)" })
+      .click();
 
     // dimple 체크박스가 disabled 상태임을 확인
     await expect(
-      authenticatedPage.locator("#sewing-style-dimple"),
+      authenticatedPage.getByRole("checkbox", { name: "딤플" }),
     ).toBeDisabled();
   });
 });
