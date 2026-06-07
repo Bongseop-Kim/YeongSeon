@@ -39,7 +39,6 @@
     "format:check": "prettier --check .",
     "cpd": "jscpd apps/store/src apps/admin/src packages/shared/src",
     "knip": "knip",
-    "depcruise": "turbo depcruise",
     "// ── 패키지 관리 (자동 실행) ──────────────────────────────────────────────": "",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky || true"
