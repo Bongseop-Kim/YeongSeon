@@ -353,21 +353,6 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               <AttachmentPopup />
             </ResponsiveDialogScaffold>
           </Dialog>
-          <div className="absolute right-3 top-3 flex items-center gap-1.5 text-xs">
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <Coins className="size-3 text-muted-foreground" />
-              {tokenBalance === undefined ? "—" : tokenBalance.toLocaleString()}
-            </span>
-            <Button
-              type="button"
-              variant="none"
-              size="sm"
-              className="h-auto rounded-none p-0 text-xs font-medium text-foreground underline underline-offset-2"
-              onClick={onCharge}
-            >
-              충전
-            </Button>
-          </div>
           {hasImageAttachments ? (
             <div className="mb-3 flex flex-wrap gap-2 px-1 pt-1">
               {pendingAttachments.map((attachment, index) =>
@@ -381,28 +366,58 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
               )}
             </div>
           ) : null}
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            aria-label="디자인 요청 메시지"
-            value={inputText}
-            placeholder="원하는 넥타이 스타일, 원단, 색상, 로고 배치를 입력하세요..."
-            onChange={(event) => setInputText(event.target.value)}
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.shiftKey &&
-                !event.nativeEvent.isComposing
-              ) {
-                event.preventDefault();
-                handleSend();
-              }
-            }}
-            className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 pr-20 text-sm outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          />
+          <div className="flex items-start gap-2">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              aria-label="디자인 요청 메시지"
+              value={inputText}
+              placeholder="원하는 넥타이 스타일, 원단, 색상, 로고 배치를 입력하세요..."
+              onChange={(event) => setInputText(event.target.value)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+                  handleSend();
+                }
+              }}
+              className="max-h-32 min-h-[56px] min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-1 text-base outline-none [scrollbar-width:none] md:min-h-[40px] md:text-sm [&::-webkit-scrollbar]:hidden"
+            />
+            <div
+              data-testid="chat-input-meta"
+              className="flex w-[74px] shrink-0 flex-col items-end gap-0.5 pt-1 text-right text-xs"
+            >
+              <div className="flex items-center gap-1">
+                <span className="inline-flex items-center gap-0.5 text-muted-foreground">
+                  <Coins className="size-3 text-muted-foreground" />
+                  {tokenBalance === undefined
+                    ? "—"
+                    : tokenBalance.toLocaleString()}
+                </span>
+                <Button
+                  type="button"
+                  variant="none"
+                  size="sm"
+                  className="h-auto rounded-none p-0 text-xs font-medium text-foreground underline underline-offset-2"
+                  onClick={onCharge}
+                >
+                  충전
+                </Button>
+              </div>
+              <span className="text-muted-foreground">
+                {getFabricMethodLabel(designContext.fabricMethod)}
+              </span>
+              <span className="text-muted-foreground">
+                {designContext.imageCount}개
+              </span>
+            </div>
+          </div>
           <div
             data-testid="chat-input-selected-option-row"
-            className="mt-2 flex min-w-0 items-start justify-between gap-2 px-1"
+            className="mt-2 flex min-w-0 items-start px-1"
           >
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
               {hasNonImageAttachments
@@ -426,10 +441,6 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                   )
                 : null}
             </div>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {getFabricMethodLabel(designContext.fabricMethod)} ·{" "}
-              {designContext.imageCount}개
-            </span>
           </div>
           <div className="mt-2 flex flex-col gap-2 border-t pt-2">
             <div className="flex items-center justify-between gap-2">

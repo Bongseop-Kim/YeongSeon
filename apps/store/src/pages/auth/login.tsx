@@ -32,6 +32,8 @@ import {
 const isKakaoInAppBrowser = (): boolean =>
   /KAKAOTALK/i.test(navigator.userAgent);
 
+const isEmailLoginEnabled = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === "true";
+
 const isLocationStateWithFrom = (
   value: unknown,
 ): value is { from?: string } => {
@@ -99,65 +101,71 @@ const LoginPage = () => {
             <div className="text-center space-y-2">
               <h1 className="text-2xl font-semibold">로그인</h1>
               <p className="text-sm text-zinc-600">
-                이메일 또는 소셜 계정으로 로그인하세요
+                {isEmailLoginEnabled
+                  ? "이메일 또는 소셜 계정으로 로그인하세요"
+                  : "소셜 계정으로 로그인하세요"}
               </p>
             </div>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit((values) =>
-                  emailSignInMutation.mutate(values),
-                )}
-                className="space-y-4"
-              >
-                <InputField
-                  control={form.control}
-                  name="email"
-                  label="이메일"
-                  type="email"
-                  placeholder="이메일을 입력해주세요."
-                  disabled={isSubmitting}
-                />
-                <Controller
-                  control={form.control}
-                  name="password"
-                  render={({ field, fieldState }) => (
-                    <Field orientation="vertical">
-                      <FieldLabel htmlFor={passwordId}>
-                        <FieldTitle>비밀번호</FieldTitle>
-                      </FieldLabel>
-                      <FieldContent>
-                        <PwInput
-                          {...field}
-                          id={passwordId}
-                          autoComplete="current-password"
-                          placeholder="비밀번호를 입력해주세요."
-                          disabled={isSubmitting}
-                          aria-invalid={!!fieldState.error}
-                        />
-                        <FieldError errors={[fieldState.error]} />
-                      </FieldContent>
-                    </Field>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "로그인 중..." : "이메일로 로그인"}
-                </Button>
-              </form>
-            </Form>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-foreground-muted">
-                  또는
-                </span>
-              </div>
-            </div>
+            {isEmailLoginEnabled ? (
+              <>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit((values) =>
+                      emailSignInMutation.mutate(values),
+                    )}
+                    className="space-y-4"
+                  >
+                    <InputField
+                      control={form.control}
+                      name="email"
+                      label="이메일"
+                      type="email"
+                      placeholder="이메일을 입력해주세요."
+                      disabled={isSubmitting}
+                    />
+                    <Controller
+                      control={form.control}
+                      name="password"
+                      render={({ field, fieldState }) => (
+                        <Field orientation="vertical">
+                          <FieldLabel htmlFor={passwordId}>
+                            <FieldTitle>비밀번호</FieldTitle>
+                          </FieldLabel>
+                          <FieldContent>
+                            <PwInput
+                              {...field}
+                              id={passwordId}
+                              autoComplete="current-password"
+                              placeholder="비밀번호를 입력해주세요."
+                              disabled={isSubmitting}
+                              aria-invalid={!!fieldState.error}
+                            />
+                            <FieldError errors={[fieldState.error]} />
+                          </FieldContent>
+                        </Field>
+                      )}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "로그인 중..." : "이메일로 로그인"}
+                    </Button>
+                  </form>
+                </Form>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-zinc-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-foreground-muted">
+                      또는
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : null}
             <div className="space-y-3">
               {PROVIDERS.map((provider) => (
                 <div key={provider.id}>

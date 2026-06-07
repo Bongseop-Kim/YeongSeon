@@ -1,5 +1,6 @@
 import type { ProductCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import { ItemPriceDisplay } from "@/shared/ui/item-price-display";
 
 interface ProductItemInfoProps {
@@ -39,7 +40,11 @@ export function ProductItemInfo({ item }: ProductItemInfoProps) {
         <ItemPriceDisplay
           basePrice={totalPrice}
           discountedPrice={totalDiscountedPrice}
-          couponName={item.appliedCoupon?.coupon.name}
+          couponName={
+            item.appliedCoupon
+              ? formatCouponName(item.appliedCoupon.coupon)
+              : undefined
+          }
         />
       </div>
     </div>

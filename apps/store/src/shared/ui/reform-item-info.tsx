@@ -1,5 +1,6 @@
 import type { ReformCartItem } from "@yeongseon/shared/types/view/cart";
 import { calculateDiscount } from "@yeongseon/shared/utils/calculate-discount";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import { Package } from "lucide-react";
 import { ItemPriceDisplay } from "@/shared/ui/item-price-display";
 
@@ -71,7 +72,11 @@ export function ReformItemInfo({ item, image }: ReformItemInfoProps) {
         <ItemPriceDisplay
           basePrice={itemPrice}
           discountedPrice={discountedPrice}
-          couponName={item.appliedCoupon?.coupon.name}
+          couponName={
+            item.appliedCoupon
+              ? formatCouponName(item.appliedCoupon.coupon)
+              : undefined
+          }
           className="mt-2"
         />
       </div>

@@ -22,7 +22,7 @@ const SelectTrigger = React.forwardRef<
       className={cn(
         variant === "borderless" && "border-0 shadow-none",
         variant === "sort" &&
-          "w-[112px] rounded-lg border-zinc-200 bg-white text-sm font-medium text-zinc-700 shadow-none",
+          "w-[112px] rounded-lg border-zinc-200 bg-white text-base font-medium text-zinc-700 shadow-none md:text-sm",
         className,
       )}
       {...props}

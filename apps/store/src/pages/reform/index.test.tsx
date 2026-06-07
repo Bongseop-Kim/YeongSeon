@@ -344,7 +344,9 @@ describe("ReformPage", () => {
       screen.getByText("예상 수선 기간은 영업일 기준 7~14일입니다."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다."),
+      screen.getByText(
+        "접수 전 취소 시 수선 택배비 및 신청한 택배 수거비는 환불되지 않습니다.",
+      ),
     ).toBeInTheDocument();
     expect(
       within(summaryCard).getByText("내게 맞는 넥타이 길이"),
