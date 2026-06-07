@@ -46,6 +46,7 @@
     "./utils/calculate-discount": "./src/utils/calculate-discount.ts",
     "./utils/calculated-order-totals": "./src/utils/calculated-order-totals.ts",
     "./utils/format-coupon-amount": "./src/utils/format-coupon-amount.ts",
+    "./utils/format-coupon-name": "./src/utils/format-coupon-name.ts",
     "./utils/claim-utils": "./src/utils/claim-utils.ts",
     "./utils/get-order-item-details": "./src/utils/get-order-item-details.ts",
     "./utils/format-date": "./src/utils/format-date.ts",

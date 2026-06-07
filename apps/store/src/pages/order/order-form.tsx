@@ -23,6 +23,7 @@ import { toast } from "@/shared/lib/toast";
 import { hasStringCode } from "@/shared/lib/type-guard";
 import { ShippingAddressCard } from "@/shared/composite/shipping-address-card";
 import { calculateOrderTotals } from "@yeongseon/shared/utils/calculated-order-totals";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import { useAuthStore } from "@/shared/store/auth";
 import { createOrder } from "@/entities/order";
 import { useReformPricing } from "@/entities/reform";
@@ -170,7 +171,7 @@ const OrderFormPage = () => {
 
     toast.success(
       selectedCoupon
-        ? `${selectedCoupon.coupon.name} 적용을 완료했습니다.`
+        ? `${formatCouponName(selectedCoupon.coupon)} 적용을 완료했습니다.`
         : "쿠폰 사용을 취소했습니다.",
     );
   };

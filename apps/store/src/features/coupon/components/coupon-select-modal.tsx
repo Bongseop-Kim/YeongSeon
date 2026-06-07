@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { Label } from "@/shared/ui/label";
 import { formatCouponAmount } from "@yeongseon/shared/utils/format-coupon-amount";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import type {
   AppliedCoupon,
   UserCoupon,
@@ -119,7 +120,9 @@ export const CouponSelectModal = forwardRef<
                       value={coupon.id}
                       id={`coupon-${coupon.id}`}
                     />
-                    <span className="font-semibold">{coupon.coupon.name}</span>
+                    <span className="font-semibold">
+                      {formatCouponName(coupon.coupon)}
+                    </span>
                   </div>
                   <span className="text-lg font-bold text-primary">
                     {formatCouponAmount(coupon.coupon)}

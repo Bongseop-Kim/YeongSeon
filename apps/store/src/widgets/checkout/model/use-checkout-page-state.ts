@@ -6,6 +6,7 @@ import type { PaymentWidgetRef } from "@/shared/composite/payment-widget";
 import { toast } from "@/shared/lib/toast";
 import { useAuthStore } from "@/shared/store/auth";
 import type { AppliedCoupon } from "@yeongseon/shared/types/view/coupon";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 
 interface UseCheckoutPageStateOptions {
   initialShippingAddressId: string | null;
@@ -45,7 +46,9 @@ export function useCheckoutPageState({
     setAppliedCoupon(selected ?? undefined);
     resetPendingOrderState();
     if (selected) {
-      toast.success(`${selected.coupon.name} 적용을 완료했습니다.`);
+      toast.success(
+        `${formatCouponName(selected.coupon)} 적용을 완료했습니다.`,
+      );
     } else {
       toast.success("쿠폰 사용을 취소했습니다.");
     }

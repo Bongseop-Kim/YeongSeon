@@ -26,6 +26,7 @@ import type {
 import { useCouponSelect } from "@/features/coupon";
 import { useProducts } from "@/entities/shop";
 import { calculateOrderSummary } from "@yeongseon/shared/utils/calculated-order-totals";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import { useReformPricing } from "@/entities/reform";
 import { useBreakpoint } from "@/shared/lib/breakpoint-provider";
 import { ROUTES } from "@/shared/constants/ROUTES";
@@ -265,7 +266,7 @@ export function CartCheckoutPage() {
 
       toast.success(
         selectedCoupon
-          ? `${selectedCoupon.coupon.name} 적용을 완료했습니다.`
+          ? `${formatCouponName(selectedCoupon.coupon)} 적용을 완료했습니다.`
           : "쿠폰 사용을 취소했습니다.",
       );
     } catch (error) {
