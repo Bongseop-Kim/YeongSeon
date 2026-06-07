@@ -25,7 +25,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm depcruise
+      - run: pnpm -r --if-present run depcruise
       - run: pnpm knip
       - run: pnpm cpd
       - run: pnpm type-check
