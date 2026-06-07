@@ -12,15 +12,15 @@ importers:
 
   .:
     devDependencies:
+      '@axe-core/playwright':
+        specifier: ^4.11.3
+        version: 4.11.3(playwright-core@1.58.2)
       '@eslint/js':
         specifier: ^9.30.1
         version: 9.39.3
       '@playwright/test':
         specifier: ^1.58.2
         version: 1.58.2
-      dependency-cruiser:
-        specifier: ^17.3.9
-        version: 17.3.9
       eslint:
         specifier: ^9.30.1
         version: 9.39.3(jiti@2.6.1)
@@ -52,8 +52,8 @@ importers:
         specifier: ^3.8.1
         version: 3.8.1
       turbo:
-        specifier: ^2
-        version: 2.8.10
+        specifier: ^2.9.16
+        version: 2.9.16
       typescript-eslint:
         specifier: ^8.35.1
         version: 8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.8.3)
@@ -360,6 +360,11 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@axe-core/playwright@4.11.3':
+    resolution: {integrity: sha512-h/kfksv4F0cVIDlKpT4700OehdRgpvuVskuQ2nb7/JmtWUXpe9ftHAPtwyXGvVSsa6SJ64A9ER7Zrzc/sIvC4w==}
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.29.0':
     resolution: {integrity: sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==}
@@ -692,23 +697,11 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@floating-ui/core@1.7.4':
-    resolution: {integrity: sha512-C3HlIdsBxszvm5McXlB8PeOEWfBhcGBTZGkGlWc2U0KFY5IwG5OQEuQ8rq52DZmcHDlPLd+YFBK+cZcytwIFWg==}
-
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
 
-  '@floating-ui/dom@1.7.5':
-    resolution: {integrity: sha512-N0bD2kIPInNHUHehXhMke1rBGs1dwqvC9O9KYMyyjK7iXt7GAhnro7UlcuYcGdS/yYOlq0MAVgrow8IbWJwyqg==}
-
   '@floating-ui/dom@1.7.6':
     resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
-
-  '@floating-ui/react-dom@2.1.7':
-    resolution: {integrity: sha512-0tLRojf/1Go2JgEVm+3Frg9A3IW8bJgKgdO0BN5RkF//ufuz2joZM63Npau2ff3J6lUVYgDSNzNkR+aH3IVfjg==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
 
   '@floating-ui/react-dom@2.1.8':
     resolution: {integrity: sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A==}
@@ -721,9 +714,6 @@ packages:
     peerDependencies:
       react: '>=17.0.0'
       react-dom: '>=17.0.0'
-
-  '@floating-ui/utils@0.2.10':
-    resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
@@ -2487,6 +2477,36 @@ packages:
   '@tosspayments/tosspayments-sdk@2.5.0':
     resolution: {integrity: sha512-qapms+cTY5/4MBwcEegG1GkYBIWVjWv77yWnG2+CWXqdZOtGKLmqt0pb1lbrevBOF/uhO1f2Wtj+r/bggHwiHQ==}
 
+  '@turbo/darwin-64@2.9.16':
+    resolution: {integrity: sha512-jLjApWTSNd7JZ5JaLYfelW1ytnGQOvB7ivl+2RD1xQvJTbi8I9gBjzcga7tDZVPyaxpl10YTfJt3BrYXR18KDw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@turbo/darwin-arm64@2.9.16':
+    resolution: {integrity: sha512-YPgrn+5HIGzrx0O2a631SV4MBQUe4W/DafMFUuBVgaU32PW9/OTT0ehviF0QSxTXuRJlHvW2eUTemddF5/spmw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@turbo/linux-64@2.9.16':
+    resolution: {integrity: sha512-vAEf1H6l26lTpl9FJ/peQo1NUB8RC0sbEJJz5mPcUhHA2bPDup2x3CZPgo/bH8S4cUcBLm4FN3UHd5iUO2RAew==}
+    cpu: [x64]
+    os: [linux]
+
+  '@turbo/linux-arm64@2.9.16':
+    resolution: {integrity: sha512-xDBLR2PZg4BrQOchfG6svgpv5FCNJ2TOtT2psLdEJcdKo1BH+pnPs9Xj6pvUjgfkHbuvBOfeE4R6tvxMoQKDHQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@turbo/windows-64@2.9.16':
+    resolution: {integrity: sha512-NBAJnaUiGdgkSzQwUIdOvkCkcpTSu58G/sBGa0mvBtzfvFOOgrQwepKOOQ8cp6sWM6OcKDNFj2p1dsZA1OWjPg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@turbo/windows-arm64@2.9.16':
+    resolution: {integrity: sha512-Y7SJppD0Z8wjO3Ec0ZGd9KQ4Yv0BMnA8CIowj5Vp+OEVsosXDG2weK6/t1RRLfJmc2Ozrnd6y4DOgQys+mn3WQ==}
+    cpu: [arm64]
+    os: [win32]
+
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
 
@@ -2717,6 +2737,10 @@ packages:
 
   ast-v8-to-istanbul@0.3.11:
     resolution: {integrity: sha512-Qya9fkoofMjCBNVdWINMjB5KZvkYfaO9/anwkWnjxibpWUxo5iHl2sOdP7/uAqaRuUYuoo8rDwnbaaKVFxoUvw==}
+
+  axe-core@4.11.4:
+    resolution: {integrity: sha512-KunSNx+TVpkAw/6ULfhnx+HWRecjqZGTOyquAoWHYLRSdK1tB5Ihce1ZW+UY3fj33bYAFWPu7W/GRSmmrCGuxA==}
+    engines: {node: '>=4'}
 
   babel-walk@3.0.0-canary-5:
     resolution: {integrity: sha512-GAwkz0AihzY5bkwIY5QDR+LvsRQgB/B+1foMPvi0FZPMl5fjD7ICiznUiBdLYMH1QYe6vqu4gWYytZOccLouFw==}
@@ -2999,10 +3023,6 @@ packages:
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
-
-  enhanced-resolve@5.19.0:
-    resolution: {integrity: sha512-phv3E1Xl4tQOShqSte26C7Fl84EwUdZsyOuSSk9qtAGyyQs2s3jJzComh+Abf4g187lUUAvH+H26omrqia2aGg==}
-    engines: {node: '>=10.13.0'}
 
   enhanced-resolve@5.20.0:
     resolution: {integrity: sha512-/ce7+jQ1PQ6rVXwe+jKEg5hW5ciicHwIQUagZkp6IufBoY3YDgdTTY1azVs0qoRgVmvsNB+rbjLJxDAeHHtwsQ==}
@@ -4364,38 +4384,8 @@ packages:
   tunnel-agent@0.6.0:
     resolution: {integrity: sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==}
 
-  turbo-darwin-64@2.8.10:
-    resolution: {integrity: sha512-A03fXh+B7S8mL3PbdhTd+0UsaGrhfyPkODvzBDpKRY7bbeac4MDFpJ7I+Slf2oSkCEeSvHKR7Z4U71uKRUfX7g==}
-    cpu: [x64]
-    os: [darwin]
-
-  turbo-darwin-arm64@2.8.10:
-    resolution: {integrity: sha512-sidzowgWL3s5xCHLeqwC9M3s9M0i16W1nuQF3Mc7fPHpZ+YPohvcbVFBB2uoRRHYZg6yBnwD4gyUHKTeXfwtXA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  turbo-linux-64@2.8.10:
-    resolution: {integrity: sha512-YK9vcpL3TVtqonB021XwgaQhY9hJJbKKUhLv16osxV0HkcQASQWUqR56yMge7puh6nxU67rQlTq1b7ksR1T3KA==}
-    cpu: [x64]
-    os: [linux]
-
-  turbo-linux-arm64@2.8.10:
-    resolution: {integrity: sha512-3+j2tL0sG95iBJTm+6J8/45JsETQABPqtFyYjVjBbi6eVGdtNTiBmHNKrbvXRlQ3ZbUG75bKLaSSDHSEEN+btQ==}
-    cpu: [arm64]
-    os: [linux]
-
-  turbo-windows-64@2.8.10:
-    resolution: {integrity: sha512-hdeF5qmVY/NFgiucf8FW0CWJWtyT2QPm5mIsX0W1DXAVzqKVXGq+Zf+dg4EUngAFKjDzoBeN6ec2Fhajwfztkw==}
-    cpu: [x64]
-    os: [win32]
-
-  turbo-windows-arm64@2.8.10:
-    resolution: {integrity: sha512-QGdr/Q8LWmj+ITMkSvfiz2glf0d7JG0oXVzGL3jxkGqiBI1zXFj20oqVY0qWi+112LO9SVrYdpHS0E/oGFrMbQ==}
-    cpu: [arm64]
-    os: [win32]
-
-  turbo@2.8.10:
-    resolution: {integrity: sha512-OxbzDES66+x7nnKGg2MwBA1ypVsZoDTLHpeaP4giyiHSixbsiTaMyeJqbEyvBdp5Cm28fc+8GG6RdQtic0ijwQ==}
+  turbo@2.9.16:
+    resolution: {integrity: sha512-NqgRQy6j6dPYcdSdv0q1g9QsZg7SWg87RERM8otw/1AtKU2yTFVClOM7cbwKzOonZr/Ek1blTBucw64L9H0Bwg==}
     hasBin: true
 
   tw-animate-css@1.4.0:
@@ -4701,6 +4691,11 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
+  '@axe-core/playwright@4.11.3(playwright-core@1.58.2)':
+    dependencies:
+      axe-core: 4.11.4
+      playwright-core: 1.58.2
+
   '@babel/code-frame@7.29.0':
     dependencies:
       '@babel/helper-validator-identifier': 7.28.5
@@ -4978,29 +4973,14 @@ snapshots:
 
   '@exodus/bytes@1.15.0': {}
 
-  '@floating-ui/core@1.7.4':
-    dependencies:
-      '@floating-ui/utils': 0.2.10
-
   '@floating-ui/core@1.7.5':
     dependencies:
       '@floating-ui/utils': 0.2.11
-
-  '@floating-ui/dom@1.7.5':
-    dependencies:
-      '@floating-ui/core': 1.7.4
-      '@floating-ui/utils': 0.2.10
 
   '@floating-ui/dom@1.7.6':
     dependencies:
       '@floating-ui/core': 1.7.5
       '@floating-ui/utils': 0.2.11
-
-  '@floating-ui/react-dom@2.1.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
-    dependencies:
-      '@floating-ui/dom': 1.7.5
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
 
   '@floating-ui/react-dom@2.1.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -5015,8 +4995,6 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       tabbable: 6.4.0
-
-  '@floating-ui/utils@0.2.10': {}
 
   '@floating-ui/utils@0.2.11': {}
 
@@ -5761,7 +5739,7 @@ snapshots:
 
   '@radix-ui/react-popper@1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@floating-ui/react-dom': 2.1.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@floating-ui/react-dom': 2.1.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-arrow': 1.1.7(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.14)(react@19.2.4)
       '@radix-ui/react-context': 1.1.2(@types/react@19.2.14)(react@19.2.4)
@@ -6720,7 +6698,7 @@ snapshots:
   '@tailwindcss/node@4.2.1':
     dependencies:
       '@jridgewell/remapping': 2.3.5
-      enhanced-resolve: 5.19.0
+      enhanced-resolve: 5.20.0
       jiti: 2.6.1
       lightningcss: 1.31.1
       magic-string: 0.30.21
@@ -6835,6 +6813,24 @@ snapshots:
       '@testing-library/dom': 10.4.1
 
   '@tosspayments/tosspayments-sdk@2.5.0': {}
+
+  '@turbo/darwin-64@2.9.16':
+    optional: true
+
+  '@turbo/darwin-arm64@2.9.16':
+    optional: true
+
+  '@turbo/linux-64@2.9.16':
+    optional: true
+
+  '@turbo/linux-arm64@2.9.16':
+    optional: true
+
+  '@turbo/windows-64@2.9.16':
+    optional: true
+
+  '@turbo/windows-arm64@2.9.16':
+    optional: true
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
@@ -7110,6 +7106,8 @@ snapshots:
       estree-walker: 3.0.3
       js-tokens: 10.0.0
 
+  axe-core@4.11.4: {}
+
   babel-walk@3.0.0-canary-5:
     dependencies:
       '@babel/types': 7.29.0
@@ -7382,11 +7380,6 @@ snapshots:
   end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
-
-  enhanced-resolve@5.19.0:
-    dependencies:
-      graceful-fs: 4.2.11
-      tapable: 2.3.0
 
   enhanced-resolve@5.20.0:
     dependencies:
@@ -8873,32 +8866,14 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  turbo-darwin-64@2.8.10:
-    optional: true
-
-  turbo-darwin-arm64@2.8.10:
-    optional: true
-
-  turbo-linux-64@2.8.10:
-    optional: true
-
-  turbo-linux-arm64@2.8.10:
-    optional: true
-
-  turbo-windows-64@2.8.10:
-    optional: true
-
-  turbo-windows-arm64@2.8.10:
-    optional: true
-
-  turbo@2.8.10:
+  turbo@2.9.16:
     optionalDependencies:
-      turbo-darwin-64: 2.8.10
-      turbo-darwin-arm64: 2.8.10
-      turbo-linux-64: 2.8.10
-      turbo-linux-arm64: 2.8.10
-      turbo-windows-64: 2.8.10
-      turbo-windows-arm64: 2.8.10
+      '@turbo/darwin-64': 2.9.16
+      '@turbo/darwin-arm64': 2.9.16
+      '@turbo/linux-64': 2.9.16
+      '@turbo/linux-arm64': 2.9.16
+      '@turbo/windows-64': 2.9.16
+      '@turbo/windows-arm64': 2.9.16
 
   tw-animate-css@1.4.0: {}
 
