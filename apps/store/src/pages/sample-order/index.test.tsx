@@ -213,7 +213,7 @@ describe("SampleOrderPage", () => {
     ).toBeInTheDocument();
     expect(
       within(summaryCard).getByText(
-        "접수 전 취소 시 택배비 4,200원을 제외하고 환불됩니다.",
+        "접수 전 취소 시 수선 택배비 및 신청한 택배 수거비는 환불되지 않습니다.",
       ),
     ).toBeInTheDocument();
   });
