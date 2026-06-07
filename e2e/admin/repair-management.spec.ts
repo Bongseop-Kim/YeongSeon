@@ -9,7 +9,11 @@ import {
   seedRepairOrderInStatus,
   type SeededClaimOrder,
 } from "../utils/store-data";
-import { statusRow } from "../utils/admin-helpers";
+import {
+  advanceStatus,
+  saveOutboundShipping,
+  statusRow,
+} from "../utils/admin-helpers";
 
 test.describe.serial("Admin 수선 주문 관리", () => {
   test.skip(
@@ -40,12 +44,11 @@ test.describe.serial("Admin 수선 주문 관리", () => {
     await authenticatedPage.goto(`/orders/show/${forwardOrder.orderId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E repair processing");
-    await authenticatedPage
-      .getByRole("button", { name: "수선중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "수선중으로 변경",
+      "E2E repair processing",
+    );
     await expect(statusRow(authenticatedPage, "수선중")).toBeVisible();
   });
 
@@ -55,12 +58,11 @@ test.describe.serial("Admin 수선 주문 관리", () => {
   }) => {
     await authenticatedPage.goto(`/orders/show/${forwardOrder.orderId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E repair done");
-    await authenticatedPage
-      .getByRole("button", { name: "수선완료로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "수선완료로 변경",
+      "E2E repair done",
+    );
     await expect(statusRow(authenticatedPage, "수선완료")).toBeVisible();
   });
 
@@ -70,12 +72,11 @@ test.describe.serial("Admin 수선 주문 관리", () => {
   }) => {
     await authenticatedPage.goto(`/orders/show/${forwardOrder.orderId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E shipping start");
-    await authenticatedPage
-      .getByRole("button", { name: "배송중으로 변경" })
-      .click();
+    await advanceStatus(
+      authenticatedPage,
+      "배송중으로 변경",
+      "E2E shipping start",
+    );
     await expect(statusRow(authenticatedPage, "배송중")).toBeVisible();
   });
 
@@ -85,20 +86,12 @@ test.describe.serial("Admin 수선 주문 관리", () => {
   }) => {
     await authenticatedPage.goto(`/orders/show/${forwardOrder.orderId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E delivered");
-    await authenticatedPage
-      .getByRole("button", { name: "배송완료로 변경" })
-      .click();
+    await saveOutboundShipping(authenticatedPage, "9876543210");
+
+    await advanceStatus(authenticatedPage, "배송완료로 변경", "E2E delivered");
     await expect(statusRow(authenticatedPage, "배송완료")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E complete");
-    await authenticatedPage
-      .getByRole("button", { name: "완료로 변경" })
-      .click();
+    await advanceStatus(authenticatedPage, "완료로 변경", "E2E complete");
     await expect(statusRow(authenticatedPage, "완료")).toBeVisible();
   });
 

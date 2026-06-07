@@ -218,6 +218,7 @@ export default function OrderPage() {
                   isPriceReady={!!pricingConfig}
                   isPriceError={isPricingError && !pricingConfig}
                   disabled={isSubmitDisabled}
+                  readyLabel={isQuoteMode ? "견적 요청하기" : undefined}
                   helperText={
                     !isLoggedIn ? (
                       <p className="text-sm text-center text-zinc-500">

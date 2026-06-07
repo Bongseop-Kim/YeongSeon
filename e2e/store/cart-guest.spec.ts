@@ -252,6 +252,12 @@ const gotoCartAndWaitForItems = async (page: Page) => {
   ]);
 };
 
+const expectCartAddedToast = async (page: Page) => {
+  await expect(
+    page.getByText("장바구니에 추가되었습니다.").last(),
+  ).toBeVisible();
+};
+
 test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
   const storeAuthSkipMessage =
     "Store 계정 env(TEST_STORE_EMAIL/PASSWORD)가 필요합니다.";
@@ -277,15 +283,12 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
     await page.getByTestId("product-add-to-cart").click();
 
-    // 모달이 열리며 장바구니에 추가되었음을 알림
-    await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
+    // 토스트로 장바구니에 추가되었음을 알림
+    await expectCartAddedToast(page);
 
     // 로컬스토리지에 저장됐는지 확인
     const items = await getGuestCartFromStorage(page);
     expect(items.length).toBeGreaterThan(0);
-
-    // 모달 닫기
-    await page.getByRole("button", { name: "닫기" }).click();
 
     // 장바구니 페이지에서 아이템 확인
     await page.goto("/cart");
@@ -318,8 +321,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
 
     // 첫 번째 담기
     await page.getByTestId("product-add-to-cart").click();
-    await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
-    await page.getByRole("button", { name: "닫기" }).click();
+    await expectCartAddedToast(page);
 
     const itemsAfterFirst = await getGuestCartFromStorage(page);
     expect(itemsAfterFirst.length).toBe(1);
@@ -327,9 +329,8 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     // 두 번째 담기 — 같은 페이지에서 다시 클릭 (페이지 재방문 시 React Query 캐시 초기화 방지)
     await page.getByTestId("product-add-to-cart").click();
 
-    // shop detail page는 중복 여부와 관계없이 "장바구니에 추가되었습니다." 모달을 표시
-    await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
-    await page.getByRole("button", { name: "닫기" }).click();
+    // shop detail page는 중복 여부와 관계없이 "장바구니에 추가되었습니다." 토스트를 표시
+    await expectCartAddedToast(page);
 
     // 아이템 수는 여전히 1개 (새 row가 추가되지 않고 수량만 증가)
     const itemsAfterSecond = await getGuestCartFromStorage(page);
@@ -363,8 +364,7 @@ test.describe.serial("Cart 비회원/동기화 (SC-cart-001~004, 007)", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/shop/${productId}`);
     await page.getByTestId("product-add-to-cart").click();
-    await expect(page.getByText("장바구니에 추가되었습니다.")).toBeVisible();
-    await page.getByRole("button", { name: "닫기" }).click();
+    await expectCartAddedToast(page);
 
     const guestItemsBefore = await getGuestCartFromStorage(page);
     expect(guestItemsBefore.length).toBeGreaterThan(0);

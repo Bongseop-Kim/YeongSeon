@@ -9,6 +9,7 @@ import {
   seedClaimForAdminFlow,
   type ClaimAdminSeed,
 } from "../utils/store-data";
+import { advanceStatus, statusRow } from "../utils/admin-helpers";
 
 test.describe.serial("Admin 클레임 관리", () => {
   test.skip(
@@ -40,18 +41,12 @@ test.describe.serial("Admin 클레임 관리", () => {
     await authenticatedPage.goto(`/claims/show/${cancelClaim.claimId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E cancel processing");
-    await authenticatedPage
-      .getByRole("button", { name: "처리중 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^처리중$/ })
-        .first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "처리중으로 변경",
+      "E2E cancel processing",
+    );
+    await expect(statusRow(authenticatedPage, "처리중")).toBeVisible();
   });
 
   // SC-claim-006: admin 취소 완료 처리
@@ -60,15 +55,12 @@ test.describe.serial("Admin 클레임 관리", () => {
   }) => {
     await authenticatedPage.goto(`/claims/show/${cancelClaim.claimId}`);
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E cancel complete");
-    await authenticatedPage
-      .getByRole("button", { name: "완료 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage.getByText("완료", { exact: true }).first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "완료로 변경",
+      "E2E cancel complete",
+    );
+    await expect(statusRow(authenticatedPage, "완료")).toBeVisible();
   });
 
   // SC-claim-007: admin 취소 처리중 → 접수 롤백 (API로 처리 후 UI 검증)
@@ -92,12 +84,7 @@ test.describe.serial("Admin 클레임 관리", () => {
 
     await authenticatedPage.goto(`/claims/show/${rollbackClaim.claimId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^접수$/ })
-        .first(),
-    ).toBeVisible();
+    await expect(statusRow(authenticatedPage, "접수")).toBeVisible();
   });
 
   // SC-claim-008~010: 반품 수거요청 → 수거완료 → 완료
@@ -107,41 +94,22 @@ test.describe.serial("Admin 클레임 관리", () => {
     await authenticatedPage.goto(`/claims/show/${returnClaim.claimId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E return pickup");
-    await authenticatedPage
-      .getByRole("button", { name: "수거요청 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^수거요청$/ })
-        .first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "수거요청으로 변경",
+      "E2E return pickup",
+    );
+    await expect(statusRow(authenticatedPage, "수거요청")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E return picked up");
-    await authenticatedPage
-      .getByRole("button", { name: "수거완료 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^수거완료$/ })
-        .first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "수거완료로 변경",
+      "E2E return picked up",
+    );
+    await expect(statusRow(authenticatedPage, "수거완료")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E return done");
-    await authenticatedPage
-      .getByRole("button", { name: "완료 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage.getByText("완료", { exact: true }).first(),
-    ).toBeVisible();
+    await advanceStatus(authenticatedPage, "완료로 변경", "E2E return done");
+    await expect(statusRow(authenticatedPage, "완료")).toBeVisible();
   });
 
   // SC-claim-013: 수거완료 상태에서 롤백 버튼 미노출
@@ -169,28 +137,15 @@ test.describe.serial("Admin 클레임 관리", () => {
     await authenticatedPage.goto(`/claims/show/${exchangeClaim.claimId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E exchange resend");
-    await authenticatedPage
-      .getByRole("button", { name: "재발송 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^재발송$/ })
-        .first(),
-    ).toBeVisible();
+    await advanceStatus(
+      authenticatedPage,
+      "재발송으로 변경",
+      "E2E exchange resend",
+    );
+    await expect(statusRow(authenticatedPage, "재발송")).toBeVisible();
 
-    await authenticatedPage
-      .getByPlaceholder("상태 변경 사유 (이력에 기록됨)")
-      .fill("E2E exchange done");
-    await authenticatedPage
-      .getByRole("button", { name: "완료 으로 변경" })
-      .click();
-    await expect(
-      authenticatedPage.getByText("완료", { exact: true }).first(),
-    ).toBeVisible();
+    await advanceStatus(authenticatedPage, "완료로 변경", "E2E exchange done");
+    await expect(statusRow(authenticatedPage, "완료")).toBeVisible();
   });
 
   // SC-claim-014~015: 거부 및 접수 복원 (API로 처리 후 UI 검증)
@@ -202,12 +157,7 @@ test.describe.serial("Admin 클레임 관리", () => {
 
     await authenticatedPage.goto(`/claims/show/${rejectClaim.claimId}`);
     await expectAuthenticatedRoute(authenticatedPage, "/login");
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^거부$/ })
-        .first(),
-    ).toBeVisible();
+    await expect(statusRow(authenticatedPage, "거부")).toBeVisible();
 
     // 거부 상태에서 "접수로 복원" 버튼이 표시되는지 확인
     await expect(
@@ -223,11 +173,6 @@ test.describe.serial("Admin 클레임 관리", () => {
     );
 
     await authenticatedPage.reload();
-    await expect(
-      authenticatedPage
-        .locator(".ant-tag")
-        .filter({ hasText: /^접수$/ })
-        .first(),
-    ).toBeVisible();
+    await expect(statusRow(authenticatedPage, "접수")).toBeVisible();
   });
 });

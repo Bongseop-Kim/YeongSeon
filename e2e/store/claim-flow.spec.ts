@@ -190,21 +190,21 @@ test.describe.serial("Store 클레임 플로우", () => {
     );
     await expect(cancelCard).toContainText("취소");
     await expect(cancelCard).toContainText("접수");
-    await expect(cancelCard).toContainText("change_mind");
+    await expect(cancelCard).toContainText("단순변심");
 
     await expect(returnCard).toContainText(
       listVerificationOrders.returnOrder.orderNumber,
     );
     await expect(returnCard).toContainText("반품");
     await expect(returnCard).toContainText("접수");
-    await expect(returnCard).toContainText("defect");
+    await expect(returnCard).toContainText("불량/파손");
 
     await expect(exchangeCard).toContainText(
       listVerificationOrders.exchangeOrder.orderNumber,
     );
     await expect(exchangeCard).toContainText("교환");
     await expect(exchangeCard).toContainText("접수");
-    await expect(exchangeCard).toContainText("size_mismatch");
+    await expect(exchangeCard).toContainText("사이즈 불일치");
 
     await expect(cancelCard).toContainText(
       listVerificationOrders.cancelOrder.productName,

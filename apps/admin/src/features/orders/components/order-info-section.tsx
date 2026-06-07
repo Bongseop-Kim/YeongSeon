@@ -25,7 +25,9 @@ export function OrderInfoSection({ order }: OrderInfoSectionProps) {
         <StatusBadge>{ORDER_TYPE_LABELS[order.orderType]}</StatusBadge>
       </OrderDetailItem>
       <OrderDetailItem label="상태">
-        <OrderStatusBadge>{order.status}</OrderStatusBadge>
+        <OrderStatusBadge testId="current-status">
+          {order.status}
+        </OrderStatusBadge>
       </OrderDetailItem>
       <OrderDetailItem label="고객명">
         {order.userId ? (
