@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": [],
+      "entry": ["e2e/store/accessibility-guest.spec.ts"],
       "project": []
     },
     "apps/store": {

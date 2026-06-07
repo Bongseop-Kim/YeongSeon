@@ -117,7 +117,7 @@ export default defineConfig({
     {
       name: "store",
       testMatch: /store\/.*\.spec\.ts$/,
-      testIgnore: /store\/cart-guest\.spec\.ts$/,
+      testIgnore: /store\/(cart-guest|accessibility-guest)\.spec\.ts$/,
       use: {
         baseURL: storeBaseURL,
         storageState: path.join(__dirname, ".auth/store.json"),
@@ -125,7 +125,7 @@ export default defineConfig({
     },
     {
       name: "store-guest",
-      testMatch: /store\/cart-guest\.spec\.ts$/,
+      testMatch: /store\/(cart-guest|accessibility-guest)\.spec\.ts$/,
       use: {
         baseURL: storeBaseURL,
       },
