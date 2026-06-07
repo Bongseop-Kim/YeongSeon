@@ -1,7 +1,3 @@
--- =============================================================
--- zz_function_privileges.sql - Explicit RPC EXECUTE grants
--- =============================================================
-
 DO $$
 DECLARE
   v_signature text;
