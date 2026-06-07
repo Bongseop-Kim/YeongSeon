@@ -175,6 +175,8 @@ RETURNS TABLE (
   pattern       character varying,
   material      character varying,
   info          text,
+  stock         integer,
+  "optionLabel" character varying,
   created_at    timestamp with time zone,
   updated_at    timestamp with time zone,
   options       jsonb,
@@ -198,6 +200,8 @@ AS $$
     p.pattern,
     p.material,
     p.info,
+    p.stock,
+    p.option_label as "optionLabel",
     p.created_at,
     p.updated_at,
     coalesce(
@@ -205,7 +209,8 @@ AS $$
         jsonb_build_object(
           'id', po.id::text,
           'name', po.name,
-          'additionalPrice', po.additional_price
+          'additionalPrice', po.additional_price,
+          'stock', po.stock
         )
         order by po.id
       ) filter (where po.id is not null),
@@ -220,6 +225,6 @@ AS $$
   group by
     p.id, p.code, p.name, p.price, p.image, p.detail_images,
     p.category, p.color, p.pattern, p.material, p.info,
-    p.created_at, p.updated_at, lc.likes
+    p.stock, p.option_label, p.created_at, p.updated_at, lc.likes
   order by p.id;
 $$;
