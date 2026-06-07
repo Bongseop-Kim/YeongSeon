@@ -25,8 +25,7 @@ BEGIN
   END LOOP;
 
   FOREACH v_signature IN ARRAY ARRAY[
-    'public.product_is_liked_rpc(integer)',
-    'public.product_like_counts_rpc()'
+    'public.product_is_liked_rpc(integer)'
   ]
   LOOP
     IF to_regprocedure(v_signature) IS NOT NULL THEN

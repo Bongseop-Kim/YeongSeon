@@ -38,7 +38,7 @@ SELECT
   coalesce(public.product_is_liked_rpc(p.id), false) AS "isLiked"
 FROM public.products p
 LEFT JOIN public.product_options po ON po.product_id = p.id
-LEFT JOIN public.product_like_counts_rpc() lc ON lc.product_id = p.id
+LEFT JOIN public.product_like_counts lc ON lc.product_id = p.id
 GROUP BY
   p.id, p.code, p.name, p.price, p.image, p.detail_images,
   p.category, p.color, p.pattern, p.material, p.info,

@@ -2,23 +2,6 @@
 -- 89_view_helper_functions.sql  –  Helper functions used by views
 -- =============================================================
 
--- Aggregates like counts per product (SECURITY DEFINER bypasses RLS)
-CREATE OR REPLACE FUNCTION public.product_like_counts_rpc()
-RETURNS TABLE (product_id integer, likes integer)
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-  select
-    pl.product_id,
-    count(*)::int as likes
-  from public.product_likes pl
-  group by pl.product_id;
-$$;
-
-COMMENT ON FUNCTION public.product_like_counts_rpc()
-  IS 'SECURITY DEFINER is required to expose aggregate product like counts publicly while product_likes rows remain protected by RLS.';
-
 -- Checks if the current user liked a product
 CREATE OR REPLACE FUNCTION public.product_is_liked_rpc(p_id integer)
 RETURNS boolean
@@ -232,7 +215,7 @@ AS $$
     coalesce(public.product_is_liked_rpc(p.id), false) as "isLiked"
   from products p
   left join product_options po on po.product_id = p.id
-  left join product_like_counts_rpc() lc on lc.product_id = p.id
+  left join public.product_like_counts lc on lc.product_id = p.id
   where p.id = any (p_ids)
   group by
     p.id, p.code, p.name, p.price, p.image, p.detail_images,
