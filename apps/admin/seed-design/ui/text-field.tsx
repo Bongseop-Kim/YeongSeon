@@ -16,6 +16,10 @@ import {
 import type { FieldLabelVariantProps } from "@seed-design/css/recipes/field-label";
 import { IconExclamationmarkCircleFill } from "@karrotmarket/react-monochrome-icon";
 
+function cx(...classNames: Array<string | undefined>): string {
+  return classNames.filter(Boolean).join(" ");
+}
+
 export interface TextFieldProps extends Omit<
   SeedTextField.RootProps,
   "prefix" | "onValueChange" | "asChild"
@@ -173,14 +177,34 @@ export type TextFieldInputProps = SeedTextField.InputProps;
 /**
  * @see https://seed-design.io/react/components/text-field-input
  */
-export const TextFieldInput = SeedTextField.Input;
+export const TextFieldInput = React.forwardRef<
+  React.ElementRef<typeof SeedTextField.Input>,
+  TextFieldInputProps
+>(({ className, ...props }, ref) => (
+  <SeedTextField.Input
+    ref={ref}
+    className={cx("adminMobileTextControl", className)}
+    {...props}
+  />
+));
+TextFieldInput.displayName = "TextFieldInput";
 
 export type TextFieldTextareaProps = SeedTextField.TextareaProps;
 
 /**
  * @see https://seed-design.io/react/components/text-field-textarea
  */
-export const TextFieldTextarea = SeedTextField.Textarea;
+export const TextFieldTextarea = React.forwardRef<
+  React.ElementRef<typeof SeedTextField.Textarea>,
+  TextFieldTextareaProps
+>(({ className, ...props }, ref) => (
+  <SeedTextField.Textarea
+    ref={ref}
+    className={cx("adminMobileTextControl", className)}
+    {...props}
+  />
+));
+TextFieldTextarea.displayName = "TextFieldTextarea";
 
 /**
  * This file is a snippet from SEED Design, helping you get started quickly with @seed-design/* packages.

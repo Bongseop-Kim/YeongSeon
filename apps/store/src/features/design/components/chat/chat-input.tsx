@@ -398,7 +398,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(
                 handleSend();
               }
             }}
-            className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 pr-20 text-sm outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="max-h-32 min-h-[40px] w-full resize-none border-0 bg-transparent px-2 py-1 pr-20 text-base outline-none [scrollbar-width:none] md:text-sm [&::-webkit-scrollbar]:hidden"
           />
           <div
             data-testid="chat-input-selected-option-row"
