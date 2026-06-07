@@ -61,6 +61,9 @@ AS $$
   );
 $$;
 
+COMMENT ON FUNCTION public.is_admin()
+  IS 'SECURITY DEFINER is required to check profiles.role from RLS policies and admin-only RPCs without recursive policy evaluation.';
+
 -- RLS
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.phone_verifications ENABLE ROW LEVEL SECURITY;

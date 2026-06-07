@@ -16,11 +16,14 @@ AS $$
   group by pl.product_id;
 $$;
 
+COMMENT ON FUNCTION public.product_like_counts_rpc()
+  IS 'SECURITY DEFINER is required to expose aggregate product like counts publicly while product_likes rows remain protected by RLS.';
+
 -- Checks if the current user liked a product
 CREATE OR REPLACE FUNCTION public.product_is_liked_rpc(p_id integer)
 RETURNS boolean
 LANGUAGE sql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path TO 'public'
 AS $$
   select exists (
@@ -30,6 +33,9 @@ AS $$
       and pl.user_id = auth.uid()
   );
 $$;
+
+COMMENT ON FUNCTION public.product_is_liked_rpc(integer)
+  IS 'SECURITY INVOKER keeps product_likes RLS active while returning whether the current caller liked the product.';
 
 -- ── admin_get_email ────────────────────────────────────────
 -- Returns auth.users.email for admins only; NULL otherwise.
@@ -45,6 +51,9 @@ AS $$
     ELSE NULL
   END;
 $$;
+
+COMMENT ON FUNCTION public.admin_get_email(uuid)
+  IS 'SECURITY DEFINER is required to read auth.users.email for admin views while returning data only when auth.uid() is an admin.';
 
 -- ── get_order_admin_actions ───────────────────────────────────
 -- 순수 함수: DB 조회 없음. 주어진 order_type + status에서

@@ -25,6 +25,23 @@ BEGIN
   END LOOP;
 
   FOREACH v_signature IN ARRAY ARRAY[
+    'public.product_is_liked_rpc(integer)',
+    'public.product_like_counts_rpc()'
+  ]
+  LOOP
+    IF to_regprocedure(v_signature) IS NOT NULL THEN
+      EXECUTE format(
+        'REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated, service_role',
+        v_signature
+      );
+      EXECUTE format(
+        'GRANT EXECUTE ON FUNCTION %s TO anon, authenticated',
+        v_signature
+      );
+    END IF;
+  END LOOP;
+
+  FOREACH v_signature IN ARRAY ARRAY[
     'public.admin_get_email(uuid)',
     'public.admin_update_claim_status(uuid, text, text, boolean)',
     'public.admin_update_order_tracking(uuid, text, text, text, text)',
