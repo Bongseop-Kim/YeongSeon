@@ -140,7 +140,7 @@ describe("ChatInput", () => {
     expect(within(selectedOptionRow).getByText("네이비")).toBeInTheDocument();
   });
 
-  it("선택한 원단 방식과 생성 수량을 액션 행에 작게 표시한다", () => {
+  it("선택한 원단 방식과 생성 수량을 입력 행 우측 메타 영역에 작게 표시한다", () => {
     useDesignChatStore.getState().setDesignContext({
       fabricMethod: "print",
       imageCount: 2,
@@ -148,11 +148,15 @@ describe("ChatInput", () => {
 
     render(<ChatInput onSend={vi.fn()} />);
 
+    const meta = screen.getByTestId("chat-input-meta");
+
+    expect(within(meta).getByText("날염 (프린팅)")).toBeInTheDocument();
+    expect(within(meta).getByText("2개")).toBeInTheDocument();
     expect(
-      within(screen.getByTestId("chat-input-selected-option-row")).getByText(
-        "날염 (프린팅) · 2개",
+      within(screen.getByTestId("chat-input-selected-option-row")).queryByText(
+        "날염 (프린팅)",
       ),
-    ).toBeInTheDocument();
+    ).not.toBeInTheDocument();
   });
 
   it("옵션 추가 다이얼로그는 취소 시 변경을 되돌리고 적용 시 유지한다", () => {
