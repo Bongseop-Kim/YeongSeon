@@ -48,10 +48,12 @@ const parseCouponRecord = (v: unknown, i: number): CouponRecord | null => {
       `쿠폰 조회 행(${i})의 coupon이 올바르지 않습니다: discount_type 값(${v.discount_type})이 허용된 유형("percentage" | "fixed")이 아닙니다.`,
     );
   }
+  const displayName =
+    typeof v.display_name === "string" ? v.display_name.trim() : "";
   return {
     id: v.id,
     name: v.name,
-    display_name: typeof v.display_name === "string" ? v.display_name : null,
+    display_name: displayName === "" ? null : displayName,
     discount_type: v.discount_type,
     discount_value: v.discount_value,
     max_discount_amount:

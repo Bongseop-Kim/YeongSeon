@@ -65,6 +65,23 @@ describe("parseUserCouponRecords", () => {
     );
   });
 
+  it("coupon.display_name은 trim하고 빈 값이면 null로 정규화한다", () => {
+    const coupon = {
+      ...(createUserCouponRecordRaw().coupon as Record<string, unknown>),
+      display_name: "   ",
+    };
+
+    expect(
+      parseUserCouponRecords([createUserCouponRecordRaw({ coupon })])[0],
+    ).toEqual(
+      expect.objectContaining({
+        coupon: expect.objectContaining({
+          display_name: null,
+        }),
+      }),
+    );
+  });
+
   it("reserved 상태 쿠폰도 허용한다", () => {
     expect(
       parseUserCouponRecords([
@@ -140,6 +157,7 @@ describe("coupon record -> view", () => {
     expect(mapRecordToCoupon(record)).toEqual(
       expect.objectContaining({
         id: "coupon-1",
+        displayName: "봄맞이 10% 할인",
         discountType: "percentage",
       }),
     );
@@ -151,7 +169,10 @@ describe("coupon record -> view", () => {
     expect(mapRecordToUserCoupon(record)).toEqual(
       expect.objectContaining({
         id: "uc-1",
-        coupon: expect.objectContaining({ name: "10% 할인" }),
+        coupon: expect.objectContaining({
+          name: "10% 할인",
+          displayName: "봄맞이 10% 할인",
+        }),
       }),
     );
     expect(() => mapRecordToUserCoupon({ ...record, coupon: null })).toThrow(

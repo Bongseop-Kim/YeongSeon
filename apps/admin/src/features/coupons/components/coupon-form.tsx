@@ -38,6 +38,7 @@ interface ControlledTextFieldProps {
   label: string;
   type?: HTMLInputTypeAttribute;
   required?: boolean;
+  validate?: (value: unknown) => true | string;
   error?: string;
   textarea?: boolean;
   min?: number;
@@ -73,19 +74,20 @@ function ControlledTextField({
   label,
   type = "text",
   required,
+  validate,
   error,
   textarea,
   min,
   className,
 }: ControlledTextFieldProps): ReactNode {
-  const validate =
-    type === "number" ? createNumberValidator(label, min) : undefined;
+  const fieldValidator =
+    type === "number" ? createNumberValidator(label, min) : validate;
   const { field } = useController({
     control,
     name,
     rules: {
       required: required ? `${label}을 입력해주세요.` : false,
-      validate,
+      validate: fieldValidator,
     },
   });
   const value = field.value == null ? "" : String(field.value);
@@ -171,6 +173,11 @@ export function CouponForm({
         name="displayName"
         label="고객 표시명"
         required
+        validate={(value) =>
+          typeof value === "string" && value.trim().length > 0
+            ? true
+            : "표시명은 비워둘 수 없습니다"
+        }
         error={errors.displayName?.message}
       />
 

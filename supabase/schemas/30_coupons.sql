@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS public.coupons (
     CHECK (discount_value > 0)
 );
 
+COMMENT ON TABLE public.coupons IS 'Coupons include legacy sample discount cleanup: SAMPLE_DISCOUNT was created by 20260319000000_sample_order_type.sql, disabled by 20260320000000_sample_pricing_by_type.sql, and superseded by five SAMPLE_DISCOUNT_* type-specific coupons. Migration 20260607234500_remove_legacy_sample_discount_coupon.sql deletes it only when no user_coupons issuance history references it.';
+
 -- Indexes
 CREATE INDEX coupons_active_idx ON public.coupons USING btree (is_active);
 CREATE INDEX coupons_expiry_idx ON public.coupons USING btree (expiry_date);
