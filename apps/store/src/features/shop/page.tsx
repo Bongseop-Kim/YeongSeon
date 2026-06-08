@@ -65,6 +65,7 @@ export default function ShopPage() {
         title="넥타이 쇼핑"
         description="ESSE SION의 다양한 넥타이 컬렉션. 비즈니스·웨딩·선물용 넥타이를 엄선된 소재로 제공합니다."
         ogUrl="https://essesion.shop/shop"
+        siteName="ESSE SION"
       />
       <MainLayout>
         <MainContent>

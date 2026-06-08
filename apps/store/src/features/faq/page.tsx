@@ -12,7 +12,7 @@ export default function FaqPage() {
     <>
       <PageSeo
         title="자주 묻는 질문"
-        description="맞춤 제작 기간, 소재 선택, 주문 방법 등 ESSE SION 이용에 관한 궁금증을 해결해 드립니다."
+        description="맞춤 제작 기간, 소재 선택, 주문 방법 등 영선산업 이용에 관한 궁금증을 해결해 드립니다."
         ogUrl="https://essesion.shop/faq"
       />
       <MainLayout>

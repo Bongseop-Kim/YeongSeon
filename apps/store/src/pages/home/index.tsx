@@ -10,7 +10,8 @@ const HOME_JSON_LD = {
     {
       "@type": "Organization",
       "@id": "https://essesion.shop/#organization",
-      name: "ESSE SION",
+      name: "영선산업",
+      alternateName: ["ESSE SION", "essesion"],
       url: "https://essesion.shop",
       logo: "https://essesion.shop/logo/logo.png",
       telephone: "042-626-9055",
@@ -23,7 +24,8 @@ const HOME_JSON_LD = {
       "@type": "WebSite",
       "@id": "https://essesion.shop/#website",
       url: "https://essesion.shop",
-      name: "ESSE SION",
+      name: "영선산업",
+      alternateName: "ESSE SION",
       publisher: { "@id": "https://essesion.shop/#organization" },
     },
   ],
@@ -38,8 +40,8 @@ export default function HomePage() {
   return (
     <>
       <PageSeo
-        title="ESSE SION | 맞춤 넥타이 전문 브랜드"
-        description="B2B 단체 제작부터 개인 맞춤 넥타이까지. 고품질 소재와 정교한 제작으로 당신만의 타이를 만들어 드립니다."
+        title="영선산업 | 맞춤 넥타이 제작·수선 전문"
+        description="영선산업은 맞춤 넥타이 제작, 단체 넥타이, 샘플 주문, 넥타이 수선·리폼을 운영합니다. 넥타이 판매 브랜드 ESSE SION을 함께 운영합니다."
         ogUrl="https://essesion.shop"
         fullTitle
       />

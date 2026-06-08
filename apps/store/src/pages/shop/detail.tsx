@@ -233,6 +233,7 @@ export default function ShopDetailPage() {
         description={product.info}
         ogImage={productImageUrl}
         ogUrl={productUrl}
+        siteName="ESSE SION"
       />
       <Helmet>
         <meta property="og:type" content="product" />
@@ -258,7 +259,7 @@ export default function ShopDetailPage() {
                 : "https://schema.org/InStock",
               seller: {
                 "@type": "Organization",
-                name: "ESSE SION",
+                name: "영선산업",
               },
             },
           })}

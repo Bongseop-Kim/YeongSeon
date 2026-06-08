@@ -7,7 +7,10 @@ interface PageSeoProps {
   ogUrl?: string;
   fullTitle?: boolean;
   robots?: string;
+  siteName?: string;
 }
+
+const DEFAULT_SITE_NAME = "영선산업";
 
 export function PageSeo({
   title,
@@ -16,8 +19,9 @@ export function PageSeo({
   ogUrl,
   fullTitle,
   robots,
+  siteName = DEFAULT_SITE_NAME,
 }: PageSeoProps) {
-  const resolvedTitle = fullTitle ? title : `${title} | ESSE SION`;
+  const resolvedTitle = fullTitle ? title : `${title} | ${siteName}`;
   return (
     <Helmet>
       <title>{resolvedTitle}</title>
@@ -27,6 +31,7 @@ export function PageSeo({
       <meta property="og:title" content={resolvedTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:site_name" content={siteName} />
       {ogUrl && <meta property="og:url" content={ogUrl} />}
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary_large_image" />
