@@ -371,7 +371,7 @@ const ReformPage = () => {
     <>
       <PageSeo
         title="넥타이 수선·리폼"
-        description="수동 넥타이를 자동 넥타이로 바꾸거나 원하는 폭으로 수선해 보세요. 사진 첨부와 일괄 적용으로 여러 개도 쉽게 접수할 수 있습니다."
+        description="영선산업에서 수동 넥타이를 자동 넥타이로 바꾸거나 원하는 폭으로 수선해 보세요. 여러 개도 쉽게 접수할 수 있습니다."
         ogUrl="https://essesion.shop/reform"
       />
       <MainLayout>

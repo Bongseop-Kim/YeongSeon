@@ -200,7 +200,7 @@ export default function SampleOrderPage() {
     <>
       <PageSeo
         title="샘플 넥타이 주문"
-        description="대량 주문 전 샘플로 먼저 확인하세요. ESSE SION 샘플 서비스로 소재와 품질을 직접 체험할 수 있습니다."
+        description="대량 주문 전 샘플로 먼저 확인하세요. 영선산업 샘플 서비스로 소재와 품질을 직접 체험할 수 있습니다."
         ogUrl="https://essesion.shop/sample-order"
       />
       <MainLayout>

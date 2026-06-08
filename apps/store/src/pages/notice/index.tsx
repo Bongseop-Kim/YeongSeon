@@ -11,7 +11,7 @@ export default function NoticePage() {
     <>
       <PageSeo
         title="공지사항"
-        description="ESSE SION 서비스 운영 변경, 점검 일정, 정책 반영 사항을 확인하세요."
+        description="영선산업 서비스 운영 변경, 점검 일정, 정책 반영 사항을 확인하세요."
         ogUrl="https://essesion.shop/notice"
       />
       <MainLayout>

@@ -14,6 +14,9 @@ import { Dialog } from "@/shared/ui-extended/dialog";
 import { ResponsiveDialogScaffold } from "@/shared/ui-extended/responsive-dialog-scaffold";
 import { useShopFilters } from "@/features/shop/hooks/use-shop-filters";
 
+// Shop SEO uses the English sales brand for tie commerce, not the company name.
+const SHOP_SALES_BRAND_NAME = "ESSE SION";
+
 export default function ShopPage() {
   const [sortOption, setSortOption] = useState<SortOption>("latest");
   const { isMobile } = useBreakpoint();
@@ -65,6 +68,7 @@ export default function ShopPage() {
         title="넥타이 쇼핑"
         description="ESSE SION의 다양한 넥타이 컬렉션. 비즈니스·웨딩·선물용 넥타이를 엄선된 소재로 제공합니다."
         ogUrl="https://essesion.shop/shop"
+        siteName={SHOP_SALES_BRAND_NAME}
       />
       <MainLayout>
         <MainContent>

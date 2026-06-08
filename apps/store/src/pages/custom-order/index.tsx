@@ -165,7 +165,7 @@ export default function OrderPage() {
     <>
       <PageSeo
         title="맞춤 넥타이 제작 주문"
-        description="기업 단체 넥타이부터 개인 맞춤 타이까지. 원하는 디자인·소재·색상으로 나만의 넥타이를 제작해 드립니다."
+        description="영선산업이 기업 단체 넥타이부터 개인 맞춤 타이까지 원하는 디자인·소재·색상으로 제작해 드립니다."
         ogUrl="https://essesion.shop/custom-order"
       />
       <MainLayout>
