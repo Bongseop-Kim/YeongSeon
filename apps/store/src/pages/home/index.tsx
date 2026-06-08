@@ -25,7 +25,7 @@ const HOME_JSON_LD = {
       "@id": "https://essesion.shop/#website",
       url: "https://essesion.shop",
       name: "영선산업",
-      alternateName: "ESSE SION",
+      alternateName: ["ESSE SION"],
       publisher: { "@id": "https://essesion.shop/#organization" },
     },
   ],
