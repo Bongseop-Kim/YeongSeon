@@ -3,6 +3,7 @@ import type { UserCouponStatus } from "@yeongseon/shared/types/view/coupon";
 export interface CouponRecord {
   id: string;
   name: string;
+  display_name: string | null;
   discount_type: "percentage" | "fixed";
   discount_value: number;
   max_discount_amount: number | null;

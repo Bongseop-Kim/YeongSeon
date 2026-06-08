@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS public.coupons (
   id                  uuid          NOT NULL DEFAULT extensions.uuid_generate_v4(),
   name                text          NOT NULL,
+  display_name        text,
   discount_type       text          NOT NULL,
   discount_value      numeric(10,2) NOT NULL,
   max_discount_amount numeric(10,2),
@@ -22,6 +23,8 @@ CREATE TABLE IF NOT EXISTS public.coupons (
   CONSTRAINT coupons_discount_value_check
     CHECK (discount_value > 0)
 );
+
+COMMENT ON TABLE public.coupons IS 'Coupons include legacy sample discount cleanup: SAMPLE_DISCOUNT was created by 20260319000000_sample_order_type.sql, disabled by 20260320000000_sample_pricing_by_type.sql, and superseded by five SAMPLE_DISCOUNT_* type-specific coupons. Migration 20260607234500_remove_legacy_sample_discount_coupon.sql deletes it only when no user_coupons issuance history references it.';
 
 -- Indexes
 CREATE INDEX coupons_active_idx ON public.coupons USING btree (is_active);

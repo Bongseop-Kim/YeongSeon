@@ -327,6 +327,10 @@ const parseClaimItemField = (
       coupon: {
         id: v.appliedCoupon.coupon.id,
         name: v.appliedCoupon.coupon.name,
+        displayName:
+          typeof v.appliedCoupon.coupon.displayName === "string"
+            ? v.appliedCoupon.coupon.displayName
+            : null,
         discountType: v.appliedCoupon.coupon.discountType,
         discountValue: v.appliedCoupon.coupon.discountValue,
         expiryDate: v.appliedCoupon.coupon.expiryDate,

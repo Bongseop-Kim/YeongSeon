@@ -35,6 +35,7 @@ SET recipient_name = EXCLUDED.recipient_name,
 INSERT INTO public.coupons (
   id,
   name,
+  display_name,
   discount_type,
   discount_value,
   max_discount_amount,
@@ -46,6 +47,7 @@ INSERT INTO public.coupons (
 VALUES (
   '40000000-0000-4000-8000-000000000001',
   '로컬 개발 주문 쿠폰',
+  '로컬 개발 주문 쿠폰',
   'fixed',
   1000,
   1000,
@@ -56,6 +58,7 @@ VALUES (
 )
 ON CONFLICT (name) DO UPDATE
 SET discount_type = EXCLUDED.discount_type,
+    display_name = EXCLUDED.display_name,
     discount_value = EXCLUDED.discount_value,
     max_discount_amount = EXCLUDED.max_discount_amount,
     description = EXCLUDED.description,

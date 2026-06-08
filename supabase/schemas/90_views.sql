@@ -163,6 +163,7 @@ LEFT JOIN LATERAL (
       'coupon', jsonb_build_object(
         'id', c.id,
         'name', c.name,
+        'displayName', c.display_name,
         'discountType', c.discount_type,
         'discountValue', c.discount_value,
         'maxDiscountAmount', c.max_discount_amount,
@@ -256,6 +257,7 @@ LEFT JOIN LATERAL (
       'coupon', jsonb_build_object(
         'id', cp.id,
         'name', cp.name,
+        'displayName', cp.display_name,
         'discountType', cp.discount_type,
         'discountValue', cp.discount_value,
         'maxDiscountAmount', cp.max_discount_amount,

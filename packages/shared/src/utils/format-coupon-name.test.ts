@@ -21,4 +21,26 @@ describe("formatCouponName", () => {
       "신규 가입 쿠폰",
     );
   });
+
+  it("고객 표시명이 있으면 내부 관리명 대신 고객 표시명을 사용한다", () => {
+    expect(
+      formatCouponName(
+        createCoupon({
+          name: "WELCOME_10",
+          displayName: "신규 가입 10% 할인 쿠폰",
+        }),
+      ),
+    ).toBe("신규 가입 10% 할인 쿠폰");
+  });
+
+  it("고객 표시명이 없고 내부 관리명이 내부용이면 설명을 고객 표시명 fallback으로 사용한다", () => {
+    expect(
+      formatCouponName(
+        createCoupon({
+          name: "WELCOME_10",
+          description: "신규 가입 10% 할인 쿠폰",
+        }),
+      ),
+    ).toBe("신규 가입 10% 할인 쿠폰");
+  });
 });

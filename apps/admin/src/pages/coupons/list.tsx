@@ -6,6 +6,7 @@ import { Callout } from "seed-design/ui/callout";
 import { AdminPageHeader } from "@/components/AdminPageHeader";
 import { AdminPanelHeader } from "@/components/AdminPanelHeader";
 import { AdminDataTable } from "@/components/AdminDataTable";
+import { formatCouponName } from "@yeongseon/shared/utils/format-coupon-name";
 import {
   COUPON_PAGE_SIZE,
   CouponStatusBadge,
@@ -22,7 +23,16 @@ function formatDiscount(coupon: AdminCoupon): string {
 }
 
 const COUPON_COLUMNS: ColumnDef<AdminCoupon>[] = [
-  { accessorKey: "name", header: "쿠폰명" },
+  { accessorKey: "name", header: "내부 관리명" },
+  {
+    accessorKey: "displayName",
+    header: "고객 표시명",
+    cell: ({ row }) => (
+      <Text as="span" textStyle="t4Regular">
+        {formatCouponName(row.original)}
+      </Text>
+    ),
+  },
   {
     accessorKey: "discountType",
     header: "할인유형",
@@ -115,7 +125,7 @@ export default function CouponList() {
               search: location.search,
             })
           }
-          getRowActionLabel={(row) => `${row.name} 쿠폰 수정`}
+          getRowActionLabel={(row) => `${row.name} 내부 관리 쿠폰 수정`}
           isLoading={query.isFetching}
         />
 

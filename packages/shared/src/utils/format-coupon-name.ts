@@ -9,5 +9,15 @@ const SYSTEM_COUPON_LABELS: Record<string, string> = {
     "원단+봉제 샘플 할인 쿠폰 (선염)",
 };
 
-export const formatCouponName = (coupon: Pick<Coupon, "name">): string =>
-  SYSTEM_COUPON_LABELS[coupon.name] ?? coupon.name;
+export const formatCouponName = (
+  coupon: Pick<Coupon, "name" | "displayName" | "description">,
+): string => {
+  const displayName = coupon.displayName?.trim();
+  const description = coupon.description?.trim();
+  return (
+    displayName ||
+    SYSTEM_COUPON_LABELS[coupon.name] ||
+    description ||
+    coupon.name
+  );
+};
