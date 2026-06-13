@@ -5,9 +5,19 @@ import { PAGE_BREADCRUMBS } from "@/shared/constants/PAGE_BREADCRUMBS";
 import { Accordion } from "@/shared/ui/accordion";
 import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { FAQ_DATA } from "@/features/faq/constants/FAQ";
+import { useReformPricing } from "@/entities/reform";
+import { applyTemplateTokens } from "@/shared/lib/template-tokens";
 import { FaqAccordionItem } from "./components/faq-accordion-item";
 
 export default function FaqPage() {
+  const { data: reformPricing } = useReformPricing();
+  const feeTokens: Record<string, string> = reformPricing
+    ? {
+        REFORM_SHIPPING_COST: reformPricing.shippingCost.toLocaleString(),
+        REFORM_PICKUP_FEE: reformPricing.pickupFee.toLocaleString(),
+      }
+    : {};
+
   return (
     <>
       <PageSeo
@@ -30,7 +40,13 @@ export default function FaqPage() {
 
               <Accordion type="single" collapsible className="w-full">
                 {FAQ_DATA.map((faq) => (
-                  <FaqAccordionItem key={faq.id} faq={faq} />
+                  <FaqAccordionItem
+                    key={faq.id}
+                    faq={{
+                      ...faq,
+                      answer: applyTemplateTokens(faq.answer, feeTokens),
+                    }}
+                  />
                 ))}
               </Accordion>
             </div>

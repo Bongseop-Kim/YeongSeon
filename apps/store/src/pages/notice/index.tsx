@@ -5,8 +5,18 @@ import { Accordion } from "@/shared/ui/accordion";
 import { UtilityPageIntro } from "@/shared/composite/utility-page";
 import { NOTICE_DATA, NoticeAccordionItem } from "@/features/notice";
 import { PageSeo } from "@/shared/ui/page-seo";
+import { useReformPricing } from "@/entities/reform";
+import { applyTemplateTokens } from "@/shared/lib/template-tokens";
 
 export default function NoticePage() {
+  const { data: reformPricing } = useReformPricing();
+  const feeTokens: Record<string, string> = reformPricing
+    ? {
+        REFORM_SHIPPING_COST: reformPricing.shippingCost.toLocaleString(),
+        REFORM_PICKUP_FEE: reformPricing.pickupFee.toLocaleString(),
+      }
+    : {};
+
   return (
     <>
       <PageSeo
@@ -29,7 +39,13 @@ export default function NoticePage() {
 
               <Accordion type="single" collapsible className="w-full">
                 {NOTICE_DATA.map((notice) => (
-                  <NoticeAccordionItem key={notice.id} notice={notice} />
+                  <NoticeAccordionItem
+                    key={notice.id}
+                    notice={{
+                      ...notice,
+                      content: applyTemplateTokens(notice.content, feeTokens),
+                    }}
+                  />
                 ))}
               </Accordion>
             </div>

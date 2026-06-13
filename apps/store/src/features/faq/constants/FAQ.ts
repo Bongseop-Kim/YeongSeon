@@ -36,11 +36,12 @@ export const FAQ_DATA: FAQItem[] = [
     id: "shipping-3",
     category: "일반 배송",
     question: "배송비는 얼마인가요?",
-    answer: `배송비는 주문 금액에 따라 다릅니다.
+    answer: `배송비는 상품 종류에 따라 다릅니다.
 
 ■ 배송비 안내
-- 5만원 이상 구매 시: 무료 배송
-- 5만원 미만 구매 시: 3,000원
+- 일반 상품: 무료 배송
+- 수선 상품: {{REFORM_SHIPPING_COST}}원
+- 택배 수거 서비스 신청 시: {{REFORM_PICKUP_FEE}}원 추가
 
 ※ 제주도 및 도서산간 지역은 추가 배송비가 발생할 수 있습니다.`,
   },
