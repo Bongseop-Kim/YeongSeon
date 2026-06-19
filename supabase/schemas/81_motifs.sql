@@ -13,8 +13,8 @@ CREATE TABLE public.motifs (
   color_slots   jsonb             NOT NULL DEFAULT '["s0"]'::jsonb,
   bbox          jsonb             NOT NULL,                     -- [min_x, min_y, max_x, max_y]
   anchor        jsonb             NOT NULL,                     -- [x, y]
-  subject       text,
-  part          text,
+  subject       text,                                            -- [free text] 통제 어휘 없음 (D10)
+  scope         text,                                            -- [controlled] 'whole' | 'partial' (D10)
   view          text,
   expression    text,
   style         text,
@@ -30,7 +30,9 @@ CREATE TABLE public.motifs (
 
 -- P0: ivfflat(vector) 인덱스 없음 — 카탈로그가 작아 seq scan으로 충분, 임베딩 검색은 S11/P3로 미룸.
 CREATE INDEX motifs_variant_group_idx ON public.motifs (variant_group);
-CREATE INDEX motifs_subject_part_idx  ON public.motifs (subject, part);
+-- scope는 저카디널리티(whole/partial)라 실효성은 낮다. 실질 조회는 variant_group 인덱스 +
+-- (행 수 충분해진 뒤) ivfflat(embedding)에 의존한다. subject 하드필터는 폐기(D10/D13).
+CREATE INDEX motifs_scope_idx         ON public.motifs (scope);
 
 ALTER TABLE public.motifs ENABLE ROW LEVEL SECURITY;
 
