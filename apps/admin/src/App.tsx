@@ -34,6 +34,8 @@ import SettingsPage from "@/pages/settings";
 import PricingPage from "@/pages/pricing";
 import GenerationLogList from "@/pages/generation-logs/list";
 import GenerationLogDetailPage from "@/pages/generation-logs/detail";
+import SeamlessLogList from "@/pages/seamless-logs/list";
+import SeamlessLogDetail from "@/pages/seamless-logs/detail";
 
 function useAdminAuthCheck() {
   const [state, setState] = useState<{
@@ -136,6 +138,8 @@ function AppRoutes() {
             path="/generation-logs/:id"
             element={<GenerationLogDetailPage />}
           />
+          <Route path="/seamless-logs" element={<SeamlessLogList />} />
+          <Route path="/seamless-logs/:id" element={<SeamlessLogDetail />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
