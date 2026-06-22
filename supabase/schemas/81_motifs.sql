@@ -14,7 +14,7 @@ CREATE TABLE public.motifs (
   bbox          jsonb             NOT NULL,                     -- [min_x, min_y, max_x, max_y]
   anchor        jsonb             NOT NULL,                     -- [x, y]
   subject       text,                                            -- [free text] 통제 어휘 없음 (D10)
-  scope         text,                                            -- [controlled] 'whole' | 'partial' (D10)
+  scope         text              CONSTRAINT motifs_scope_check CHECK (scope IN ('whole', 'partial')), -- [controlled] 'whole' | 'partial' (D10)
   view          text,
   expression    text,
   style         text,

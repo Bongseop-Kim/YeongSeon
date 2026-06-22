@@ -43,7 +43,7 @@ const MERCHANT_RETURN_POLICY = {
   returnFees: "https://schema.org/ReturnShippingFeesCustomerResponsibility",
 } as const;
 
-export interface ProductJsonLdInput {
+interface ProductJsonLdInput {
   name: string;
   image: string;
   description: string;
