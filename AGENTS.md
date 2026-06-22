@@ -49,6 +49,7 @@
 
 - `supabase/schemas/*.sql`이 DB 구조 기준
 - 운영 DB 객체 변경 시 `supabase/schemas/*.sql` 변경과 새 `supabase/migrations/*.sql`을 같은 diff에 포함
+- **seamless-tile(Python SVG 엔진) 테이블은 전부 이 모노레포가 소유·관리한다** — 같은 Supabase 프로젝트(공유 DB)를 쓰므로 마이그레이션 원장은 하나뿐. seamless-tile 레포는 마이그레이션을 만들지 않고 direct DSN 클라이언트로만 붙는다. 해당 테이블(`motifs` 등) 스키마 변경은 여기서 `pnpm db:new`로 처리. 현재: `supabase/schemas/81_motifs.sql`
 - CLI 실패 시 에러 전문 공유, 자동 재시도 금지
 - `migration repair`, `db reset --linked`는 영향 범위 설명 후 승인받고 실행
 - 마이그레이션 파일에 `--` 주석 금지 (squash 시 소실) → `supabase/schemas/*.sql` 또는 `COMMENT ON` 사용

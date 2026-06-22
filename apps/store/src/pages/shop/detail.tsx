@@ -8,6 +8,7 @@ import { Image } from "@imagekit/react";
 import { useState, useEffect, useRef } from "react";
 import { PageSeo } from "@/shared/ui/page-seo";
 import { IMAGEKIT_URL_ENDPOINT } from "@/shared/lib/imagekit";
+import { buildProductJsonLd } from "@/shared/lib/product-jsonld";
 import {
   useSelectedOptions,
   MobilePurchaseSheet,
@@ -238,31 +239,17 @@ export default function ShopDetailPage() {
       <Helmet>
         <meta property="og:type" content="product" />
         <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org/",
-            "@type": "Product",
-            name: product.name,
-            image: productImageUrl,
-            description: product.info,
-            sku: product.code,
-            brand: {
-              "@type": "Brand",
-              name: "ESSE SION",
-            },
-            offers: {
-              "@type": "Offer",
-              url: productUrl,
-              priceCurrency: "KRW",
+          {JSON.stringify(
+            buildProductJsonLd({
+              name: product.name,
+              image: productImageUrl,
+              description: product.info,
+              sku: product.code,
               price: product.price,
-              availability: isProductSoldOut
-                ? "https://schema.org/OutOfStock"
-                : "https://schema.org/InStock",
-              seller: {
-                "@type": "Organization",
-                name: "영선산업",
-              },
-            },
-          })}
+              url: productUrl,
+              isSoldOut: isProductSoldOut,
+            }),
+          )}
         </script>
       </Helmet>
       <MainContent className="overflow-visible">
