@@ -112,22 +112,13 @@ export default function MotifList() {
       <AdminPageHeader
         title="Motif SVG"
         description="seamless-tile motif registry의 SVG primitive를 확인합니다."
-        className="motifHeader"
-        titleGroupClassName="motifTitleGroup"
-        titleClassName="motifTitle"
-        descriptionClassName="motifDescriptionText"
       />
 
       <section
         className="motifFilterPanel"
         aria-labelledby="motif-filter-title"
       >
-        <AdminPanelHeader
-          title="조회 조건"
-          id="motif-filter-title"
-          className="motifPanelHeader"
-          titleClassName="motifPanelTitle"
-        />
+        <AdminPanelHeader title="조회 조건" id="motif-filter-title" />
         <form
           className="motifFilterBar"
           onSubmit={(event) => event.preventDefault()}
@@ -177,22 +168,24 @@ export default function MotifList() {
         </form>
       </section>
 
-      {errorMessage ? (
-        <Callout tone="critical" description={errorMessage} role="alert" />
-      ) : null}
-
-      {isLoading ? (
-        <AdminPanelSkeleton lines={6} />
-      ) : (
-        <MotifGrid
-          data={data ?? []}
-          page={page}
-          hasMore={hasMore}
-          onPageChange={(nextPage) =>
-            updateParams({ page: String(nextPage) }, { resetPage: false })
-          }
-        />
-      )}
+      <section className="motifListPanel" aria-labelledby="motif-list-title">
+        <AdminPanelHeader title="Motif 목록" id="motif-list-title" />
+        {errorMessage ? (
+          <Callout tone="critical" description={errorMessage} role="alert" />
+        ) : null}
+        {isLoading ? (
+          <AdminPanelSkeleton lines={6} />
+        ) : (
+          <MotifGrid
+            data={data ?? []}
+            page={page}
+            hasMore={hasMore}
+            onPageChange={(nextPage) =>
+              updateParams({ page: String(nextPage) }, { resetPage: false })
+            }
+          />
+        )}
+      </section>
     </main>
   );
 }

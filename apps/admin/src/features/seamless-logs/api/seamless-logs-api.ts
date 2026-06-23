@@ -21,7 +21,7 @@ export async function getSeamlessStats(
       p_end_date: endDate,
     },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   return toSeamlessStatsData(data);
 }
 
@@ -46,7 +46,7 @@ export async function getSeamlessLogs(params: {
       p_offset: params.offset ?? 0,
     },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   if (!Array.isArray(data)) return [];
   return data.map(toAdminSeamlessLogItem);
 }
@@ -60,7 +60,7 @@ export async function getSeamlessLog(
       p_id: id,
     },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw error;
   if (!Array.isArray(data) || data.length === 0) return null;
   return toAdminSeamlessLogItem(data[0]);
 }

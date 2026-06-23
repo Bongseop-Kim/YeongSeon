@@ -42,7 +42,8 @@
   color: var(--seed-color-fg-neutral-muted);
 }
 
-.motifFilterPanel {
+.motifFilterPanel,
+.motifListPanel {
   display: flex;
   flex-direction: column;
   gap: 16px;

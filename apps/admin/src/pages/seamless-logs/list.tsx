@@ -79,16 +79,20 @@ export default function SeamlessLogList() {
   const inputType = normalizeInputTypeParam(searchParams.get("inputType"));
   const idSearch = searchParams.get("idSearch") ?? "";
   const page = parsePageParam(searchParams.get("page"));
+  const isDateRangeValid = dateRange[0] <= dateRange[1];
   const [idSearchInputState, setIdSearchInputState] = useState({
     source: idSearch,
     value: idSearch,
   });
-  const { data: statsData, isLoading: statsLoading } =
-    useSeamlessStatsQuery(dateRange);
+  const { data: statsData, isLoading: statsLoading } = useSeamlessStatsQuery(
+    dateRange,
+    isDateRangeValid,
+  );
 
-  if (idSearchInputState.source !== idSearch) {
+  useEffect(() => {
+    if (idSearchInputState.source === idSearch) return;
     setIdSearchInputState({ source: idSearch, value: idSearch });
-  }
+  }, [idSearch, idSearchInputState.source]);
 
   const idSearchInput =
     idSearchInputState.source === idSearch
@@ -129,11 +133,16 @@ export default function SeamlessLogList() {
     inputType,
     status,
     idSearch: idSearch || null,
+    enabled: isDateRangeValid,
   });
 
-  const logCountText = logsHasMore
-    ? `${page * SEAMLESS_LOG_PAGE_SIZE}+`
-    : String((page - 1) * SEAMLESS_LOG_PAGE_SIZE + (logsData?.length ?? 0));
+  const logs = isDateRangeValid ? (logsData ?? []) : [];
+  const hasMoreLogs = isDateRangeValid && logsHasMore;
+  const logCountText = isDateRangeValid
+    ? hasMoreLogs
+      ? `${page * SEAMLESS_LOG_PAGE_SIZE}+`
+      : String((page - 1) * SEAMLESS_LOG_PAGE_SIZE + logs.length)
+    : "0";
 
   const updateParams = (
     patch: Record<string, string | null>,
@@ -152,25 +161,20 @@ export default function SeamlessLogList() {
 
   return (
     <main className="generationLogPage">
-      <AdminPageHeader
-        title="Seamless 생성 로그"
-        description="seamless SVG 생성 요청, 후보 미리보기, 실행 시간과 상태 분포를 확인합니다."
-        className="generationLogHeader"
-        titleGroupClassName="generationLogTitleGroup"
-        titleClassName="generationLogTitle"
-        descriptionClassName="generationLogDescription"
-      />
+      <div className="generationLogHeader">
+        <AdminPageHeader
+          title="Seamless 생성 로그"
+          description="seamless SVG 생성 요청, 후보 미리보기, 실행 시간과 상태 분포를 확인합니다."
+        />
+      </div>
 
       <section
         className="generationLogPanel"
         aria-labelledby="seamless-filter-title"
       >
-        <AdminPanelHeader
-          title="조회 조건"
-          id="seamless-filter-title"
-          className="generationLogPanelHeader"
-          titleClassName="generationLogPanelTitle"
-        />
+        <div className="generationLogPanelHeader">
+          <AdminPanelHeader title="조회 조건" id="seamless-filter-title" />
+        </div>
         <form
           className="generationLogToolbar"
           onSubmit={(event) => event.preventDefault()}
@@ -237,23 +241,29 @@ export default function SeamlessLogList() {
         </form>
       </section>
 
-      {statsLoading ? (
+      {isDateRangeValid && statsLoading ? (
         <AdminPanelSkeleton lines={3} />
       ) : (
-        <SeamlessLogStats stats={statsData?.summary ?? EMPTY_SUMMARY} />
+        <SeamlessLogStats
+          stats={
+            isDateRangeValid
+              ? (statsData?.summary ?? EMPTY_SUMMARY)
+              : EMPTY_SUMMARY
+          }
+        />
       )}
 
       <section
         className="generationLogPanel"
         aria-labelledby="seamless-log-list-title"
       >
-        <AdminPanelHeader
-          title="로그 목록"
-          id="seamless-log-list-title"
-          className="generationLogPanelHeader"
-          titleClassName="generationLogPanelTitle"
-          count={`${logCountText}건`}
-        />
+        <div className="generationLogPanelHeader">
+          <AdminPanelHeader
+            title="로그 목록"
+            id="seamless-log-list-title"
+            count={`${logCountText}건`}
+          />
+        </div>
         {dateRange[0] > dateRange[1] ? (
           <Callout
             tone="critical"
@@ -262,10 +272,10 @@ export default function SeamlessLogList() {
           />
         ) : null}
         <SeamlessLogTable
-          data={logsData ?? []}
-          loading={logsLoading}
+          data={logs}
+          loading={isDateRangeValid && logsLoading}
           page={page}
-          hasMore={logsHasMore}
+          hasMore={hasMoreLogs}
           onPageChange={(nextPage) =>
             updateParams({ page: String(nextPage) }, { resetPage: false })
           }

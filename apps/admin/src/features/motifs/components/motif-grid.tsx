@@ -115,17 +115,17 @@ export function MotifGrid({
 }: MotifGridProps) {
   const totalPages = hasMore ? page + 1 : page;
 
-  if (data.length === 0) {
-    return <div className="motifEmpty">Motif가 없습니다.</div>;
-  }
-
   return (
     <>
-      <div className="motifGrid">
-        {data.map((motif) => (
-          <MotifCard key={motif.id} motif={motif} />
-        ))}
-      </div>
+      {data.length === 0 ? (
+        <div className="motifEmpty">Motif가 없습니다.</div>
+      ) : (
+        <div className="motifGrid">
+          {data.map((motif) => (
+            <MotifCard key={motif.id} motif={motif} />
+          ))}
+        </div>
+      )}
       <nav className="motifPagination" aria-label="Motif SVG 페이지네이션">
         <ActionButton
           type="button"

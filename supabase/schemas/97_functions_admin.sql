@@ -626,10 +626,6 @@ end;
 $$;
 
 -- ── admin_update_order_tracking ─────────────────────────────────
--- SECURITY DEFINER 사용 근거:
---   스키마에서 authenticated 역할의 orders 테이블 직접 UPDATE가
---   REVOKE UPDATE ... FROM authenticated 로 제한되어 있다.
---   is_admin() 검증으로 관리자만 호출 가능하므로 SECURITY DEFINER가 적합하다.
 CREATE OR REPLACE FUNCTION public.admin_update_order_tracking(
   p_order_id uuid,
   p_courier_company text DEFAULT NULL,
@@ -718,6 +714,9 @@ begin
   return jsonb_build_object('success', true, 'order_id', p_order_id);
 end;
 $$;
+
+COMMENT ON FUNCTION public.admin_update_order_tracking(uuid, text, text, text, text)
+  IS 'Updates admin order tracking fields. SECURITY DEFINER is required because authenticated cannot directly UPDATE orders after REVOKE UPDATE; admin access is restricted by public.is_admin().';
 
 -- ── admin_bulk_issue_coupons ────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.admin_bulk_issue_coupons(
@@ -843,9 +842,6 @@ begin
 end;
 $$;
 
--- ── admin_get_motifs ───────────────────────────────────────────
--- Admin-only motif viewer. `motifs` has no authenticated SELECT grant, so this
--- function is the read boundary for the admin UI.
 CREATE OR REPLACE FUNCTION public.admin_get_motifs(
   p_status    text    DEFAULT NULL,
   p_source    text    DEFAULT NULL,
@@ -919,7 +915,7 @@ end;
 $$;
 
 COMMENT ON FUNCTION public.admin_get_motifs(text, text, text, integer, integer)
-  IS 'Admin-only motif listing for SVG primitive review.';
+  IS 'Admin-only motif listing for SVG primitive review. SECURITY DEFINER is required because motifs has no authenticated SELECT grant; this function is the read boundary for the admin UI.';
 
 GRANT EXECUTE ON FUNCTION public.admin_get_motifs(
   text, text, text, integer, integer
@@ -1017,14 +1013,8 @@ begin
     l.error_message,
     l.created_at
   from public.seamless_generation_logs l
-  where (
-      p_start_date is null
-      or p_end_date is null
-      or (
-        l.created_at >= (p_start_date::timestamp at time zone 'UTC')::timestamptz
-        and l.created_at < ((p_end_date + 1)::timestamp at time zone 'UTC')::timestamptz
-      )
-    )
+  where (p_start_date is null or l.created_at >= (p_start_date::timestamp at time zone 'UTC')::timestamptz)
+    and (p_end_date is null or l.created_at < ((p_end_date + 1)::timestamp at time zone 'UTC')::timestamptz)
     and (p_input_type is null or l.input_type = p_input_type)
     and (p_status     is null or l.status     = p_status)
     and (

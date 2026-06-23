@@ -19,7 +19,10 @@ function toDateString(value: string | Dayjs): string {
   return typeof value === "string" ? value : value.format("YYYY-MM-DD");
 }
 
-export function useSeamlessStatsQuery(dateRange: SeamlessDateRange): {
+export function useSeamlessStatsQuery(
+  dateRange: SeamlessDateRange,
+  enabled = true,
+): {
   data: SeamlessStatsData | undefined;
   isLoading: boolean;
 } {
@@ -28,6 +31,7 @@ export function useSeamlessStatsQuery(dateRange: SeamlessDateRange): {
   return useQuery({
     queryKey: ["seamless-logs", "stats", startDate, endDate],
     queryFn: () => getSeamlessStats(startDate, endDate),
+    enabled,
   });
 }
 
@@ -37,6 +41,7 @@ export function useSeamlessLogsQuery(params: {
   inputType?: SeamlessInputTypeFilter | null;
   status?: SeamlessStatusFilter | null;
   idSearch?: string | null;
+  enabled?: boolean;
 }): {
   data: AdminSeamlessLogItem[] | undefined;
   hasMore: boolean;
@@ -67,6 +72,7 @@ export function useSeamlessLogsQuery(params: {
         limit: SEAMLESS_LOG_PAGE_SIZE + 1,
         offset: (normalizedPage - 1) * SEAMLESS_LOG_PAGE_SIZE,
       }),
+    enabled: params.enabled ?? true,
   });
 
   const rawData = query.data;
