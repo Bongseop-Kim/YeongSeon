@@ -1,0 +1,356 @@
+.generationLogPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.generationLogHeader,
+.generationLogPanelHeader,
+.generationLogToolbar,
+.generationLogPagination,
+.generationLogActionRow,
+.generationLogChipRow,
+.generationLogImageGrid,
+.generationLogStatsGrid,
+.generationLogPromptGrid,
+.generationLogSummaryStrip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.generationLogHeader,
+.generationLogPanelHeader {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.generationLogTitleGroup,
+.generationLogPanelTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.generationLogTitle,
+.generationLogPanelTitle,
+.generationLogSectionTitle,
+.generationLogSubTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.generationLogTitle {
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.generationLogPanelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  line-height: 26px;
+}
+
+.generationLogSectionTitle {
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.generationLogSubTitle {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.generationLogDescription,
+.generationLogMutedText,
+.generationLogMetaText,
+.generationLogBreadcrumb {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.generationLogBreadcrumb {
+  font-size: 12px;
+}
+
+.generationLogMetaText {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.generationLogPanel,
+.generationLogStatCard,
+.generationLogSummaryStrip {
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 16px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.generationLogPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.generationLogSummaryStrip {
+  align-items: center;
+  justify-content: space-between;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.generationLogToolbar {
+  align-items: flex-end;
+}
+
+.generationLogPagination {
+  align-items: center;
+  gap: 8px;
+}
+
+.generationLogField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.generationLogSearchField {
+  min-width: 240px;
+}
+
+.generationLogFieldLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.generationLogInput,
+.generationLogSelect,
+.generationLogTextarea {
+  min-height: 40px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
+  padding: 0 12px;
+  font: inherit;
+}
+
+.generationLogTextarea {
+  padding: 10px 12px;
+  white-space: pre-wrap;
+}
+
+.generationLogInput:focus-visible,
+.generationLogSelect:focus-visible,
+.generationLogImageButton:focus-visible {
+  outline: 2px solid var(--seed-color-stroke-brand);
+  outline-offset: 2px;
+}
+
+.generationLogStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.generationLogStatCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.generationLogStatLabel {
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.generationLogStatValue {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.generationLogThumbGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 54px);
+  gap: 4px;
+}
+
+.generationLogThumbCell,
+.generationLogPreviewPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 8px;
+  background: var(--seed-color-bg-neutral-weak);
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 11px;
+}
+
+.generationLogThumbCell {
+  width: 54px;
+  height: 54px;
+}
+
+.generationLogThumbCellError,
+.generationLogPreviewPlaceholderError {
+  border-color: var(--seed-color-stroke-critical-muted);
+  background: var(--seed-color-bg-critical-weak);
+}
+
+.generationLogThumbImage,
+.generationLogPreviewImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.generationLogRequestCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+}
+
+.generationLogRequestText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generationLogCodeText,
+.generationLogJsonBlock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.generationLogJsonBlock {
+  max-height: 520px;
+  overflow: auto;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-neutral-weak);
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+.generationLogTabList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.generationLogTabButton {
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 999px;
+  background: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.generationLogTabButton[aria-selected="true"] {
+  border-color: var(--seed-color-stroke-brand);
+  background: var(--seed-color-bg-brand-weak);
+  color: var(--seed-color-fg-brand);
+}
+
+.generationLogMediaItem,
+.generationLogDataBlock,
+.generationLogTextColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.generationLogDataBlock,
+.generationLogTextColumn {
+  min-width: 0;
+}
+
+.generationLogImageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.generationLogImageButton {
+  width: 100%;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 12px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.generationLogImageButton:hover {
+  border-color: var(--seed-color-stroke-neutral);
+}
+
+.generationLogImageButtonActive {
+  border-color: var(--seed-color-stroke-brand);
+  background: var(--seed-color-bg-brand-weak);
+}
+
+.generationLogPreviewImage,
+.generationLogPreviewPlaceholder {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: var(--seed-color-bg-neutral-weak);
+}
+
+.generationLogPromptGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.generationLogExpandable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.generationLogExpandableBody {
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-neutral-weak);
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 980px) {
+  .generationLogStatsGrid,
+  .generationLogPromptGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .generationLogHeader,
+  .generationLogPanelHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.generationLogNumberCell {
+  display: inline-block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

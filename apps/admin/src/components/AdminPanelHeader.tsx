@@ -5,8 +5,8 @@ import { AdminCountBadge } from "@/components/AdminCountBadge";
 interface AdminPanelHeaderProps {
   title: ReactNode;
   id: string;
-  className: string;
-  titleClassName: string;
+  className?: string;
+  titleClassName?: string;
   titleGroupClassName?: string;
   description?: ReactNode;
   descriptionClassName?: string;
@@ -33,7 +33,7 @@ export function AdminPanelHeader({
           <AdminCountBadge>{count}</AdminCountBadge>
         )}
       </Text>
-      {description && descriptionClassName ? (
+      {description ? (
         <Text as="p" textStyle="t4Regular" className={descriptionClassName}>
           {description}
         </Text>

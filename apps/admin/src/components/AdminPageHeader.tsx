@@ -4,9 +4,9 @@ import { Text } from "seed-design/ui/text";
 interface AdminPageHeaderProps {
   title: ReactNode;
   description: ReactNode;
-  className: string;
-  titleClassName: string;
-  descriptionClassName: string;
+  className?: string;
+  titleClassName?: string;
+  descriptionClassName?: string;
   titleGroupClassName?: string;
   actions?: ReactNode;
 }

@@ -15,6 +15,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { key: "inquiries", label: "문의 관리", path: "/inquiries" },
   { key: "pricing", label: "가격 관리", path: "/pricing" },
   { key: "generation-logs", label: "AI 생성 로그", path: "/generation-logs" },
+  {
+    key: "seamless-logs",
+    label: "Seamless 생성 로그",
+    path: "/seamless-logs",
+  },
+  { key: "motifs", label: "Motif SVG", path: "/motifs" },
   { key: "settings", label: "설정", path: "/settings" },
 ];
 
