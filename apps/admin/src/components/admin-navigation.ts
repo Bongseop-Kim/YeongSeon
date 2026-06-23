@@ -20,6 +20,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: "Seamless 생성 로그",
     path: "/seamless-logs",
   },
+  { key: "motifs", label: "Motif SVG", path: "/motifs" },
   { key: "settings", label: "설정", path: "/settings" },
 ];
 

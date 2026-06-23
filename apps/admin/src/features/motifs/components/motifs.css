@@ -1,0 +1,145 @@
+.motifPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.motifHeader,
+.motifPanelHeader,
+.motifFilterBar,
+.motifChipRow,
+.motifPagination {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.motifHeader {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.motifPanelHeader {
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.motifTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.motifTitle,
+.motifPanelTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.motifDescriptionText {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+}
+
+.motifFilterPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 8px;
+  background: var(--seed-color-bg-layer-default);
+  padding: 20px;
+}
+
+.motifFilterBar {
+  align-items: flex-end;
+}
+
+.motifGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.motifCard {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 8px;
+  background: var(--seed-color-bg-layer-default);
+}
+
+.motifPreviewImage,
+.motifPreviewPlaceholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  background: var(--seed-color-bg-neutral-weak);
+  color: var(--seed-color-fg-neutral-muted);
+  object-fit: contain;
+}
+
+.motifCardBody {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.motifCardTitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.motifChipRow {
+  gap: 6px;
+}
+
+.motifMetaText,
+.motifDescription {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  overflow-wrap: anywhere;
+}
+
+.motifDescription {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.motifEmpty {
+  display: flex;
+  min-height: 240px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 8px;
+  background: var(--seed-color-bg-neutral-weak);
+  color: var(--seed-color-fg-neutral-muted);
+}
+
+.motifPagination {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+@media (max-width: 720px) {
+  .motifPage {
+    padding: 16px;
+  }
+
+  .motifHeader {
+    flex-direction: column;
+  }
+}
