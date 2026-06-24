@@ -39,9 +39,12 @@ function toPreviewUri(motif: AdminMotifItem): string | null {
   const symbol = ensureSymbolId(motif.symbol, symbolId);
   const svg = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${width} ${height}" color="#1f2937">`,
-    '<rect width="100%" height="100%" fill="#fff"/>',
+    `<rect x="${minX}" y="${minY}" width="${width}" height="${height}" fill="#fff"/>`,
     `<defs>${symbol}</defs>`,
-    `<use href="#${escapeAttr(symbolId)}" x="${minX}" y="${minY}" width="${width}" height="${height}"/>`,
+    // seamless-tile symbols carry no viewBox; geometry is already in the bbox
+    // coordinate frame, so the viewBox above frames it 1:1. An x/y/width/height
+    // <use> would (wrongly) translate by (minX,minY) and not scale. Render at origin.
+    `<use href="#${escapeAttr(symbolId)}"/>`,
     "</svg>",
   ].join("");
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
