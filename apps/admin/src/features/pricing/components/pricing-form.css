@@ -23,6 +23,8 @@
 }
 
 .pricingPanel {
+  padding: 16px;
+  border-radius: 8px;
 }
 
 .pricingTabs {
@@ -76,9 +78,9 @@
   flex-direction: column;
   gap: 12px;
   border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 14px;
+  border-radius: 8px;
   background: var(--seed-color-bg-neutral-weak);
-  padding: 16px;
+  padding: 14px;
 }
 
 .pricingTierTitle {
@@ -97,6 +99,15 @@
 }
 
 @media (max-width: 720px) {
+  .pricingPage.adminSettingsPage {
+    padding: 12px;
+  }
+
+  .pricingTitle {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
   .pricingGrid {
     grid-template-columns: 1fr;
   }
