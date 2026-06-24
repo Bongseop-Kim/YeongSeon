@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 const { sendPhoneVerification, verifyPhone } = vi.hoisted(() => ({
@@ -19,6 +19,10 @@ describe("usePhoneVerification", () => {
     onVerified.mockReset();
     sendPhoneVerification.mockReset();
     verifyPhone.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("유효하지 않은 번호로 발송 시도 시 에러를 설정하고 발송하지 않는다", async () => {
@@ -165,7 +169,6 @@ describe("usePhoneVerification", () => {
 
     expect(result.current.code).toBe("");
     expect(sendPhoneVerification).toHaveBeenCalledTimes(2);
-    vi.useRealTimers();
   });
 
   it("발송 성공 시 카운트다운은 300, 재전송 쿨다운은 60으로 시작된다", async () => {
@@ -183,7 +186,6 @@ describe("usePhoneVerification", () => {
     expect(result.current.countdown).toBe(300);
     expect(result.current.resendCooldown).toBe(60);
     expect(result.current.canResend).toBe(false);
-    vi.useRealTimers();
   });
 
   it("1초가 지나면 카운트다운과 재전송 쿨다운이 줄어든다", async () => {
@@ -204,7 +206,6 @@ describe("usePhoneVerification", () => {
 
     expect(result.current.countdown).toBe(299);
     expect(result.current.resendCooldown).toBe(59);
-    vi.useRealTimers();
   });
 
   it("1분 이내 재전송 시도는 발송하지 않는다", async () => {
@@ -229,7 +230,6 @@ describe("usePhoneVerification", () => {
     expect(result.current.resendCooldown).toBe(1);
     expect(result.current.canResend).toBe(false);
     expect(sendPhoneVerification).toHaveBeenCalledTimes(1);
-    vi.useRealTimers();
   });
 
   it("1분 후 재전송할 수 있다", async () => {
@@ -251,7 +251,6 @@ describe("usePhoneVerification", () => {
     expect(result.current.countdown).toBe(240);
     expect(result.current.resendCooldown).toBe(0);
     expect(result.current.canResend).toBe(true);
-    vi.useRealTimers();
   });
 
   it("재발송 시 카운트다운을 300으로 초기화한다", async () => {
@@ -278,7 +277,6 @@ describe("usePhoneVerification", () => {
 
     expect(result.current.countdown).toBe(300);
     expect(result.current.resendCooldown).toBe(60);
-    vi.useRealTimers();
   });
 
   it("카운트다운이 0이면 isCountdownExpired가 true다", async () => {
@@ -299,6 +297,5 @@ describe("usePhoneVerification", () => {
 
     expect(result.current.countdown).toBe(0);
     expect(result.current.isCountdownExpired).toBe(true);
-    vi.useRealTimers();
   });
 });

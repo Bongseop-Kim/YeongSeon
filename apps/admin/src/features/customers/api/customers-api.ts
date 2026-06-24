@@ -72,6 +72,7 @@ export async function getAdminCustomerDetail(
     .from("admin_customer_profile_view")
     .select("id,name,phone,email,role,is_active,created_at,birth")
     .eq("id", customerId)
+    .eq("role", "customer")
     .single();
 
   if (error) throw new Error(error.message);

@@ -33,4 +33,18 @@ describe("DialogContent", () => {
     await waitFor(() => expect(screen.getByRole("dialog")).toHaveFocus());
     expect(screen.getByLabelText("휴대폰 번호")).not.toHaveFocus();
   });
+
+  it("focuses base content instead of the first field on open", async () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>인증</DialogTitle>
+          <input aria-label="휴대폰 번호" />
+        </DialogContent>
+      </Dialog>,
+    );
+
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveFocus());
+    expect(screen.getByLabelText("휴대폰 번호")).not.toHaveFocus();
+  });
 });

@@ -62,4 +62,20 @@ describe("customers api contract", () => {
     expect(orderMock).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(rangeMock).toHaveBeenCalledWith(0, 19);
   });
+
+  it("고객 목록 이름 검색은 ilike 이후 정렬과 페이지 범위를 적용한다", async () => {
+    fromMock.mockReturnValue({ select: selectMock });
+    selectMock.mockReturnValue({ eq: eqMock });
+    eqMock.mockReturnValue({ ilike: ilikeMock, order: orderMock });
+    ilikeMock.mockReturnValue({ order: orderMock });
+    orderMock.mockReturnValue({ range: rangeMock });
+    rangeMock.mockResolvedValue({ data: [], error: null, count: 0 });
+
+    await getAdminCustomers({ page: 2, pageSize: 10, name: " 홍길동 " });
+
+    expect(eqMock).toHaveBeenCalledWith("role", "customer");
+    expect(ilikeMock).toHaveBeenCalledWith("name", "%홍길동%");
+    expect(orderMock).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(rangeMock).toHaveBeenCalledWith(10, 19);
+  });
 });

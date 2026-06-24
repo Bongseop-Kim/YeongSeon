@@ -1,5 +1,6 @@
 import { Input } from "@/shared/ui-extended/input";
 import { Button } from "@/shared/ui-extended/button";
+import { FieldContent, FieldDescription } from "@/shared/ui/field";
 import { Label } from "@/shared/ui/label";
 import { extractPhoneNumber } from "@/shared/lib/phone-format";
 import { padZero } from "@/shared/lib/utils";
@@ -91,7 +92,7 @@ export const PhoneVerificationForm = ({
             inputMode="numeric"
           />
           <div className="flex gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-2">
+            <FieldContent className="min-w-0 flex-row items-center gap-2">
               <Button
                 variant="outline"
                 onClick={handleResend}
@@ -101,14 +102,14 @@ export const PhoneVerificationForm = ({
                 재전송
               </Button>
               {resendCooldown > 0 && (
-                <span
+                <FieldDescription
                   aria-live="polite"
                   className="shrink-0 whitespace-nowrap text-xs tabular-nums text-zinc-500"
                 >
                   {resendCooldown}초 뒤 가능
-                </span>
+                </FieldDescription>
               )}
-            </div>
+            </FieldContent>
             <Button
               onClick={handleVerify}
               disabled={isLoading || code.length !== 6 || isCountdownExpired}
