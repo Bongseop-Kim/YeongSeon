@@ -15,7 +15,7 @@ export function RepairOrderDetail({ items }: RepairOrderDetailProps) {
   if (repairItems.length === 0) return null;
 
   return (
-    <div className="orderOptionCard">
+    <div className="orderOptionCard orderRepairDetailCard">
       <Text as="h2" textStyle="t6Bold" className="orderSectionTitle">
         수선 상세
       </Text>

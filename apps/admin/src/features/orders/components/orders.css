@@ -1,8 +1,8 @@
 .orderPage {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 24px;
+  gap: 16px;
+  padding: 20px;
 }
 
 .orderPageTitleGroup,
@@ -38,9 +38,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px;
+  padding: 16px;
   border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 16px;
+  border-radius: 8px;
   background: var(--seed-color-bg-layer-default);
 }
 
@@ -124,7 +124,7 @@
 .orderPreviewImage {
   width: 120px;
   height: 120px;
-  border-radius: 12px;
+  border-radius: 8px;
   object-fit: cover;
   background: var(--seed-color-bg-neutral-weak);
 }
@@ -142,8 +142,12 @@
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--seed-color-bg-neutral-weak);
+}
+
+.orderRepairDetailCard {
+  background: var(--seed-color-bg-layer-default);
 }
 
 .orderModalBody {
@@ -159,6 +163,15 @@
 }
 
 @media (max-width: 840px) {
+  .orderPage {
+    padding: 12px;
+  }
+
+  .orderPageTitle {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
   .orderPanelHeader,
   .orderDetailActions {
     align-items: stretch;
