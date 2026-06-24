@@ -15,6 +15,7 @@ export interface ProfileRow {
   id: string;
   name: string | null;
   phone: string | null;
+  email: string | null;
   role: string | null;
   is_active: boolean | null;
   created_at: string | null;
@@ -38,6 +39,7 @@ export function toAdminCustomerListItem(
     id: row.id,
     name: row.name ?? "",
     phone: row.phone,
+    email: row.email,
     role: row.role ?? "",
     isActive: row.is_active ?? false,
     createdAt: row.created_at ?? "",

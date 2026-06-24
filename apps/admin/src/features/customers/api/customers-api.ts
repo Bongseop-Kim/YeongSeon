@@ -45,13 +45,16 @@ export async function getAdminCustomers(params: {
   const from = (normalizedPage - 1) * params.pageSize;
   const to = from + params.pageSize - 1;
   let query = supabase
-    .from("profiles")
-    .select("id,name,phone,role,is_active,created_at,birth", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .from("admin_customer_profile_view")
+    .select("id,name,phone,email,role,is_active,created_at,birth", {
+      count: "exact",
+    })
+    .eq("role", "customer");
 
   const name = params.name?.trim();
   if (name) query = query.ilike("name", `%${name}%`);
+
+  query = query.order("created_at", { ascending: false }).range(from, to);
 
   const { data, error, count } = await query;
   if (error) throw new Error(error.message);
@@ -66,8 +69,8 @@ export async function getAdminCustomerDetail(
   customerId: string,
 ): Promise<AdminCustomerDetail> {
   const { data, error } = await supabase
-    .from("profiles")
-    .select("id,name,phone,role,is_active,created_at,birth")
+    .from("admin_customer_profile_view")
+    .select("id,name,phone,email,role,is_active,created_at,birth")
     .eq("id", customerId)
     .single();
 

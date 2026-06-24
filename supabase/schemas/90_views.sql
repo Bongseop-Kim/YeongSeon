@@ -365,6 +365,22 @@ FROM public.user_coupons uc
 LEFT JOIN public.profiles p ON p.id = uc.user_id
 WHERE public.is_admin();
 
+-- ── admin_customer_profile_view ─────────────────────────────
+CREATE OR REPLACE VIEW public.admin_customer_profile_view
+WITH (security_invoker = true)
+AS
+SELECT
+  p.id,
+  p.name,
+  p.phone,
+  public.admin_get_email(p.id) AS email,
+  p.role,
+  p.is_active,
+  p.created_at,
+  p.birth
+FROM public.profiles p
+WHERE public.is_admin();
+
 -- ── admin_order_list_view ──────────────────────────────────
 CREATE OR REPLACE VIEW public.admin_order_list_view
 WITH (security_invoker = true)
@@ -661,6 +677,7 @@ GRANT SELECT ON public.order_detail_view TO anon, authenticated, service_role;
 GRANT SELECT ON public.order_item_view TO anon, authenticated, service_role;
 GRANT SELECT ON public.quote_request_list_view TO anon, authenticated, service_role;
 GRANT SELECT ON public.quote_request_detail_view TO anon, authenticated, service_role;
+GRANT SELECT ON public.admin_customer_profile_view TO authenticated, service_role;
 GRANT SELECT ON public.admin_user_coupon_view TO anon, authenticated, service_role;
 GRANT SELECT ON public.admin_claim_list_view TO authenticated, service_role;
 GRANT SELECT ON public.admin_claim_status_log_view TO authenticated, service_role;

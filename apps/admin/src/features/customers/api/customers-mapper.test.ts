@@ -28,6 +28,7 @@ describe("toAdminCustomerListItem", () => {
       id: "user-1",
       name: "",
       phone: "010-1111-2222",
+      email: "hong@example.com",
       role: "",
       isActive: false,
       createdAt: "",
