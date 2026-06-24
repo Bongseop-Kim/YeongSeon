@@ -1,6 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
+import {
+  Dialog as ExtendedDialog,
+  DialogContent as ExtendedDialogContent,
+  DialogTitle as ExtendedDialogTitle,
+} from "@/shared/ui-extended/dialog";
 
 describe("DialogContent", () => {
   it("sheet presentation renders a visible dismiss control", () => {
@@ -13,5 +18,33 @@ describe("DialogContent", () => {
     );
 
     expect(screen.getByRole("button", { name: "닫기" })).toBeInTheDocument();
+  });
+
+  it("focuses content instead of the first field on open", async () => {
+    render(
+      <ExtendedDialog open>
+        <ExtendedDialogContent>
+          <ExtendedDialogTitle>인증</ExtendedDialogTitle>
+          <input aria-label="휴대폰 번호" />
+        </ExtendedDialogContent>
+      </ExtendedDialog>,
+    );
+
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveFocus());
+    expect(screen.getByLabelText("휴대폰 번호")).not.toHaveFocus();
+  });
+
+  it("focuses base content instead of the first field on open", async () => {
+    render(
+      <Dialog open>
+        <DialogContent>
+          <DialogTitle>인증</DialogTitle>
+          <input aria-label="휴대폰 번호" />
+        </DialogContent>
+      </Dialog>,
+    );
+
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveFocus());
+    expect(screen.getByLabelText("휴대폰 번호")).not.toHaveFocus();
   });
 });

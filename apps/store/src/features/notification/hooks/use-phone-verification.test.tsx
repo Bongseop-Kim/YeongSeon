@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePhoneVerification } from "@/features/notification/hooks/use-phone-verification";
 
 const { sendPhoneVerification, verifyPhone } = vi.hoisted(() => ({
@@ -19,6 +19,10 @@ describe("usePhoneVerification", () => {
     onVerified.mockReset();
     sendPhoneVerification.mockReset();
     verifyPhone.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("유효하지 않은 번호로 발송 시도 시 에러를 설정하고 발송하지 않는다", async () => {
@@ -139,6 +143,7 @@ describe("usePhoneVerification", () => {
   });
 
   it("재발송 시 코드를 초기화하고 다시 발송한다", async () => {
+    vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -154,6 +159,10 @@ describe("usePhoneVerification", () => {
       result.current.setCode("111111");
     });
 
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+
     await act(async () => {
       await result.current.handleResend();
     });
@@ -162,7 +171,7 @@ describe("usePhoneVerification", () => {
     expect(sendPhoneVerification).toHaveBeenCalledTimes(2);
   });
 
-  it("발송 성공 시 카운트다운이 300으로 시작된다", async () => {
+  it("발송 성공 시 카운트다운은 300, 재전송 쿨다운은 60으로 시작된다", async () => {
     vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -175,10 +184,11 @@ describe("usePhoneVerification", () => {
     });
 
     expect(result.current.countdown).toBe(300);
-    vi.useRealTimers();
+    expect(result.current.resendCooldown).toBe(60);
+    expect(result.current.canResend).toBe(false);
   });
 
-  it("1초가 지나면 카운트다운이 299로 줄어든다", async () => {
+  it("1초가 지나면 카운트다운과 재전송 쿨다운이 줄어든다", async () => {
     vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -195,7 +205,52 @@ describe("usePhoneVerification", () => {
     });
 
     expect(result.current.countdown).toBe(299);
-    vi.useRealTimers();
+    expect(result.current.resendCooldown).toBe(59);
+  });
+
+  it("1분 이내 재전송 시도는 발송하지 않는다", async () => {
+    vi.useFakeTimers();
+    sendPhoneVerification.mockResolvedValue(undefined);
+    const { result } = renderHook(() => usePhoneVerification(onVerified));
+
+    act(() => {
+      result.current.setPhone("01012345678");
+    });
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
+    await act(async () => {
+      await result.current.handleResend();
+    });
+
+    expect(result.current.resendCooldown).toBe(1);
+    expect(result.current.canResend).toBe(false);
+    expect(sendPhoneVerification).toHaveBeenCalledTimes(1);
+  });
+
+  it("1분 후 재전송할 수 있다", async () => {
+    vi.useFakeTimers();
+    sendPhoneVerification.mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => usePhoneVerification(onVerified));
+
+    act(() => {
+      result.current.setPhone("01012345678");
+    });
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+
+    expect(result.current.countdown).toBe(240);
+    expect(result.current.resendCooldown).toBe(0);
+    expect(result.current.canResend).toBe(true);
   });
 
   it("재발송 시 카운트다운을 300으로 초기화한다", async () => {
@@ -211,16 +266,17 @@ describe("usePhoneVerification", () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(5_000);
+      vi.advanceTimersByTime(60_000);
     });
-    expect(result.current.countdown).toBe(295);
+    expect(result.current.countdown).toBe(240);
+    expect(result.current.resendCooldown).toBe(0);
 
     await act(async () => {
       await result.current.handleResend();
     });
 
     expect(result.current.countdown).toBe(300);
-    vi.useRealTimers();
+    expect(result.current.resendCooldown).toBe(60);
   });
 
   it("카운트다운이 0이면 isCountdownExpired가 true다", async () => {
@@ -241,6 +297,5 @@ describe("usePhoneVerification", () => {
 
     expect(result.current.countdown).toBe(0);
     expect(result.current.isCountdownExpired).toBe(true);
-    vi.useRealTimers();
   });
 });

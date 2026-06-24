@@ -85,6 +85,11 @@ export function CustomerListTable() {
         cell: ({ row }) => row.original.phone ?? "-",
       },
       {
+        accessorKey: "email",
+        header: "이메일",
+        cell: ({ row }) => row.original.email ?? "-",
+      },
+      {
         id: "tokenBalance",
         header: "토큰 잔액",
         cell: ({ row }) => formatTokenBalance(row.original.id),

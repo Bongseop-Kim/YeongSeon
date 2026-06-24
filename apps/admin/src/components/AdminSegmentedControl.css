@@ -1,15 +1,30 @@
 .adminSegmentedControlButtonGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .adminSegmentedControlTabs {
   width: fit-content;
+  max-width: 100%;
+}
+
+.adminSegmentedControlTabs.seed-segmented-control__root {
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.adminSegmentedControlTabs .seed-segmented-control__item {
+  min-width: 0;
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
 }
 
 .adminSegmentedControlLabel {
   min-width: 0;
+  white-space: nowrap;
 }
 
 .adminSegmentedControlDot {
@@ -17,4 +32,21 @@
   height: 6px;
   border-radius: var(--seed-radius-r3);
   background: var(--seed-color-fg-critical);
+}
+
+@media (max-width: 640px) {
+  .adminSegmentedControlButtonGroup {
+    gap: 4px;
+  }
+
+  .adminSegmentedControlTabs {
+    width: 100%;
+  }
+
+  .adminSegmentedControlTabs .seed-segmented-control__item {
+    min-height: 28px;
+    padding: 3px 4px;
+    font-size: 12px;
+    line-height: 16px;
+  }
 }

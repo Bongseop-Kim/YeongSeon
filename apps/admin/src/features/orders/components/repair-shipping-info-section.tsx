@@ -24,7 +24,7 @@ export function RepairShippingInfoSection({
   if (!pickupRequest && receipts.length === 0) return null;
 
   return (
-    <div className="orderOptionCard">
+    <div className="orderOptionCard orderRepairDetailCard">
       <Text as="h2" textStyle="t6Bold" className="orderSectionTitle">
         수선품 발송 정보
       </Text>

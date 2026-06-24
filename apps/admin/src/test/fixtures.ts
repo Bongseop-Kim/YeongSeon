@@ -265,6 +265,7 @@ export const createProfileRow = (
   id: "user-1",
   name: "홍길동",
   phone: "010-1111-2222",
+  email: "hong@example.com",
   role: "customer",
   is_active: true,
   created_at: "2026-03-15T09:00:00Z",

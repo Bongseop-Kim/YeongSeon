@@ -50,7 +50,7 @@ const PaymentFailPage = () => {
             <p className="mt-6 text-xs text-zinc-400">에러 코드: {code}</p>
           ) : null}
           <div className="mt-8 flex justify-center">
-            <Button onClick={() => navigate(backRoute)}>
+            <Button onClick={() => navigate(backRoute, { replace: true })}>
               {BACK_LABELS[backRoute]}
             </Button>
           </div>

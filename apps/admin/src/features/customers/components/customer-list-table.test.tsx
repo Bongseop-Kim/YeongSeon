@@ -58,6 +58,7 @@ describe("CustomerListTable", () => {
             id: "customer-1",
             name: "홍길동",
             phone: "010-1111-2222",
+            email: "hong@example.com",
             role: "customer",
             isActive: true,
             createdAt: "2026-01-01T00:00:00.000Z",

@@ -26,6 +26,9 @@ export function CustomerProfileSection({ customer }: Props) {
         <AdminDetailItem label="전화번호">
           {customer.phone ?? "-"}
         </AdminDetailItem>
+        <AdminDetailItem label="이메일">
+          {customer.email ?? "-"}
+        </AdminDetailItem>
         <AdminDetailItem label="역할">
           <StatusBadge>{customer.role}</StatusBadge>
         </AdminDetailItem>

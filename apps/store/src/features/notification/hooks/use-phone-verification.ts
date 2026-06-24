@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { sendPhoneVerification, verifyPhone } from "@/entities/notification";
 
 type Step = "input" | "verify" | "done";
-const COUNTDOWN_SECONDS = 300;
+const VERIFICATION_EXPIRES_SECONDS = 300;
+const RESEND_COOLDOWN_SECONDS = 60;
 
 const isValidKoreanPhone = (value: string): boolean =>
   /^01[0-9]{8,9}$/.test(value);
@@ -14,6 +15,7 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimer = () => {
@@ -24,7 +26,8 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
 
   const startCountdown = () => {
     clearTimer();
-    setCountdown(COUNTDOWN_SECONDS);
+    setCountdown(VERIFICATION_EXPIRES_SECONDS);
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -34,6 +37,7 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
 
         return prev - 1;
       });
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
   };
 
@@ -73,6 +77,7 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
       await onVerified();
       clearTimer();
       setCountdown(0);
+      setResendCooldown(0);
       setStep("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "인증 실패");
@@ -81,13 +86,18 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
     }
   };
 
+  const isCountdownExpired = countdown === 0 && step === "verify";
+  const canResend = step === "verify" && resendCooldown === 0 && !isLoading;
+
   const handleResend = async () => {
+    if (!canResend) {
+      return;
+    }
+
     setCode("");
     setError(null);
     await handleSend();
   };
-
-  const isCountdownExpired = countdown === 0 && step === "verify";
 
   return {
     step,
@@ -98,7 +108,9 @@ export const usePhoneVerification = (onVerified: () => Promise<void>) => {
     isLoading,
     error,
     countdown,
+    resendCooldown,
     isCountdownExpired,
+    canResend,
     handleSend,
     handleVerify,
     handleResend,

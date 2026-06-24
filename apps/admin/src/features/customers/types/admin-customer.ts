@@ -4,6 +4,7 @@ export interface AdminCustomerListItem {
   id: string;
   name: string;
   phone: string | null;
+  email: string | null;
   role: string;
   isActive: boolean;
   createdAt: string;
