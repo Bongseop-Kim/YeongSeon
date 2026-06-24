@@ -139,6 +139,7 @@ describe("usePhoneVerification", () => {
   });
 
   it("재발송 시 코드를 초기화하고 다시 발송한다", async () => {
+    vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValue(undefined);
 
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -154,15 +155,20 @@ describe("usePhoneVerification", () => {
       result.current.setCode("111111");
     });
 
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+
     await act(async () => {
       await result.current.handleResend();
     });
 
     expect(result.current.code).toBe("");
     expect(sendPhoneVerification).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 
-  it("발송 성공 시 카운트다운이 300으로 시작된다", async () => {
+  it("발송 성공 시 카운트다운은 300, 재전송 쿨다운은 60으로 시작된다", async () => {
     vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -175,10 +181,12 @@ describe("usePhoneVerification", () => {
     });
 
     expect(result.current.countdown).toBe(300);
+    expect(result.current.resendCooldown).toBe(60);
+    expect(result.current.canResend).toBe(false);
     vi.useRealTimers();
   });
 
-  it("1초가 지나면 카운트다운이 299로 줄어든다", async () => {
+  it("1초가 지나면 카운트다운과 재전송 쿨다운이 줄어든다", async () => {
     vi.useFakeTimers();
     sendPhoneVerification.mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => usePhoneVerification(onVerified));
@@ -195,6 +203,54 @@ describe("usePhoneVerification", () => {
     });
 
     expect(result.current.countdown).toBe(299);
+    expect(result.current.resendCooldown).toBe(59);
+    vi.useRealTimers();
+  });
+
+  it("1분 이내 재전송 시도는 발송하지 않는다", async () => {
+    vi.useFakeTimers();
+    sendPhoneVerification.mockResolvedValue(undefined);
+    const { result } = renderHook(() => usePhoneVerification(onVerified));
+
+    act(() => {
+      result.current.setPhone("01012345678");
+    });
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
+    await act(async () => {
+      await result.current.handleResend();
+    });
+
+    expect(result.current.resendCooldown).toBe(1);
+    expect(result.current.canResend).toBe(false);
+    expect(sendPhoneVerification).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it("1분 후 재전송할 수 있다", async () => {
+    vi.useFakeTimers();
+    sendPhoneVerification.mockResolvedValueOnce(undefined);
+    const { result } = renderHook(() => usePhoneVerification(onVerified));
+
+    act(() => {
+      result.current.setPhone("01012345678");
+    });
+    await act(async () => {
+      await result.current.handleSend();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+
+    expect(result.current.countdown).toBe(240);
+    expect(result.current.resendCooldown).toBe(0);
+    expect(result.current.canResend).toBe(true);
     vi.useRealTimers();
   });
 
@@ -211,15 +267,17 @@ describe("usePhoneVerification", () => {
     });
 
     await act(async () => {
-      vi.advanceTimersByTime(5_000);
+      vi.advanceTimersByTime(60_000);
     });
-    expect(result.current.countdown).toBe(295);
+    expect(result.current.countdown).toBe(240);
+    expect(result.current.resendCooldown).toBe(0);
 
     await act(async () => {
       await result.current.handleResend();
     });
 
     expect(result.current.countdown).toBe(300);
+    expect(result.current.resendCooldown).toBe(60);
     vi.useRealTimers();
   });
 
