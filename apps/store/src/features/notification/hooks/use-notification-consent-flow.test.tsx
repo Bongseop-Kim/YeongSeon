@@ -115,7 +115,7 @@ describe("useNotificationConsentFlow", () => {
     expect(onProceed).toHaveBeenCalled();
   });
 
-  it("dismissConsentModal은 모달을 닫고 onProceed를 호출한다", async () => {
+  it("dismissConsentModal은 모달만 닫고 onProceed를 호출하지 않는다", async () => {
     const { result } = renderHook(() => useNotificationConsentFlow(onProceed));
 
     await act(async () => {
@@ -127,10 +127,10 @@ describe("useNotificationConsentFlow", () => {
     });
 
     expect(result.current.consentFlow.showConsentModal).toBe(false);
-    expect(onProceed).toHaveBeenCalled();
+    expect(onProceed).not.toHaveBeenCalled();
   });
 
-  it("closeVerifyModal은 모달을 닫고 onProceed를 호출한다", async () => {
+  it("closeVerifyModal은 모달만 닫고 onProceed를 호출하지 않는다", async () => {
     const { result } = renderHook(() => useNotificationConsentFlow(onProceed));
 
     await act(async () => {
@@ -142,6 +142,6 @@ describe("useNotificationConsentFlow", () => {
     });
 
     expect(result.current.consentFlow.showVerifyModal).toBe(false);
-    expect(onProceed).toHaveBeenCalled();
+    expect(onProceed).not.toHaveBeenCalled();
   });
 });
