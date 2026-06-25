@@ -1,4 +1,3 @@
-export type MotifStatusFilter = "auto" | "curated";
 export type MotifSourceFilter = "llm" | "recraft" | "builtin";
 export type MotifBBox = [number, number, number, number];
 export type MotifAnchor = [number, number];
@@ -17,7 +16,6 @@ export interface AdminMotifItem {
   description: string | null;
   tags: string[];
   source: MotifSourceFilter | string;
-  status: MotifStatusFilter | string;
   quality: number | null;
   variantGroup: string | null;
   createdAt: string;

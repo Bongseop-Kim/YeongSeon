@@ -18,7 +18,6 @@ describe("toAdminMotifItem", () => {
         description: "sample motif",
         tags: ["test"],
         source: "recraft",
-        status: "auto",
         quality: 0.8,
         variant_group: "flower:whole",
         created_at: "2026-06-23T00:00:00Z",
@@ -30,7 +29,6 @@ describe("toAdminMotifItem", () => {
         bbox: [0, 0, 1, 1],
         anchor: [0.5, 0.5],
         source: "recraft",
-        status: "auto",
       }),
     );
   });

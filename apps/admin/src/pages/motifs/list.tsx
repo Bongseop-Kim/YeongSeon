@@ -13,25 +13,16 @@ import { AdminPanelSkeleton } from "@/components/AdminSkeleton";
 import {
   MotifGrid,
   type MotifSourceFilter,
-  type MotifStatusFilter,
   useAdminMotifsQuery,
 } from "@/features/motifs";
 
 const MOTIF_SEARCH_DEBOUNCE_MS = 300;
-const VALID_STATUSES: MotifStatusFilter[] = ["auto", "curated"];
 const VALID_SOURCES: MotifSourceFilter[] = ["llm", "recraft", "builtin"];
 
 function parsePageParam(value: string | null): number {
   const page = Number(value ?? "1");
   if (!Number.isFinite(page)) return 1;
   return Math.max(1, Math.floor(page));
-}
-
-function normalizeStatusParam(value: string | null): MotifStatusFilter | null {
-  if (!value) return null;
-  return VALID_STATUSES.some((status) => status === value)
-    ? (value as MotifStatusFilter)
-    : null;
 }
 
 function normalizeSourceParam(value: string | null): MotifSourceFilter | null {
@@ -43,7 +34,6 @@ function normalizeSourceParam(value: string | null): MotifSourceFilter | null {
 
 export default function MotifList() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const status = normalizeStatusParam(searchParams.get("status"));
   const source = normalizeSourceParam(searchParams.get("source"));
   const idSearch = searchParams.get("idSearch") ?? "";
   const page = parsePageParam(searchParams.get("page"));
@@ -87,7 +77,6 @@ export default function MotifList() {
 
   const { data, hasMore, isLoading, errorMessage } = useAdminMotifsQuery({
     page,
-    status,
     source,
     idSearch: idSearch || null,
   });
@@ -123,20 +112,6 @@ export default function MotifList() {
           className="motifFilterBar"
           onSubmit={(event) => event.preventDefault()}
         >
-          <AdminFilterField>
-            <AdminFilterSelect
-              label="상태"
-              name="motif-status"
-              value={status ?? ""}
-              onChange={(event) =>
-                updateParams({ status: event.target.value || null })
-              }
-            >
-              <option value="">모든 상태</option>
-              <option value="auto">auto</option>
-              <option value="curated">curated</option>
-            </AdminFilterSelect>
-          </AdminFilterField>
           <AdminFilterField>
             <AdminFilterSelect
               label="소스"
