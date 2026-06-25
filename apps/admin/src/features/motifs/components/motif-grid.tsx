@@ -82,9 +82,6 @@ function MotifCard({ motif }: { motif: AdminMotifItem }) {
           {motif.id}
         </Text>
         <div className="motifChipRow">
-          <StatusBadge tone={motif.status === "curated" ? "positive" : "brand"}>
-            {motif.status || "-"}
-          </StatusBadge>
           <StatusBadge>{motif.source || "-"}</StatusBadge>
           {motif.colorSlots.length > 1 ? (
             <StatusBadge>{motif.colorSlots.length} colors</StatusBadge>

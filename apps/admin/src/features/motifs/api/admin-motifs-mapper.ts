@@ -55,7 +55,6 @@ export function toAdminMotifItem(row: unknown): AdminMotifItem {
     description: toString(r.description),
     tags: toStringArray(r.tags),
     source: toString(r.source) ?? "",
-    status: toString(r.status) ?? "",
     quality: toNumber(r.quality),
     variantGroup: toString(r.variant_group),
     createdAt: toString(r.created_at) ?? "",

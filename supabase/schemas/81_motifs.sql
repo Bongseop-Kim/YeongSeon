@@ -22,7 +22,6 @@ CREATE TABLE public.motifs (
   tags          text[]            NOT NULL DEFAULT '{}',
   embedding     extensions.vector,                              -- nullable; 임베딩 검색은 S11/P3
   source        text              NOT NULL DEFAULT 'recraft',   -- 'llm' | 'recraft'
-  status        text              NOT NULL DEFAULT 'auto',      -- 'auto' | 'curated'
   quality       real,
   variant_group text,
   created_at    timestamptz       NOT NULL DEFAULT now()

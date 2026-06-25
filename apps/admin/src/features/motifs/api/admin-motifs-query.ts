@@ -4,12 +4,10 @@ import { ADMIN_MOTIF_PAGE_SIZE } from "@/features/motifs/constants";
 import type {
   AdminMotifItem,
   MotifSourceFilter,
-  MotifStatusFilter,
 } from "@/features/motifs/types/admin-motif";
 
 export function useAdminMotifsQuery(params: {
   page: number;
-  status?: MotifStatusFilter | null;
   source?: MotifSourceFilter | null;
   idSearch?: string | null;
 }): {
@@ -23,13 +21,11 @@ export function useAdminMotifsQuery(params: {
     queryKey: [
       "admin-motifs",
       page,
-      params.status ?? null,
       params.source ?? null,
       params.idSearch ?? null,
     ],
     queryFn: () =>
       getAdminMotifs({
-        status: params.status ?? null,
         source: params.source ?? null,
         idSearch: params.idSearch ?? null,
         limit: ADMIN_MOTIF_PAGE_SIZE + 1,

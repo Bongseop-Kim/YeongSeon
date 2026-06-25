@@ -843,7 +843,6 @@ end;
 $$;
 
 CREATE OR REPLACE FUNCTION public.admin_get_motifs(
-  p_status    text    DEFAULT NULL,
   p_source    text    DEFAULT NULL,
   p_id_search text    DEFAULT NULL,
   p_limit     integer DEFAULT 48,
@@ -863,7 +862,6 @@ RETURNS TABLE (
   description   text,
   tags          text[],
   source        text,
-  status        text,
   quality       real,
   variant_group text,
   created_at    timestamptz
@@ -896,13 +894,11 @@ begin
     m.description,
     m.tags,
     m.source,
-    m.status,
     m.quality,
     m.variant_group,
     m.created_at
   from public.motifs m
-  where (p_status is null or m.status = p_status)
-    and (p_source is null or m.source = p_source)
+  where (p_source is null or m.source = p_source)
     and (
       p_id_search is null
       or m.id = p_id_search
@@ -914,11 +910,11 @@ begin
 end;
 $$;
 
-COMMENT ON FUNCTION public.admin_get_motifs(text, text, text, integer, integer)
-  IS 'Admin-only motif listing for SVG primitive review. SECURITY DEFINER is required because motifs has no authenticated SELECT grant; this function is the read boundary for the admin UI.';
+COMMENT ON FUNCTION public.admin_get_motifs(text, text, integer, integer)
+  IS 'Admin-only motif listing for SVG primitives. SECURITY DEFINER is required because motifs has no authenticated SELECT grant; this function is the read boundary for the admin UI.';
 
 GRANT EXECUTE ON FUNCTION public.admin_get_motifs(
-  text, text, text, integer, integer
+  text, text, integer, integer
 ) TO authenticated;
 
 -- ── admin_get_seamless_generation_logs ──────────────────────────
